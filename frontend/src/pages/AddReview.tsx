@@ -18,14 +18,23 @@ const AddReview: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (inputMode === 'free-form') {
       const reviewData = { reviewText };
-      console.log('Submitting free-form review data:', reviewData);
-      // Send free-form reviewData to the backend API for ChatGPT processing
+      try {
+        const response = await fetch('http://localhost:5000/api/reviews/free-form', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reviewData),
+        });
+        const data = await response.json();
+        console.log('Free-form review saved:', data);
+      } catch (error) {
+        console.error('Error saving free-form review:', error);
+      }
     } else {
-      const reviewData = {
+      const structuredData = {
         reviewer,
         restaurant,
         location,
@@ -34,8 +43,17 @@ const AddReview: React.FC = () => {
         ratings,
         overallExperience,
       };
-      console.log('Submitting structured review data:', reviewData);
-      // Send structured reviewData to the backend API to save in the database
+      try {
+        const response = await fetch('http://localhost:5000/api/reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(structuredData),
+        });
+        const data = await response.json();
+        console.log('Structured review saved:', data);
+      } catch (error) {
+        console.error('Error saving structured review:', error);
+      }
     }
   };
 
@@ -58,7 +76,7 @@ const AddReview: React.FC = () => {
           Structured Form
         </ToggleButton>
       </ToggleButtonGroup>
-      
+
       <form onSubmit={handleSubmit}>
         {inputMode === 'free-form' ? (
           <Grid container spacing={2}>
