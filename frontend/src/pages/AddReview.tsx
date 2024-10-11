@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { TextField, Button, Typography, Paper, Grid, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import {
+  TextField,
+  Button,
+  Typography,
+  Paper,
+  Grid,
+  IconButton,
+  ToggleButton,
+  ToggleButtonGroup,
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 
 const AddReview: React.FC = () => {
   const [inputMode, setInputMode] = useState('free-form');
@@ -16,6 +27,30 @@ const AddReview: React.FC = () => {
     if (newMode) {
       setInputMode(newMode);
     }
+  };
+
+  const handleAddItem = () => {
+    setItemsOrdered([...itemsOrdered, '']);
+    setRatings([...ratings, '']);
+  };
+
+  const handleRemoveItem = (index: number) => {
+    const newItemsOrdered = itemsOrdered.filter((_, i) => i !== index);
+    const newRatings = ratings.filter((_, i) => i !== index);
+    setItemsOrdered(newItemsOrdered);
+    setRatings(newRatings);
+  };
+
+  const handleItemChange = (index: number, value: string) => {
+    const newItems = [...itemsOrdered];
+    newItems[index] = value;
+    setItemsOrdered(newItems);
+  };
+
+  const handleRatingChange = (index: number, value: string) => {
+    const newRatings = [...ratings];
+    newRatings[index] = value;
+    setRatings(newRatings);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -146,11 +181,7 @@ const AddReview: React.FC = () => {
                     fullWidth
                     label={`Item ${index + 1}`}
                     value={item}
-                    onChange={(e) => {
-                      const newItems = [...itemsOrdered];
-                      newItems[index] = e.target.value;
-                      setItemsOrdered(newItems);
-                    }}
+                    onChange={(e) => handleItemChange(index, e.target.value)}
                     required
                   />
                 </Grid>
@@ -159,15 +190,27 @@ const AddReview: React.FC = () => {
                     fullWidth
                     label={`Rating for Item ${index + 1}`}
                     value={ratings[index]}
-                    onChange={(e) => {
-                      const newRatings = [...ratings];
-                      newRatings[index] = e.target.value;
-                      setRatings(newRatings);
-                    }}
+                    onChange={(e) => handleRatingChange(index, e.target.value)}
                   />
+                </Grid>
+                <Grid item xs={2} style={{ display: 'flex', alignItems: 'center' }}>
+                  <IconButton onClick={() => handleRemoveItem(index)} aria-label="remove item">
+                    <RemoveIcon />
+                  </IconButton>
                 </Grid>
               </Grid>
             ))}
+
+            <Grid item xs={12}>
+              <Button
+                variant="outlined"
+                startIcon={<AddIcon />}
+                onClick={handleAddItem}
+                style={{ marginBottom: 20 }}
+              >
+                Add Another Item
+              </Button>
+            </Grid>
 
             <Grid item xs={12}>
               <TextField
