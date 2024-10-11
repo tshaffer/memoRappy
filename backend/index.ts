@@ -1,7 +1,8 @@
-import { Request, Response } from 'express'; // Add this line to import the correct types
+import express, { Request, Response } from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
 
-const express = require('express');
-const cors = require('cors');
+dotenv.config(); // Load environment variables from .env file
 
 const app = express();
 const PORT = 5000;
