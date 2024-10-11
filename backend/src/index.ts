@@ -23,9 +23,14 @@ mongoose.connect(process.env.MONGODB_URI || '')
   .catch((error) => console.error('Error connecting to MongoDB:', error));
 
 const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+
+  console.log('freeFormReviewHandler');
+
   try {
     const { reviewText } = req.body;
 
+    console.log('reviewText:', reviewText);
+    
     // Use ChatGPT to extract structured data from the free-form text
     const prompt = `Extract the following information from this review: 
       - Reviewer name
@@ -70,6 +75,28 @@ const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response
   }
 };
 
+const structuredReviewHandler: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const reviewData = req.body;
+
+    // Basic validation: check if the restaurant name and date of visit are provided
+    if (!reviewData.restaurant || !reviewData.dateOfVisit) {
+      res.status(400).json({ error: 'Restaurant name and date of visit are required.' });
+      return;
+    }
+
+    // Save the structured review data to MongoDB
+    const newReview = new Review(reviewData);
+    await newReview.save();
+
+    res.status(201).json({ message: 'Review saved successfully!', review: newReview });
+  } catch (error) {
+    console.error('Error saving structured review:', error);
+    res.status(500).json({ error: 'An error occurred while saving the review.' });
+  }
+}
+
+app.post('/api/reviews', structuredReviewHandler);
 app.post('/api/reviews/free-form', freeFormReviewHandler);
 
 app.listen(PORT, () => {
