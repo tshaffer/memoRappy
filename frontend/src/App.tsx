@@ -4,8 +4,8 @@ const App: React.FC = () => {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    // fetch('http://localhost:5000/')
-    fetch('/')
+    fetch('http://localhost:5000/')
+    // fetch('/')
       .then((res) => res.text())
       .then((data) => setMessage(data))
       .catch((error) => console.error('Error fetching data:', error));
