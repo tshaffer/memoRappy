@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv'; // Use * as dotenv to handle default imports properly
 import OpenAI from 'openai';
 
 dotenv.config();
