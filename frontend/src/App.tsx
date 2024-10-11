@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { AppBar, Toolbar, Typography, Button, Container } from '@mui/material';
 import Home from './pages/Home';
 import AddReview from './pages/AddReview';
-import ReviewList from './pages/ReviewList';
 import QueryPage from './pages/QueryPage';
-import { AppBar, Toolbar, Typography, Button, Container } from '@mui/material';
+import ReviewList from './pages/ReviewList';
 
 const App: React.FC = () => {
   return (
