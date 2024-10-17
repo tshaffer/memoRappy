@@ -29,8 +29,6 @@ const RunQuery: React.FC = () => {
 
       if (isoStartDate) queryParams.append('startDate', isoStartDate);
       if (isoEndDate) queryParams.append('endDate', isoEndDate);
-
-      debugger;
       
       if (filters.item) queryParams.append('item', filters.item);
 

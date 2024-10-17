@@ -38,13 +38,14 @@ app.get('/api/reviews', async (req: Request, res: Response) => {
       query.location = new RegExp(location as string, 'i'); // Case-insensitive search
     }
 
+    // Use the raw ISO date strings for date filtering
     if (startDate && endDate) {
       query.dateOfVisit = {
-        $gte: new Date(startDate as string),
-        $lte: new Date(endDate as string),
+        $gte: startDate as string,
+        $lte: endDate as string,
       };
     } else if (startDate) {
-      query.dateOfVisit = { $gte: new Date(startDate as string) };
+      query.dateOfVisit = { $gte: startDate as string };
     }
 
     if (item) {
