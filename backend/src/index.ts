@@ -62,11 +62,10 @@ const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response
       temperature: 0.5,
     });
 
-    // Safely access the message content and handle the case where it might be null
     const messageContent = response.choices[0].message?.content;
     if (!messageContent) {
       res.status(500).json({ error: 'Failed to extract data from the response.' });
-      return; // Stop execution if the content is null
+      return;
     }
 
     console.log('OpenAI response:', messageContent);
@@ -91,10 +90,10 @@ const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response
 
     // Manually extract and transform the rest of the data
     const extractedData = {
-      reviewer: "Ted", // Extract from the response if necessary
+      reviewer: "Ted", 
       restaurant: extractFieldFromResponse(messageContent, 'Restaurant name'),
       location: extractFieldFromResponse(messageContent, 'Location'),
-      dateOfVisit: formattedDateOfVisit, // Use the formatted ISO date here
+      dateOfVisit: formattedDateOfVisit, 
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered'),
       overallExperience: extractFieldFromResponse(messageContent, 'Overall experience'),
       ratings: extractListFromResponse(messageContent, 'Ratings for each item').map((ratingString: string) => {
@@ -108,13 +107,11 @@ const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response
 
     console.log('Extracted data:', extractedData);
 
-    // Validate the extracted data (basic validation example)
     if (!extractedData.restaurant || !extractedData.dateOfVisit) {
       res.status(400).json({ error: 'Restaurant name and date of visit are required.' });
-      return; // Explicitly return to stop execution
+      return;
     }
 
-    // Save the structured review to MongoDB
     const newReview = new Review(extractedData);
     await newReview.save();
 
@@ -125,10 +122,21 @@ const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response
   }
 };
 
-// Helper function to clean the date string by removing ordinal suffixes
+// Helper function to clean the date string and add the current year if missing
 const cleanDateString = (dateStr: string): string => {
-  // Remove "st", "nd", "rd", "th" and any additional spaces
-  return dateStr.replace(/(\d+)(st|nd|rd|th)/, '$1').trim();
+  const currentYear = new Date().getFullYear();
+  
+  // Remove ordinal suffixes like "st", "nd", "rd", "th"
+  let cleanedDate = dateStr.replace(/(\d+)(st|nd|rd|th)/, '$1').trim();
+
+  // Check if the year is missing by seeing if the string contains a 4-digit number (year)
+  const yearRegex = /\b\d{4}\b/;
+  if (!yearRegex.test(cleanedDate)) {
+    // Append the current year if it's missing
+    cleanedDate += ` ${currentYear}`;
+  }
+
+  return cleanedDate;
 };
 
 const structuredReviewHandler: RequestHandler = async (req: Request, res: Response): Promise<void> => {
