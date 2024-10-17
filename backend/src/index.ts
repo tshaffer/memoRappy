@@ -71,16 +71,27 @@ const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response
 
     console.log('OpenAI response:', messageContent);
 
-    // Manually extract and transform the data
+    // Extract the date of visit
+    const extractedDateOfVisit = extractFieldFromResponse(messageContent, 'Date of visit');
+    
+    // Try to parse the extracted date into a JavaScript Date object and convert it to ISO format
+    let formattedDateOfVisit = '';
+    try {
+      const parsedDate = new Date(extractedDateOfVisit);
+      formattedDateOfVisit = parsedDate.toISOString();
+    } catch (error) {
+      console.error('Error parsing date:', extractedDateOfVisit);
+      formattedDateOfVisit = extractedDateOfVisit; // Fall back to the extracted string if parsing fails
+    }
+
+    // Manually extract and transform the rest of the data
     const extractedData = {
       reviewer: "Ted", // Extract from the response if necessary
       restaurant: extractFieldFromResponse(messageContent, 'Restaurant name'),
       location: extractFieldFromResponse(messageContent, 'Location'),
-      dateOfVisit: extractFieldFromResponse(messageContent, 'Date of visit'),
+      dateOfVisit: formattedDateOfVisit, // Use the formatted ISO date here
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered'),
       overallExperience: extractFieldFromResponse(messageContent, 'Overall experience'),
-
-      // Transform ratings from a string to an object with item and rating fields
       ratings: extractListFromResponse(messageContent, 'Ratings for each item').map((ratingString: string) => {
         const parts = ratingString.match(/(.+?)\s?\((.+?)\)/);
         return {
