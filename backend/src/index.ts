@@ -22,7 +22,7 @@ mongoose.connect(process.env.MONGODB_URI || '')
   .then(() => console.log('Connected to MongoDB'))
   .catch((error) => console.error('Error connecting to MongoDB:', error));
 
-  // Extract a field from the response based on a keyword
+// Extract a field from the response based on a keyword
 const extractFieldFromResponse = (response: string, fieldName: string): string => {
   const regex = new RegExp(`${fieldName}:\\s*(.*)`, 'i');
   const match = response.match(regex);
@@ -71,20 +71,27 @@ const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response
 
     console.log('OpenAI response:', messageContent);
 
-    // Instead of parsing, extract the information manually (you could use regex, or more sophisticated NLP)
+    // Manually extract and transform the data
     const extractedData = {
       reviewer: "Ted", // Extract from the response if necessary
       restaurant: extractFieldFromResponse(messageContent, 'Restaurant name'),
       location: extractFieldFromResponse(messageContent, 'Location'),
       dateOfVisit: extractFieldFromResponse(messageContent, 'Date of visit'),
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered'),
-      ratings: extractListFromResponse(messageContent, 'Ratings for each item'),
       overallExperience: extractFieldFromResponse(messageContent, 'Overall experience'),
+
+      // Transform ratings from a string to an object with item and rating fields
+      ratings: extractListFromResponse(messageContent, 'Ratings for each item').map((ratingString: string) => {
+        const parts = ratingString.match(/(.+?)\s?\((.+?)\)/);
+        return {
+          item: parts ? parts[1].trim() : ratingString,
+          rating: parts ? parts[2].trim() : '',
+        };
+      }),
     };
 
-    console.log('Extracted data:');
-    console.log(extractedData)
-    
+    console.log('Extracted data:', extractedData);
+
     // Validate the extracted data (basic validation example)
     if (!extractedData.restaurant || !extractedData.dateOfVisit) {
       res.status(400).json({ error: 'Restaurant name and date of visit are required.' });
