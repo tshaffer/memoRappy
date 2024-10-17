@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { TextField, Button, Typography, Paper, Grid, Table, TableHead, TableBody, TableCell, TableRow } from '@mui/material';
+import { makeStyles } from '@mui/styles';
+import { Theme } from '@mui/material/styles'; // Import Theme from Material-UI
+
+const useStyles = makeStyles((theme: Theme) => ({
+  tableCell: {
+    [theme.breakpoints.down('sm')]: {
+      fontSize: '0.8rem', // Smaller font size on small screens
+    },
+  },
+}));
 
 const RunQuery: React.FC = () => {
   const [reviews, setReviews] = useState<any[]>([]);
@@ -10,6 +20,8 @@ const RunQuery: React.FC = () => {
     endDate: '',
     item: '',
   });
+
+  const classes = useStyles();
 
   // Convert date to ISO format (if available)
   const convertToISO = (date: string) => {
@@ -29,7 +41,7 @@ const RunQuery: React.FC = () => {
 
       if (isoStartDate) queryParams.append('startDate', isoStartDate);
       if (isoEndDate) queryParams.append('endDate', isoEndDate);
-      
+
       if (filters.item) queryParams.append('item', filters.item);
 
       const response = await fetch(`http://localhost:5000/api/reviews?${queryParams.toString()}`);
@@ -54,7 +66,7 @@ const RunQuery: React.FC = () => {
 
       <form onSubmit={handleSearch}>
         <Grid container spacing={2}>
-          <Grid item xs={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Restaurant"
@@ -62,7 +74,7 @@ const RunQuery: React.FC = () => {
               onChange={(e) => setFilters({ ...filters, restaurant: e.target.value })}
             />
           </Grid>
-          <Grid item xs={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Location"
@@ -70,7 +82,7 @@ const RunQuery: React.FC = () => {
               onChange={(e) => setFilters({ ...filters, location: e.target.value })}
             />
           </Grid>
-          <Grid item xs={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Start Date (YYYY-MM-DD)"
@@ -80,7 +92,7 @@ const RunQuery: React.FC = () => {
               onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
             />
           </Grid>
-          <Grid item xs={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="End Date (YYYY-MM-DD)"
@@ -90,7 +102,7 @@ const RunQuery: React.FC = () => {
               onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
             />
           </Grid>
-          <Grid item xs={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Item Ordered"
@@ -107,30 +119,32 @@ const RunQuery: React.FC = () => {
       </form>
 
       {reviews.length > 0 ? (
-        <Table style={{ marginTop: 20 }}>
-          <TableHead>
-            <TableRow>
-              <TableCell>Restaurant</TableCell>
-              <TableCell>Location</TableCell>
-              <TableCell>Date of Visit</TableCell>
-              <TableCell>Items Ordered</TableCell>
-              <TableCell>Ratings</TableCell>
-              <TableCell>Overall Experience</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {reviews.map((review) => (
-              <TableRow key={review._id}>
-                <TableCell>{review.restaurant}</TableCell>
-                <TableCell>{review.location}</TableCell>
-                <TableCell>{review.dateOfVisit}</TableCell>
-                <TableCell>{review.itemsOrdered.join(', ')}</TableCell>
-                <TableCell>{review.ratings.map((r: any) => `${r.item}: ${r.rating}`).join(', ')}</TableCell>
-                <TableCell>{review.overallExperience}</TableCell>
+        <div style={{ overflowX: 'auto' }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell className={classes.tableCell}>Restaurant</TableCell>
+                <TableCell className={classes.tableCell}>Location</TableCell>
+                <TableCell className={classes.tableCell}>Date of Visit</TableCell>
+                <TableCell className={classes.tableCell}>Items Ordered</TableCell>
+                <TableCell className={classes.tableCell}>Ratings</TableCell>
+                <TableCell className={classes.tableCell}>Overall Experience</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {reviews.map((review) => (
+                <TableRow key={review._id}>
+                  <TableCell className={classes.tableCell}>{review.restaurant}</TableCell>
+                  <TableCell className={classes.tableCell}>{review.location}</TableCell>
+                  <TableCell className={classes.tableCell}>{review.dateOfVisit}</TableCell>
+                  <TableCell className={classes.tableCell}>{review.itemsOrdered.join(', ')}</TableCell>
+                  <TableCell className={classes.tableCell}>{review.ratings.map((r: any) => `${r.item}: ${r.rating}`).join(', ')}</TableCell>
+                  <TableCell className={classes.tableCell}>{review.overallExperience}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       ) : (
         <Typography>No reviews found for the given criteria.</Typography>
       )}
