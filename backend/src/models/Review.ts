@@ -8,7 +8,7 @@ interface IReview extends Document {
   itemsOrdered: string[];
   ratings: { item: string; rating: string }[];
   overallExperience: string;
-  dateOfVisit: Date;
+  dateOfVisit: string;
 }
 
 // Define the schema for the review
@@ -19,7 +19,7 @@ const ReviewSchema: Schema = new Schema({
   itemsOrdered: [{ type: String }],
   ratings: [{ item: String, rating: String }],
   overallExperience: { type: String },
-  dateOfVisit: { type: Date, required: true },
+  dateOfVisit: { type: String, required: true },
 });
 
 // Create the Review model using the schema

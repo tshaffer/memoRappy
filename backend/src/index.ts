@@ -22,25 +22,38 @@ mongoose.connect(process.env.MONGODB_URI || '')
   .then(() => console.log('Connected to MongoDB'))
   .catch((error) => console.error('Error connecting to MongoDB:', error));
 
-const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+  // Extract a field from the response based on a keyword
+const extractFieldFromResponse = (response: string, fieldName: string): string => {
+  const regex = new RegExp(`${fieldName}:\\s*(.*)`, 'i');
+  const match = response.match(regex);
+  return match ? match[1].trim() : '';
+};
 
+// Extract a list of items from the response based on a keyword
+const extractListFromResponse = (response: string, fieldName: string): string[] => {
+  const regex = new RegExp(`${fieldName}:\\s*(.*)`, 'i');
+  const match = response.match(regex);
+  return match ? match[1].split(',').map(item => item.trim()) : [];
+};
+
+const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   console.log('freeFormReviewHandler');
 
   try {
     const { reviewText } = req.body;
 
     console.log('reviewText:', reviewText);
-    
+
     // Use ChatGPT to extract structured data from the free-form text
     const prompt = `Extract the following information from this review: 
-      - Reviewer name
-      - Restaurant name
-      - Location
-      - Date of visit
-      - List of items ordered
-      - Ratings for each item
-      - Overall experience
-      Review: "${reviewText}"`;
+        - Reviewer name
+        - Restaurant name
+        - Location
+        - Date of visit
+        - List of items ordered
+        - Ratings for each item
+        - Overall experience
+        Review: "${reviewText}"`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
@@ -56,8 +69,22 @@ const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response
       return; // Stop execution if the content is null
     }
 
-    const extractedData = JSON.parse(messageContent);
+    console.log('OpenAI response:', messageContent);
 
+    // Instead of parsing, extract the information manually (you could use regex, or more sophisticated NLP)
+    const extractedData = {
+      reviewer: "Ted", // Extract from the response if necessary
+      restaurant: extractFieldFromResponse(messageContent, 'Restaurant name'),
+      location: extractFieldFromResponse(messageContent, 'Location'),
+      dateOfVisit: extractFieldFromResponse(messageContent, 'Date of visit'),
+      itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered'),
+      ratings: extractListFromResponse(messageContent, 'Ratings for each item'),
+      overallExperience: extractFieldFromResponse(messageContent, 'Overall experience'),
+    };
+
+    console.log('Extracted data:');
+    console.log(extractedData)
+    
     // Validate the extracted data (basic validation example)
     if (!extractedData.restaurant || !extractedData.dateOfVisit) {
       res.status(400).json({ error: 'Restaurant name and date of visit are required.' });
