@@ -74,11 +74,16 @@ const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response
     // Extract the date of visit
     const extractedDateOfVisit = extractFieldFromResponse(messageContent, 'Date of visit');
     
-    // Try to parse the extracted date into a JavaScript Date object and convert it to ISO format
+    // Clean and format the extracted date
     let formattedDateOfVisit = '';
     try {
-      const parsedDate = new Date(extractedDateOfVisit);
-      formattedDateOfVisit = parsedDate.toISOString();
+      const cleanedDate = cleanDateString(extractedDateOfVisit);  // Clean the date string
+      const parsedDate = new Date(cleanedDate);
+      if (!isNaN(parsedDate.getTime())) {
+        formattedDateOfVisit = parsedDate.toISOString();  // Convert to ISO format
+      } else {
+        throw new Error('Invalid Date');
+      }
     } catch (error) {
       console.error('Error parsing date:', extractedDateOfVisit);
       formattedDateOfVisit = extractedDateOfVisit; // Fall back to the extracted string if parsing fails
@@ -118,6 +123,12 @@ const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response
     console.error('Error processing free-form review:', error);
     res.status(500).json({ error: 'An error occurred while processing the review.' });
   }
+};
+
+// Helper function to clean the date string by removing ordinal suffixes
+const cleanDateString = (dateStr: string): string => {
+  // Remove "st", "nd", "rd", "th" and any additional spaces
+  return dateStr.replace(/(\d+)(st|nd|rd|th)/, '$1').trim();
 };
 
 const structuredReviewHandler: RequestHandler = async (req: Request, res: Response): Promise<void> => {
