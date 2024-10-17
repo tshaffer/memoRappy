@@ -7,6 +7,7 @@
     "resolveJsonModule": true,             // Support importing JSON modules
     "skipLibCheck": true,                  // Skip type checking of declaration files
     "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,
     "outDir": "./dist"                     // Output directory for compiled files
   },
   "include": ["./src/**/*"],
