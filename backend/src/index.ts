@@ -45,15 +45,15 @@ const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response
     console.log('reviewText:', reviewText);
 
     // Use ChatGPT to extract structured data from the free-form text
-    const prompt = `Extract the following information from this review: 
-        - Reviewer name
-        - Restaurant name
-        - Location
-        - Date of visit
-        - List of items ordered
-        - Ratings for each item
-        - Overall experience
-        Review: "${reviewText}"`;
+    const prompt = `Extract the following information from this review:
+    - Reviewer name
+    - Restaurant name
+    - Location
+    - Date of visit (in the format YYYY-MM-DD)
+    - List of items ordered
+    - Ratings for each item
+    - Overall experience
+    Review: "${reviewText}"`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
@@ -123,7 +123,12 @@ const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response
 };
 
 // Helper function to clean the date string and add the current year if missing
+// TEDTODO - may no longer be needed given the changes to the OpenAI prompt 
 const cleanDateString = (dateStr: string): string => {
+
+  console.log('cleanDateString:');
+  console.log(dateStr);
+
   const currentYear = new Date().getFullYear();
   
   // Remove ordinal suffixes like "st", "nd", "rd", "th"
@@ -135,6 +140,8 @@ const cleanDateString = (dateStr: string): string => {
     // Append the current year if it's missing
     cleanedDate += ` ${currentYear}`;
   }
+
+  console.log(cleanedDate);
 
   return cleanedDate;
 };
