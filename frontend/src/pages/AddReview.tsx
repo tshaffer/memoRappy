@@ -69,13 +69,19 @@ const AddReview: React.FC = () => {
         console.error('Error saving free-form review:', error);
       }
     } else {
+      // Combine itemsOrdered and ratings into objects for each item
+      const formattedRatings = itemsOrdered.map((item, index) => ({
+        item: item,
+        rating: ratings[index] || '',
+      }));
+  
       const structuredData = {
         reviewer,
         restaurant,
         location,
         dateOfVisit,
         itemsOrdered,
-        ratings,
+        ratings: formattedRatings, // Use the formatted ratings here
         overallExperience,
       };
       try {
@@ -91,7 +97,7 @@ const AddReview: React.FC = () => {
       }
     }
   };
-
+  
   return (
     <Paper style={{ padding: 20 }}>
       <Typography variant="h4" gutterBottom>
