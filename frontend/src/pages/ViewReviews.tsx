@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Paper, Table, TableHead, TableBody, TableCell, TableRow, Button } from '@mui/material';
+import { Typography, Paper, Table, TableHead, TableBody, TableCell, TableRow, Button, Grid } from '@mui/material';
 
 const ViewReviews: React.FC = () => {
   const [reviews, setReviews] = useState<any[]>([]);
@@ -7,7 +7,7 @@ const ViewReviews: React.FC = () => {
   // Fetch reviews from the backend
   const fetchReviews = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/reviews');
+      const response = await fetch('http://localhost:5000/api/reviews'); // Make sure to use full URL if your proxy is not working
       const data = await response.json();
       setReviews(data.reviews);
     } catch (error) {
@@ -15,7 +15,7 @@ const ViewReviews: React.FC = () => {
     }
   };
 
-  // Fetch reviews on component mount
+  // Fetch reviews when the component mounts
   useEffect(() => {
     fetchReviews();
   }, []);
@@ -26,38 +26,50 @@ const ViewReviews: React.FC = () => {
         View Reviews
       </Typography>
 
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Button variant="contained" color="primary" onClick={fetchReviews} fullWidth>
+            Refresh Reviews
+          </Button>
+        </Grid>
+      </Grid>
+
       {reviews.length > 0 ? (
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Restaurant</TableCell>
-              <TableCell>Location</TableCell>
-              <TableCell>Date of Visit</TableCell>
-              <TableCell>Items Ordered</TableCell>
-              <TableCell>Ratings</TableCell>
-              <TableCell>Overall Experience</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {reviews.map((review) => (
-              <TableRow key={review._id}>
-                <TableCell>{review.restaurant}</TableCell>
-                <TableCell>{review.location}</TableCell>
-                <TableCell>{review.dateOfVisit}</TableCell>
-                <TableCell>{review.itemsOrdered.join(', ')}</TableCell>
-                <TableCell>{review.ratings.map((r: any) => `${r.item}: ${r.rating}`).join(', ')}</TableCell>
-                <TableCell>{review.overallExperience}</TableCell>
+        <div style={{ overflowX: 'auto', marginTop: 20 }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Restaurant</TableCell>
+                <TableCell>Location</TableCell>
+                <TableCell>Date of Visit</TableCell>
+                <TableCell>Items Ordered</TableCell>
+                <TableCell>Ratings</TableCell>
+                <TableCell>Overall Experience</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {reviews.map((review) => (
+                <TableRow key={review._id}>
+                  <TableCell>{review.restaurant}</TableCell>
+                  <TableCell>{review.location}</TableCell>
+                  <TableCell>{new Date(review.dateOfVisit).toLocaleDateString()}</TableCell>
+                  <TableCell>{review.itemsOrdered.join(', ')}</TableCell>
+                  <TableCell>
+                    {review.ratings.map((r: any) => (
+                      <div key={r.item}>
+                        {r.item}: {r.rating}
+                      </div>
+                    ))}
+                  </TableCell>
+                  <TableCell>{review.overallExperience}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       ) : (
         <Typography>No reviews found.</Typography>
       )}
-
-      <Button variant="contained" color="primary" onClick={fetchReviews}>
-        Refresh Reviews
-      </Button>
     </Paper>
   );
 };

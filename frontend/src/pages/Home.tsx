@@ -1,12 +1,22 @@
 import React from 'react';
-import { Typography } from '@mui/material';
+import { Typography, Grid, Paper } from '@mui/material';
 
 const Home: React.FC = () => {
   return (
-    <div>
-      <Typography variant="h4">Welcome to MemoRapp!</Typography>
-      <Typography variant="body1">Your restaurant reviews at your fingertips.</Typography>
-    </div>
+    <Paper style={{ padding: 20 }}>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Typography variant="h4" gutterBottom>
+            Welcome to MemoRapp!
+          </Typography>
+        </Grid>
+        <Grid item xs={12}>
+          <Typography variant="body1">
+            Your restaurant reviews at your fingertips.
+          </Typography>
+        </Grid>
+      </Grid>
+    </Paper>
   );
 };
 
