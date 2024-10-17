@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import AddReview from './pages/AddReview';
 import QueryPage from './pages/QueryPage';
 import ReviewList from './pages/ReviewList';
+import ViewReviews from './pages/ViewReviews';
 
 const App: React.FC = () => {
   return (
@@ -16,13 +17,14 @@ const App: React.FC = () => {
           </Typography>
           <Button color="inherit" component={Link} to="/">Home</Button>
           <Button color="inherit" component={Link} to="/add-review">Add Review</Button>
-          <Button color="inherit" component={Link} to="/review-list">View Reviews</Button>
+          <Button color="inherit" component={Link} to="/view-reviews">View Reviews</Button>
           <Button color="inherit" component={Link} to="/query">Run Query</Button>
         </Toolbar>
       </AppBar>
       <Container style={{ marginTop: '20px' }}>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/view-reviews" element={<ViewReviews />} />
           <Route path="/add-review" element={<AddReview />} />
           <Route path="/review-list" element={<ReviewList />} />
           <Route path="/query" element={<QueryPage />} />

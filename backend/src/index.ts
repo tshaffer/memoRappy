@@ -22,6 +22,35 @@ mongoose.connect(process.env.MONGODB_URI || '')
   .then(() => console.log('Connected to MongoDB'))
   .catch((error) => console.error('Error connecting to MongoDB:', error));
 
+// Get all reviews or filter by query parameters (restaurant, location, date, item)
+app.get('/api/reviews', async (req: Request, res: Response) => {
+  try {
+    const { restaurant, location, date, item } = req.query;
+
+    // Build a dynamic query based on the provided filters
+    const query: any = {};
+    if (restaurant) {
+      query.restaurant = new RegExp(restaurant as string, 'i'); // Case-insensitive regex
+    }
+    if (location) {
+      query.location = new RegExp(location as string, 'i');
+    }
+    if (date) {
+      query.dateOfVisit = new Date(date as string);
+    }
+    if (item) {
+      query.itemsOrdered = { $in: [new RegExp(item as string, 'i')] };
+    }
+
+    // Query the MongoDB database for matching reviews
+    const reviews = await Review.find(query).exec();
+    res.status(200).json({ reviews });
+  } catch (error) {
+    console.error('Error retrieving reviews:', error);
+    res.status(500).json({ error: 'An error occurred while retrieving the reviews.' });
+  }
+});
+
 // Extract a field from the response based on a keyword
 const extractFieldFromResponse = (response: string, fieldName: string): string => {
   const regex = new RegExp(`${fieldName}:\\s*(.*)`, 'i');
@@ -72,7 +101,7 @@ const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response
 
     // Extract the date of visit
     const extractedDateOfVisit = extractFieldFromResponse(messageContent, 'Date of visit');
-    
+
     // Clean and format the extracted date
     let formattedDateOfVisit = '';
     try {
@@ -90,10 +119,10 @@ const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response
 
     // Manually extract and transform the rest of the data
     const extractedData = {
-      reviewer: "Ted", 
+      reviewer: "Ted",
       restaurant: extractFieldFromResponse(messageContent, 'Restaurant name'),
       location: extractFieldFromResponse(messageContent, 'Location'),
-      dateOfVisit: formattedDateOfVisit, 
+      dateOfVisit: formattedDateOfVisit,
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered'),
       overallExperience: extractFieldFromResponse(messageContent, 'Overall experience'),
       ratings: extractListFromResponse(messageContent, 'Ratings for each item').map((ratingString: string) => {
@@ -130,7 +159,7 @@ const cleanDateString = (dateStr: string): string => {
   console.log(dateStr);
 
   const currentYear = new Date().getFullYear();
-  
+
   // Remove ordinal suffixes like "st", "nd", "rd", "th"
   let cleanedDate = dateStr.replace(/(\d+)(st|nd|rd|th)/, '$1').trim();
 
