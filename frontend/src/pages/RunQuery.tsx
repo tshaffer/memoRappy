@@ -11,14 +11,27 @@ const RunQuery: React.FC = () => {
     item: '',
   });
 
+  // Convert date to ISO format (if available)
+  const convertToISO = (date: string) => {
+    return date ? new Date(date).toISOString() : '';
+  };
+
   // Fetch reviews from the backend
   const fetchReviews = async () => {
     try {
       const queryParams = new URLSearchParams();
       if (filters.restaurant) queryParams.append('restaurant', filters.restaurant);
       if (filters.location) queryParams.append('location', filters.location);
-      if (filters.startDate) queryParams.append('startDate', filters.startDate);
-      if (filters.endDate) queryParams.append('endDate', filters.endDate);
+
+      // Convert startDate and endDate to ISO format
+      const isoStartDate = convertToISO(filters.startDate);
+      const isoEndDate = convertToISO(filters.endDate);
+
+      if (isoStartDate) queryParams.append('startDate', isoStartDate);
+      if (isoEndDate) queryParams.append('endDate', isoEndDate);
+
+      debugger;
+      
       if (filters.item) queryParams.append('item', filters.item);
 
       const response = await fetch(`http://localhost:5000/api/reviews?${queryParams.toString()}`);
