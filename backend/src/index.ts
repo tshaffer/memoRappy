@@ -22,24 +22,33 @@ mongoose.connect(process.env.MONGODB_URI || '')
   .then(() => console.log('Connected to MongoDB'))
   .catch((error) => console.error('Error connecting to MongoDB:', error));
 
-// Get all reviews or filter by query parameters (restaurant, location, date, item)
+// Get all reviews or filter by query parameters
 app.get('/api/reviews', async (req: Request, res: Response) => {
   try {
-    const { restaurant, location, date, item } = req.query;
+    const { restaurant, location, startDate, endDate, item } = req.query;
 
     // Build a dynamic query based on the provided filters
     const query: any = {};
+
     if (restaurant) {
-      query.restaurant = new RegExp(restaurant as string, 'i'); // Case-insensitive regex
+      query.restaurant = new RegExp(restaurant as string, 'i'); // Case-insensitive search
     }
+
     if (location) {
-      query.location = new RegExp(location as string, 'i');
+      query.location = new RegExp(location as string, 'i'); // Case-insensitive search
     }
-    if (date) {
-      query.dateOfVisit = new Date(date as string);
+
+    if (startDate && endDate) {
+      query.dateOfVisit = {
+        $gte: new Date(startDate as string),
+        $lte: new Date(endDate as string),
+      };
+    } else if (startDate) {
+      query.dateOfVisit = { $gte: new Date(startDate as string) };
     }
+
     if (item) {
-      query.itemsOrdered = { $in: [new RegExp(item as string, 'i')] };
+      query.itemsOrdered = { $in: [new RegExp(item as string, 'i')] }; // Find if item exists in the list
     }
 
     // Query the MongoDB database for matching reviews
