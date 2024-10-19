@@ -1,10 +1,12 @@
-import express, {  RequestHandler } from 'express';
+// import express, {  RequestHandler } from 'express';
 import path from 'path';
-import cors from 'cors';
+// import cors from 'cors';
 import * as dotenv from 'dotenv';
 import OpenAI from 'openai';
 import mongoose from 'mongoose';
 import Review from './models/Review';
+const cors: any = require('cors');
+const express: any = require('express');
 
 dotenv.config();
 
@@ -82,7 +84,7 @@ const extractListFromResponse = (response: string, fieldName: string): string[] 
   return match ? match[1].split(',').map(item => item.trim()) : [];
 };
 
-const freeFormReviewHandler: RequestHandler = async (req: any, res: any): Promise<void> => {
+const freeFormReviewHandler: any = async (req: any, res: any): Promise<void> => {
   console.log('freeFormReviewHandler');
 
   try {
@@ -192,7 +194,7 @@ const cleanDateString = (dateStr: string): string => {
   return cleanedDate;
 };
 
-const structuredReviewHandler: RequestHandler = async (req: any, res: any): Promise<void> => {
+const structuredReviewHandler: any = async (req: any, res: any): Promise<void> => {
   try {
     const reviewData = req.body;
 
