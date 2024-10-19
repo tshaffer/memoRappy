@@ -44,7 +44,7 @@ const RunQuery: React.FC = () => {
 
       if (filters.item) queryParams.append('item', filters.item);
 
-      const response = await fetch(`http://localhost:5000/api/reviews?${queryParams.toString()}`);
+      const response = await fetch(`/api/reviews?${queryParams.toString()}`);
       const data = await response.json();
       setReviews(data.reviews);
     } catch (error) {

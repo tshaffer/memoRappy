@@ -10,6 +10,11 @@ const express: any = require('express');
 
 dotenv.config();
 
+console.log('environment variables:');
+console.log(process.env.OPENAI_API_KEY);
+console.log(process.env.MONGODB_URI);
+console.log(process.env.PORT);
+
 const app = express();
 
 app.use(cors());
