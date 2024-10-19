@@ -20,18 +20,36 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// const frontEndBuildDirectory = path.join(__dirname, '../frontend/build');
-const frontEndBuildDirectory = '/app/frontend/build';
-console.log('__dirname', __dirname);
-console.log('frontend build directory', frontEndBuildDirectory);
+// Serve static files from the frontend build directory, adjusted for production
+const frontendPath = process.env.NODE_ENV === 'production'
+  ? path.join(__dirname, '../../frontend/build') // Adjusted for Heroku
+  : path.join(__dirname, '../frontend/build');   // Works for local development
 
-// Serve static files from the frontend build directory
-app.use(express.static(frontEndBuildDirectory));
+console.log('frontend build directory:', frontendPath);
+
+// Serve static files from the adjusted path
+app.use(express.static(frontendPath));
 
 // All other requests to serve index.html
 app.get('*', (req: any, res: any) => {
-  res.sendFile(path.join(frontEndBuildDirectory, 'index.html'));
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
+
+
+
+
+// const frontEndBuildDirectory = path.join(__dirname, '../frontend/build');
+// const frontEndBuildDirectory = '/app/frontend/build';
+// console.log('__dirname', __dirname);
+// console.log('frontend build directory', frontEndBuildDirectory);
+
+// Serve static files from the frontend build directory
+// app.use(express.static(frontEndBuildDirectory));
+
+// // All other requests to serve index.html
+// app.get('*', (req: any, res: any) => {
+//   res.sendFile(path.join(frontEndBuildDirectory, 'index.html'));
+// });
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
