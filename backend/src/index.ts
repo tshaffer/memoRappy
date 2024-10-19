@@ -1,4 +1,4 @@
-import express, { Request, Response, RequestHandler } from 'express';
+import express, {  RequestHandler } from 'express';
 import path from 'path';
 import cors from 'cors';
 import * as dotenv from 'dotenv';
@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../frontend/build')));
 
 // Serve the frontend app for all other routes
-app.get('*', (req: Request, res: Response) => {
+app.get('*', (req: any, res: any) => {
   res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
 });
 
@@ -30,7 +30,7 @@ mongoose.connect(process.env.MONGODB_URI || '')
   .catch((error) => console.error('Error connecting to MongoDB:', error));
 
 // Get all reviews or filter by query parameters
-app.get('/api/reviews', async (req: Request, res: Response) => {
+app.get('/api/reviews', async (req: any, res: any) => {
   try {
     const { restaurant, location, startDate, endDate, item } = req.query;
 
@@ -82,7 +82,7 @@ const extractListFromResponse = (response: string, fieldName: string): string[] 
   return match ? match[1].split(',').map(item => item.trim()) : [];
 };
 
-const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+const freeFormReviewHandler: RequestHandler = async (req: any, res: any): Promise<void> => {
   console.log('freeFormReviewHandler');
 
   try {
@@ -192,7 +192,7 @@ const cleanDateString = (dateStr: string): string => {
   return cleanedDate;
 };
 
-const structuredReviewHandler: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+const structuredReviewHandler: RequestHandler = async (req: any, res: any): Promise<void> => {
   try {
     const reviewData = req.body;
 
