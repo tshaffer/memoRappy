@@ -15,7 +15,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const frontEndBuildDirectory = path.join(__dirname, '../frontend/build');
+// const frontEndBuildDirectory = path.join(__dirname, '../frontend/build');
+const frontEndBuildDirectory = '/app/frontend/build';
 console.log('frontend build directory', frontEndBuildDirectory);
 
 // Serve static files from the frontend build directory
