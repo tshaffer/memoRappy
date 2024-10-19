@@ -7,7 +7,7 @@ const ViewReviews: React.FC = () => {
   // Fetch reviews from the backend
   const fetchReviews = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/reviews'); // Make sure to use full URL if your proxy is not working
+      const response = await fetch('/api/reviews');
       const data = await response.json();
       setReviews(data.reviews);
     } catch (error) {

@@ -1,29 +1,27 @@
-import express, { Request, Response, RequestHandler } from 'express';
-import cors from 'cors';
+// import express, {  RequestHandler } from 'express';
+import path from 'path';
+// import cors from 'cors';
 import * as dotenv from 'dotenv';
 import OpenAI from 'openai';
 import mongoose from 'mongoose';
 import Review from './models/Review';
+const cors: any = require('cors');
+const express: any = require('express');
 
 dotenv.config();
 
+console.log('environment variables:');
+console.log(process.env.OPENAI_API_KEY);
+console.log(process.env.MONGODB_URI);
+console.log(process.env.PORT);
+
 const app = express();
-const PORT = 5000;
 
 app.use(cors());
 app.use(express.json());
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || '')
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((error) => console.error('Error connecting to MongoDB:', error));
-
 // Get all reviews or filter by query parameters
-app.get('/api/reviews', async (req: Request, res: Response) => {
+const reviewsRouter = async (req: any, res: any) => {
   try {
     const { restaurant, location, startDate, endDate, item } = req.query;
 
@@ -59,7 +57,7 @@ app.get('/api/reviews', async (req: Request, res: Response) => {
     console.error('Error retrieving reviews:', error);
     res.status(500).json({ error: 'An error occurred while retrieving the reviews.' });
   }
-});
+};
 
 // Extract a field from the response based on a keyword
 const extractFieldFromResponse = (response: string, fieldName: string): string => {
@@ -75,7 +73,31 @@ const extractListFromResponse = (response: string, fieldName: string): string[] 
   return match ? match[1].split(',').map(item => item.trim()) : [];
 };
 
-const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+// Helper function to clean the date string and add the current year if missing
+// TEDTODO - may no longer be needed given the changes to the OpenAI prompt 
+const cleanDateString = (dateStr: string): string => {
+
+  console.log('cleanDateString:');
+  console.log(dateStr);
+
+  const currentYear = new Date().getFullYear();
+
+  // Remove ordinal suffixes like "st", "nd", "rd", "th"
+  let cleanedDate = dateStr.replace(/(\d+)(st|nd|rd|th)/, '$1').trim();
+
+  // Check if the year is missing by seeing if the string contains a 4-digit number (year)
+  const yearRegex = /\b\d{4}\b/;
+  if (!yearRegex.test(cleanedDate)) {
+    // Append the current year if it's missing
+    cleanedDate += ` ${currentYear}`;
+  }
+
+  console.log(cleanedDate);
+
+  return cleanedDate;
+};
+
+const freeFormReviewHandler: any = async (req: any, res: any): Promise<void> => {
   console.log('freeFormReviewHandler');
 
   try {
@@ -161,33 +183,13 @@ const freeFormReviewHandler: RequestHandler = async (req: Request, res: Response
   }
 };
 
-// Helper function to clean the date string and add the current year if missing
-// TEDTODO - may no longer be needed given the changes to the OpenAI prompt 
-const cleanDateString = (dateStr: string): string => {
+const structuredReviewHandler: any = async (req: any, res: any): Promise<void> => {
 
-  console.log('cleanDateString:');
-  console.log(dateStr);
+  console.log('structuredReviewHandler');
 
-  const currentYear = new Date().getFullYear();
-
-  // Remove ordinal suffixes like "st", "nd", "rd", "th"
-  let cleanedDate = dateStr.replace(/(\d+)(st|nd|rd|th)/, '$1').trim();
-
-  // Check if the year is missing by seeing if the string contains a 4-digit number (year)
-  const yearRegex = /\b\d{4}\b/;
-  if (!yearRegex.test(cleanedDate)) {
-    // Append the current year if it's missing
-    cleanedDate += ` ${currentYear}`;
-  }
-
-  console.log(cleanedDate);
-
-  return cleanedDate;
-};
-
-const structuredReviewHandler: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
     const reviewData = req.body;
+    console.log('reviewData:', reviewData);
 
     // Basic validation: check if the restaurant name and date of visit are provided
     if (!reviewData.restaurant || !reviewData.dateOfVisit) {
@@ -197,7 +199,11 @@ const structuredReviewHandler: RequestHandler = async (req: Request, res: Respon
 
     // Save the structured review data to MongoDB
     const newReview = new Review(reviewData);
+    console.log('newReview:', newReview);
+
     await newReview.save();
+
+    console.log('Review saved successfully!');
 
     res.status(201).json({ message: 'Review saved successfully!', review: newReview });
   } catch (error) {
@@ -206,9 +212,36 @@ const structuredReviewHandler: RequestHandler = async (req: Request, res: Respon
   }
 }
 
+// Define your API routes first
 app.post('/api/reviews', structuredReviewHandler);
 app.post('/api/reviews/free-form', freeFormReviewHandler);
+app.use('/api/reviews', reviewsRouter);  // Your reviews router
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+// Serve static files from the frontend build directory, adjusted for production
+const frontendPath = process.env.NODE_ENV === 'production'
+  ? path.join(__dirname, '../../frontend/build') // Adjusted for Heroku
+  : path.join(__dirname, '../frontend/build');   // Works for local development
+
+console.log('frontend build directory:', frontendPath);
+
+// Serve static files from the adjusted path
+app.use(express.static(frontendPath));
+
+// All other requests to serve index.html
+app.get('*', (req: any, res: any) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI || '')
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((error) => console.error('Error connecting to MongoDB:', error));
+
+const port = process.env.PORT || 5000;
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });

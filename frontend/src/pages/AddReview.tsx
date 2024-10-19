@@ -58,7 +58,7 @@ const AddReview: React.FC = () => {
     if (inputMode === 'free-form') {
       const reviewData = { reviewText };
       try {
-        const response = await fetch('http://localhost:5000/api/reviews/free-form', {
+        const response = await fetch('/api/reviews/free-form', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(reviewData),
@@ -85,7 +85,7 @@ const AddReview: React.FC = () => {
         overallExperience,
       };
       try {
-        const response = await fetch('http://localhost:5000/api/reviews', {
+        const response = await fetch('/api/reviews', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(structuredData),
