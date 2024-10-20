@@ -59,24 +59,6 @@ const reviewsRouter = async (req: any, res: any) => {
   }
 };
 
-// Define your API routes first
-app.use('/api/reviews', reviewsRouter);  // Your reviews router
-
-// Serve static files from the frontend build directory, adjusted for production
-const frontendPath = process.env.NODE_ENV === 'production'
-  ? path.join(__dirname, '../../frontend/build') // Adjusted for Heroku
-  : path.join(__dirname, '../frontend/build');   // Works for local development
-
-console.log('frontend build directory:', frontendPath);
-
-// Serve static files from the adjusted path
-app.use(express.static(frontendPath));
-
-// All other requests to serve index.html
-app.get('*', (req: any, res: any) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
-});
-
 // Extract a field from the response based on a keyword
 const extractFieldFromResponse = (response: string, fieldName: string): string => {
   const regex = new RegExp(`${fieldName}:\\s*(.*)`, 'i');
@@ -222,7 +204,7 @@ const structuredReviewHandler: any = async (req: any, res: any): Promise<void> =
     await newReview.save();
 
     console.log('Review saved successfully!');
-    
+
     res.status(201).json({ message: 'Review saved successfully!', review: newReview });
   } catch (error) {
     console.error('Error saving structured review:', error);
@@ -230,6 +212,23 @@ const structuredReviewHandler: any = async (req: any, res: any): Promise<void> =
   }
 }
 
+// Define your API routes first
+app.use('/api/reviews', reviewsRouter);  // Your reviews router
+
+// Serve static files from the frontend build directory, adjusted for production
+const frontendPath = process.env.NODE_ENV === 'production'
+  ? path.join(__dirname, '../../frontend/build') // Adjusted for Heroku
+  : path.join(__dirname, '../frontend/build');   // Works for local development
+
+console.log('frontend build directory:', frontendPath);
+
+// Serve static files from the adjusted path
+app.use(express.static(frontendPath));
+
+// All other requests to serve index.html
+app.get('*', (req: any, res: any) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
 
 app.post('/api/reviews', structuredReviewHandler);
 app.post('/api/reviews/free-form', freeFormReviewHandler);
