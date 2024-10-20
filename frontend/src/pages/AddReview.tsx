@@ -49,11 +49,13 @@ const AddReview: React.FC = () => {
       };
 
       recognition.onresult = (event: any) => {
-        const speechEvent = event as SpeechRecognitionEvent;
+        const speechEvent = event as {
+          results: { transcript: string }[][];
+        };
         const transcript = speechEvent.results[0][0].transcript;
         setReviewText(transcript);
       };
-      
+            
       recognition.start();
     } else {
       console.error('Speech recognition not supported in this browser.');
