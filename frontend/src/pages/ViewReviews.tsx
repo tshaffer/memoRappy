@@ -7,9 +7,6 @@ const ViewReviews: React.FC = () => {
   // Fetch reviews from the backend
   const fetchReviews = async () => {
     try {
-      // const url = 'https://memorapp-1d9b45afb339.herokuapp.com/';
-      // const fullUrl = url + 'api/reviews';
-      // console.log('fullUrl:', fullUrl);
       const response = await fetch('/api/reviews');
       const data = await response.json();
       setReviews(data.reviews);
