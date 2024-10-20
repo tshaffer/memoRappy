@@ -48,7 +48,7 @@ const AddReview: React.FC = () => {
         setIsListening(false);
       };
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = event.results[0][0].transcript;
         setReviewText(transcript);
       };
