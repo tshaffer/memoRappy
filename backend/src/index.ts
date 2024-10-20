@@ -213,9 +213,9 @@ const structuredReviewHandler: any = async (req: any, res: any): Promise<void> =
 }
 
 // Define your API routes first
-app.use('/api/reviews', reviewsRouter);  // Your reviews router
 app.post('/api/reviews', structuredReviewHandler);
 app.post('/api/reviews/free-form', freeFormReviewHandler);
+app.use('/api/reviews', reviewsRouter);  // Your reviews router
 
 // Serve static files from the frontend build directory, adjusted for production
 const frontendPath = process.env.NODE_ENV === 'production'
