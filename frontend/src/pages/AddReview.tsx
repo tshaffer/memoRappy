@@ -12,6 +12,13 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 
+// Extend the Window interface to include webkitSpeechRecognition
+declare global {
+  interface Window {
+    webkitSpeechRecognition: any;
+  }
+}
+
 const AddReview: React.FC = () => {
   const [inputMode, setInputMode] = useState('free-form');
   const [reviewText, setReviewText] = useState('');
@@ -22,6 +29,35 @@ const AddReview: React.FC = () => {
   const [itemsOrdered, setItemsOrdered] = useState<string[]>(['']);
   const [ratings, setRatings] = useState<string[]>(['']);
   const [overallExperience, setOverallExperience] = useState('');
+
+  const [isListening, setIsListening] = useState(false); // To track voice input status
+
+  // Voice input handling
+  const startListening = () => {
+    if ('webkitSpeechRecognition' in window) {
+      const recognition = new window.webkitSpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = event.results[0][0].transcript;
+        setReviewText(transcript);
+      };
+
+      recognition.start();
+    } else {
+      console.error('Speech recognition not supported in this browser.');
+    }
+  };
 
   const handleInputModeChange = (event: React.MouseEvent<HTMLElement>, newMode: string) => {
     if (newMode) {
@@ -74,7 +110,7 @@ const AddReview: React.FC = () => {
         item: item,
         rating: ratings[index] || '',
       }));
-  
+
       const structuredData = {
         reviewer,
         restaurant,
@@ -132,6 +168,11 @@ const AddReview: React.FC = () => {
                 placeholder="Describe your dining experience in detail..."
                 required
               />
+            </Grid>
+            <Grid item xs={12}>
+              <Button onClick={startListening} disabled={isListening} variant="outlined" fullWidth>
+                {isListening ? 'Listening...' : 'Speak Your Review'}
+              </Button>
             </Grid>
             <Grid item xs={12}>
               <Button type="submit" variant="contained" color="primary" fullWidth>
