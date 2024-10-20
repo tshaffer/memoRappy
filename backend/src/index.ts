@@ -77,69 +77,6 @@ app.get('*', (req: any, res: any) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
-
-
-
-// const frontEndBuildDirectory = path.join(__dirname, '../frontend/build');
-// const frontEndBuildDirectory = '/app/frontend/build';
-// console.log('__dirname', __dirname);
-// console.log('frontend build directory', frontEndBuildDirectory);
-
-// Serve static files from the frontend build directory
-// app.use(express.static(frontEndBuildDirectory));
-
-// // All other requests to serve index.html
-// app.get('*', (req: any, res: any) => {
-//   res.sendFile(path.join(frontEndBuildDirectory, 'index.html'));
-// });
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || '')
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((error) => console.error('Error connecting to MongoDB:', error));
-
-// app.get('/api/reviews', async (req: any, res: any) => {
-//   try {
-//     const { restaurant, location, startDate, endDate, item } = req.query;
-
-//     // Build a dynamic query based on the provided filters
-//     const query: any = {};
-
-//     if (restaurant) {
-//       query.restaurant = new RegExp(restaurant as string, 'i'); // Case-insensitive search
-//     }
-
-//     if (location) {
-//       query.location = new RegExp(location as string, 'i'); // Case-insensitive search
-//     }
-
-//     // Use the raw ISO date strings for date filtering
-//     if (startDate && endDate) {
-//       query.dateOfVisit = {
-//         $gte: startDate as string,
-//         $lte: endDate as string,
-//       };
-//     } else if (startDate) {
-//       query.dateOfVisit = { $gte: startDate as string };
-//     }
-
-//     if (item) {
-//       query.itemsOrdered = { $in: [new RegExp(item as string, 'i')] }; // Find if item exists in the list
-//     }
-
-//     // Query the MongoDB database for matching reviews
-//     const reviews = await Review.find(query).exec();
-//     res.status(200).json({ reviews });
-//   } catch (error) {
-//     console.error('Error retrieving reviews:', error);
-//     res.status(500).json({ error: 'An error occurred while retrieving the reviews.' });
-//   }
-// });
-
 // Extract a field from the response based on a keyword
 const extractFieldFromResponse = (response: string, fieldName: string): string => {
   const regex = new RegExp(`${fieldName}:\\s*(.*)`, 'i');
@@ -152,6 +89,30 @@ const extractListFromResponse = (response: string, fieldName: string): string[] 
   const regex = new RegExp(`${fieldName}:\\s*(.*)`, 'i');
   const match = response.match(regex);
   return match ? match[1].split(',').map(item => item.trim()) : [];
+};
+
+// Helper function to clean the date string and add the current year if missing
+// TEDTODO - may no longer be needed given the changes to the OpenAI prompt 
+const cleanDateString = (dateStr: string): string => {
+
+  console.log('cleanDateString:');
+  console.log(dateStr);
+
+  const currentYear = new Date().getFullYear();
+
+  // Remove ordinal suffixes like "st", "nd", "rd", "th"
+  let cleanedDate = dateStr.replace(/(\d+)(st|nd|rd|th)/, '$1').trim();
+
+  // Check if the year is missing by seeing if the string contains a 4-digit number (year)
+  const yearRegex = /\b\d{4}\b/;
+  if (!yearRegex.test(cleanedDate)) {
+    // Append the current year if it's missing
+    cleanedDate += ` ${currentYear}`;
+  }
+
+  console.log(cleanedDate);
+
+  return cleanedDate;
 };
 
 const freeFormReviewHandler: any = async (req: any, res: any): Promise<void> => {
@@ -240,30 +201,6 @@ const freeFormReviewHandler: any = async (req: any, res: any): Promise<void> => 
   }
 };
 
-// Helper function to clean the date string and add the current year if missing
-// TEDTODO - may no longer be needed given the changes to the OpenAI prompt 
-const cleanDateString = (dateStr: string): string => {
-
-  console.log('cleanDateString:');
-  console.log(dateStr);
-
-  const currentYear = new Date().getFullYear();
-
-  // Remove ordinal suffixes like "st", "nd", "rd", "th"
-  let cleanedDate = dateStr.replace(/(\d+)(st|nd|rd|th)/, '$1').trim();
-
-  // Check if the year is missing by seeing if the string contains a 4-digit number (year)
-  const yearRegex = /\b\d{4}\b/;
-  if (!yearRegex.test(cleanedDate)) {
-    // Append the current year if it's missing
-    cleanedDate += ` ${currentYear}`;
-  }
-
-  console.log(cleanedDate);
-
-  return cleanedDate;
-};
-
 const structuredReviewHandler: any = async (req: any, res: any): Promise<void> => {
   try {
     const reviewData = req.body;
@@ -285,8 +222,18 @@ const structuredReviewHandler: any = async (req: any, res: any): Promise<void> =
   }
 }
 
+
 app.post('/api/reviews', structuredReviewHandler);
 app.post('/api/reviews/free-form', freeFormReviewHandler);
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI || '')
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((error) => console.error('Error connecting to MongoDB:', error));
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
