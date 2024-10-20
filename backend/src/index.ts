@@ -202,8 +202,12 @@ const freeFormReviewHandler: any = async (req: any, res: any): Promise<void> => 
 };
 
 const structuredReviewHandler: any = async (req: any, res: any): Promise<void> => {
+
+  console.log('structuredReviewHandler');
+
   try {
     const reviewData = req.body;
+    console.log('reviewData:', reviewData);
 
     // Basic validation: check if the restaurant name and date of visit are provided
     if (!reviewData.restaurant || !reviewData.dateOfVisit) {
@@ -213,8 +217,12 @@ const structuredReviewHandler: any = async (req: any, res: any): Promise<void> =
 
     // Save the structured review data to MongoDB
     const newReview = new Review(reviewData);
+    console.log('newReview:', newReview);
+
     await newReview.save();
 
+    console.log('Review saved successfully!');
+    
     res.status(201).json({ message: 'Review saved successfully!', review: newReview });
   } catch (error) {
     console.error('Error saving structured review:', error);
