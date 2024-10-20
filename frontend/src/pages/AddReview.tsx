@@ -22,7 +22,7 @@ const AddReview: React.FC = () => {
   const [inputMode, setInputMode] = useState('free-form');
   const [reviewText, setReviewText] = useState('');
   const [recognitionActive, setRecognitionActive] = useState(false);
-  const [recognizer, setRecognizer] = useState<SpeechRecognition | null>(null);
+  const [recognizer, setRecognizer] = useState<any | null>(null); // SpeechRecognition object
 
   // Toggle free-form or structured input
   const handleInputModeChange = (event: React.MouseEvent<HTMLElement>, newMode: string) => {
