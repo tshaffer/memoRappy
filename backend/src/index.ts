@@ -214,6 +214,8 @@ const structuredReviewHandler: any = async (req: any, res: any): Promise<void> =
 
 // Define your API routes first
 app.use('/api/reviews', reviewsRouter);  // Your reviews router
+app.post('/api/reviews', structuredReviewHandler);
+app.post('/api/reviews/free-form', freeFormReviewHandler);
 
 // Serve static files from the frontend build directory, adjusted for production
 const frontendPath = process.env.NODE_ENV === 'production'
@@ -229,9 +231,6 @@ app.use(express.static(frontendPath));
 app.get('*', (req: any, res: any) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
-
-app.post('/api/reviews', structuredReviewHandler);
-app.post('/api/reviews/free-form', freeFormReviewHandler);
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
