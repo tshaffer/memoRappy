@@ -10,6 +10,14 @@ import {
 } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 
+// Manually define SpeechRecognition and webkitSpeechRecognition types
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 const AddReview: React.FC = () => {
   const [inputMode, setInputMode] = useState('free-form');
   const [reviewText, setReviewText] = useState('');
@@ -38,10 +46,9 @@ const AddReview: React.FC = () => {
 
   // Initialize speech recognition
   useEffect(() => {
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
-
       recognition.continuous = true; // Keep listening until manually stopped
       recognition.interimResults = true; // Show partial results
 
