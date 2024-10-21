@@ -35,14 +35,12 @@ const AddReview: React.FC = () => {
   // Handle voice input toggle
   const handleVoiceInputToggle = () => {
     if (recognitionActive && recognizer) {
-      console.log('Stopping speech recognition...');
-      recognizer.stop(); // Stop the recognition
-      setRecognitionActive(false); // Deactivate recognition mode
+      recognizer.stop();
+      setRecognitionActive(false);
     } else {
       if (recognizer) {
-        console.log('Starting speech recognition...');
-        recognizer.start(); // Start recognition
-        setRecognitionActive(true); // Activate recognition mode
+        recognizer.start();
+        setRecognitionActive(true);
       }
     }
   };
@@ -55,30 +53,21 @@ const AddReview: React.FC = () => {
       recognition.continuous = true; // Keep listening until manually stopped
       recognition.interimResults = true; // Show partial results
 
-      recognition.onstart = () => {
-        console.log('Speech recognition started...');
-      };
-
       recognition.onresult = (event: any) => {
-        console.log('Speech recognition event:', event);
-        console.log('Current reviewText:', reviewText);
-
         // Use functional setReviewText to ensure it accumulates correctly
         setReviewText((prevReviewText) => {
           let finalTranscript = prevReviewText; // Use accumulated text
-
           // Iterate through the results and append final and interim results
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const transcript = event.results[i][0].transcript;
+
             console.log('Transcript:', transcript);
             console.log('isFinal:', event.results[i].isFinal);
 
             if (event.results[i].isFinal) {
               finalTranscript += transcript; // Append final results to existing text
-              console.log('Updated finalTranscript:', finalTranscript);
             } else {
               setInterimText(transcript); // Set interim text separately
-              console.log('Interim text:', transcript);
             }
           }
 
@@ -89,22 +78,12 @@ const AddReview: React.FC = () => {
       };
 
       recognition.onend = () => {
-        console.log('Speech recognition ended.');
-        // Restart recognition only if the user hasn't explicitly stopped it
         if (recognitionActive) {
-          console.log('Restarting speech recognition...');
-          recognition.start();
+          recognition.start(); // Restart recognition if voice input mode is still active
         }
       };
 
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event);
-        setRecognitionActive(false); // Deactivate on error
-      };
-
-      setRecognizer(recognition); // Set the recognizer in the state
-    } else {
-      console.log('SpeechRecognition API not supported.');
+      setRecognizer(recognition);
     }
   }, [recognitionActive]);
 
