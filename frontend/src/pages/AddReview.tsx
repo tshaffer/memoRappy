@@ -34,19 +34,29 @@ const AddReview: React.FC = () => {
 
   // Handle voice input toggle
   const handleVoiceInputToggle = () => {
+    console.log('handleVoiceInputToggle');
+    console.log('recognitionActive:', recognitionActive);
+    console.log('recognizer:', recognizer);
     if (recognitionActive && recognizer) {
       recognizer.stop();
       setRecognitionActive(false);
+      console.log('Stopped recognition');
     } else {
       if (recognizer) {
         recognizer.start();
         setRecognitionActive(true);
+        console.log('Started recognition');
+      } else {
+        console.log('handleVoiceInputToggle: no recognizer exists');
       }
     }
   };
 
   // Initialize speech recognition
   useEffect(() => {
+
+    console.log('useEffect recognitionActive:', recognitionActive);
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
@@ -54,27 +64,31 @@ const AddReview: React.FC = () => {
       recognition.interimResults = true; // Show partial results
 
       recognition.onresult = (event: any) => {
-        // Use functional setReviewText to ensure it accumulates correctly
-        setReviewText((prevReviewText) => {
-          let finalTranscript = prevReviewText; // Use accumulated text
-          // Iterate through the results and append final and interim results
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript;
+        // if (recognitionActive) {
+          // Use functional setReviewText to ensure it accumulates correctly
+          setReviewText((prevReviewText) => {
+            let finalTranscript = prevReviewText; // Use accumulated text
+            // Iterate through the results and append final and interim results
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              const transcript = event.results[i][0].transcript;
 
-            console.log('Transcript:', transcript);
-            console.log('isFinal:', event.results[i].isFinal);
+              // console.log('Transcript:', transcript);
+              // console.log('isFinal:', event.results[i].isFinal);
 
-            if (event.results[i].isFinal) {
-              finalTranscript += transcript; // Append final results to existing text
-            } else {
-              setInterimText(transcript); // Set interim text separately
+              if (event.results[i].isFinal) {
+                finalTranscript += transcript; // Append final results to existing text
+              } else {
+                setInterimText(transcript); // Set interim text separately
+              }
             }
-          }
 
-          return finalTranscript; // Return updated final transcript
-        });
+            return finalTranscript; // Return updated final transcript
+          });
 
-        setInterimText(''); // Clear interim text after final results are received
+          setInterimText(''); // Clear interim text after final results are received
+
+        // }
+
       };
 
       recognition.onend = () => {
