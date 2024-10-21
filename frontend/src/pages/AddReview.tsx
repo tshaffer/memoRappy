@@ -35,12 +35,12 @@ const AddReview: React.FC = () => {
   // Handle voice input toggle
   const handleVoiceInputToggle = () => {
     if (recognitionActive && recognizer) {
-      recognizer.stop();
-      setRecognitionActive(false);
+      recognizer.stop(); // Stop the recognition
+      setRecognitionActive(false); // Deactivate recognition mode
     } else {
       if (recognizer) {
-        recognizer.start();
-        setRecognitionActive(true);
+        recognizer.start(); // Start recognition
+        setRecognitionActive(true); // Activate recognition mode
       }
     }
   };
@@ -78,12 +78,18 @@ const AddReview: React.FC = () => {
       };
 
       recognition.onend = () => {
+        // Restart recognition only if the user hasn't explicitly stopped it
         if (recognitionActive) {
-          recognition.start(); // Restart recognition if voice input mode is still active
+          recognition.start();
         }
       };
 
-      setRecognizer(recognition);
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event);
+        setRecognitionActive(false); // Deactivate on error
+      };
+
+      setRecognizer(recognition); // Set the recognizer in the state
     }
   }, [recognitionActive]);
 
