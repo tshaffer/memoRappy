@@ -22,7 +22,8 @@ const AddReview: React.FC = () => {
   const [inputMode, setInputMode] = useState('free-form');
   const [reviewText, setReviewText] = useState('');
   const [recognitionActive, setRecognitionActive] = useState(false);
-  const [recognizer, setRecognizer] = useState<any | null>(null); // SpeechRecognition object
+  const [recognizer, setRecognizer] = useState<SpeechRecognition | null>(null);
+  const [interimText, setInterimText] = useState(''); // Hold interim results
 
   // Toggle free-form or structured input
   const handleInputModeChange = (event: React.MouseEvent<HTMLElement>, newMode: string) => {
@@ -53,28 +54,32 @@ const AddReview: React.FC = () => {
       recognition.interimResults = true; // Show partial results
 
       recognition.onresult = (event: any) => {
-        
-        let interimTranscript = '';
-        let finalTranscript = reviewText;
 
         console.log('Speech recognition event:', event);
-        console.log('finalTranscript:', finalTranscript);
+        console.log('finalTranscript / reviewText:', reviewText);
         console.log('index:', event.resultIndex);
         console.log('results:', event.results);
 
+        let finalTranscript = reviewText; // Start with the already accumulated text
+
+        // Iterate through the results and append final and interim results
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           console.log('Transcript:', transcript);
           console.log('isFinal:', event.results[i].isFinal);
+
           if (event.results[i].isFinal) {
-            finalTranscript += transcript;
+            finalTranscript += transcript; // Append final results to existing text
           } else {
-            interimTranscript += transcript;
+            setInterimText(transcript); // Set interim text separately
           }
         }
 
-        // Append new text to the existing reviewText
-        setReviewText(finalTranscript + interimTranscript);
+        // Update the state with the accumulated final transcript
+        console.log('setReviewText:', finalTranscript);
+        
+        setReviewText(finalTranscript);
+        setInterimText(''); // Clear interim text after final results are received
       };
 
       recognition.onend = () => {
@@ -132,7 +137,7 @@ const AddReview: React.FC = () => {
               label="Write Your Review"
               multiline
               rows={8}
-              value={reviewText}
+              value={reviewText + interimText} // Combine final and interim text
               onChange={(e) => setReviewText(e.target.value)}
               placeholder="Describe your dining experience in detail..."
               required
