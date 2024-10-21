@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   TextField,
   Button,
@@ -19,9 +19,13 @@ declare global {
 }
 
 const AddReview: React.FC = () => {
+
+  let recognitionActive: React.MutableRefObject<boolean> = useRef(false);
+
   const [inputMode, setInputMode] = useState('free-form');
   const [reviewText, setReviewText] = useState('');
-  const [recognitionActive, setRecognitionActive] = useState(false);
+  // const [recognitionActive, setRecognitionActive] = useState(false);
+
   const [recognizer, setRecognizer] = useState<SpeechRecognition | null>(null);
   const [interimText, setInterimText] = useState(''); // Hold interim results
 
@@ -35,16 +39,16 @@ const AddReview: React.FC = () => {
   // Handle voice input toggle
   const handleVoiceInputToggle = () => {
     console.log('handleVoiceInputToggle');
-    console.log('recognitionActive:', recognitionActive);
+    console.log('recognitionActive:', recognitionActive.current);
     console.log('recognizer:', recognizer);
-    if (recognitionActive && recognizer) {
+    if (recognitionActive.current && recognizer) {
       recognizer.stop();
-      setRecognitionActive(false);
+      recognitionActive.current = false;
       console.log('Stopped recognition');
     } else {
       if (recognizer) {
         recognizer.start();
-        setRecognitionActive(true);
+        recognitionActive.current = true;
         console.log('Started recognition');
       } else {
         console.log('handleVoiceInputToggle: no recognizer exists');
@@ -55,7 +59,7 @@ const AddReview: React.FC = () => {
   // Initialize speech recognition
   useEffect(() => {
 
-    console.log('useEffect recognitionActive:', recognitionActive);
+    console.log('useEffect recognitionActive:', recognitionActive.current);
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -64,7 +68,7 @@ const AddReview: React.FC = () => {
       recognition.interimResults = true; // Show partial results
 
       recognition.onresult = (event: any) => {
-        // if (recognitionActive) {
+        if (recognitionActive) {
           // Use functional setReviewText to ensure it accumulates correctly
           setReviewText((prevReviewText) => {
             let finalTranscript = prevReviewText; // Use accumulated text
@@ -87,19 +91,19 @@ const AddReview: React.FC = () => {
 
           setInterimText(''); // Clear interim text after final results are received
 
-        // }
+        }
 
       };
 
       recognition.onend = () => {
-        if (recognitionActive) {
+        if (recognitionActive.current) {
           recognition.start(); // Restart recognition if voice input mode is still active
         }
       };
 
       setRecognizer(recognition);
     }
-  }, [recognitionActive]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
