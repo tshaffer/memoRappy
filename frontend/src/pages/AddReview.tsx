@@ -13,7 +13,7 @@ import MicIcon from '@mui/icons-material/Mic';
 // Manually define SpeechRecognition and webkitSpeechRecognition types
 declare global {
   interface Window {
-    SpeechRecognition: any;
+    // SpeechRecognition: any;
     webkitSpeechRecognition: any;
   }
 }
