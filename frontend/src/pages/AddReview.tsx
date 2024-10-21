@@ -24,6 +24,8 @@ const AddReview: React.FC = () => {
 
   const [inputMode, setInputMode] = useState('free-form');
   const [reviewText, setReviewText] = useState('');
+  const [listening, setListening] = useState(false);
+
   // const [recognitionActive, setRecognitionActive] = useState(false);
 
   const [recognizer, setRecognizer] = useState<SpeechRecognition | null>(null);
@@ -44,11 +46,13 @@ const AddReview: React.FC = () => {
     if (recognitionActive.current && recognizer) {
       recognizer.stop();
       recognitionActive.current = false;
+      setListening(false);
       console.log('Stopped recognition');
     } else {
       if (recognizer) {
         recognizer.start();
         recognitionActive.current = true;
+        setListening(true);
         console.log('Started recognition');
       } else {
         console.log('handleVoiceInputToggle: no recognizer exists');
@@ -164,7 +168,7 @@ const AddReview: React.FC = () => {
               startIcon={<MicIcon />}
               fullWidth
             >
-              {recognitionActive ? 'Stop Listening' : 'Speak Your Review'}
+              {listening ? 'Stop Listening' : 'Speak Your Review'}
             </Button>
           </Grid>
           <Grid item xs={12}>
