@@ -54,31 +54,26 @@ const AddReview: React.FC = () => {
       recognition.interimResults = true; // Show partial results
 
       recognition.onresult = (event: any) => {
+        // Use functional setReviewText to ensure it accumulates correctly
+        setReviewText((prevReviewText) => {
+          let finalTranscript = prevReviewText; // Use accumulated text
+          // Iterate through the results and append final and interim results
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
 
-        console.log('Speech recognition event:', event);
-        console.log('finalTranscript / reviewText:', reviewText);
-        console.log('index:', event.resultIndex);
-        console.log('results:', event.results);
+            console.log('Transcript:', transcript);
+            console.log('isFinal:', event.results[i].isFinal);
 
-        let finalTranscript = reviewText; // Start with the already accumulated text
-
-        // Iterate through the results and append final and interim results
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          console.log('Transcript:', transcript);
-          console.log('isFinal:', event.results[i].isFinal);
-
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript; // Append final results to existing text
-          } else {
-            setInterimText(transcript); // Set interim text separately
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript; // Append final results to existing text
+            } else {
+              setInterimText(transcript); // Set interim text separately
+            }
           }
-        }
 
-        // Update the state with the accumulated final transcript
-        console.log('setReviewText:', finalTranscript);
-        
-        setReviewText(finalTranscript);
+          return finalTranscript; // Return updated final transcript
+        });
+
         setInterimText(''); // Clear interim text after final results are received
       };
 
@@ -90,7 +85,7 @@ const AddReview: React.FC = () => {
 
       setRecognizer(recognition);
     }
-  }, [reviewText, recognitionActive]);
+  }, [recognitionActive]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
