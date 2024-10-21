@@ -25,9 +25,17 @@ const AddReview: React.FC = () => {
   const [inputMode, setInputMode] = useState('free-form');
   const [reviewText, setReviewText] = useState('');
   const [listening, setListening] = useState(false);
-
   const [recognizer, setRecognizer] = useState<SpeechRecognition | null>(null);
   const [interimText, setInterimText] = useState(''); // Hold interim results
+
+  // Map spoken words to punctuation
+  const processPunctuation = (text: string) => {
+    return text
+      .replace(/\bcomma\b/gi, ',')
+      .replace(/\bperiod\b/gi, '.')
+      .replace(/\bquestion mark\b/gi, '?')
+      .replace(/\bexclamation mark\b/gi, '!');
+  };
 
   // Toggle free-form or structured input
   const handleInputModeChange = (event: React.MouseEvent<HTMLElement>, newMode: string) => {
@@ -65,9 +73,12 @@ const AddReview: React.FC = () => {
           // Use functional setReviewText to ensure it accumulates correctly
           setReviewText((prevReviewText) => {
             let finalTranscript = prevReviewText; // Use accumulated text
+
             // Iterate through the results and append final and interim results
             for (let i = event.resultIndex; i < event.results.length; i++) {
-              const transcript = event.results[i][0].transcript;
+              let transcript = event.results[i][0].transcript;
+              transcript = processPunctuation(transcript); // Process punctuation
+
               if (event.results[i].isFinal) {
                 finalTranscript += transcript; // Append final results to existing text
               } else {
