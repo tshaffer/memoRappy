@@ -26,8 +26,6 @@ const AddReview: React.FC = () => {
   const [reviewText, setReviewText] = useState('');
   const [listening, setListening] = useState(false);
 
-  // const [recognitionActive, setRecognitionActive] = useState(false);
-
   const [recognizer, setRecognizer] = useState<SpeechRecognition | null>(null);
   const [interimText, setInterimText] = useState(''); // Hold interim results
 
@@ -40,30 +38,21 @@ const AddReview: React.FC = () => {
 
   // Handle voice input toggle
   const handleVoiceInputToggle = () => {
-    console.log('handleVoiceInputToggle');
-    console.log('recognitionActive:', recognitionActive.current);
-    console.log('recognizer:', recognizer);
     if (recognitionActive.current && recognizer) {
       recognizer.stop();
       recognitionActive.current = false;
       setListening(false);
-      console.log('Stopped recognition');
     } else {
       if (recognizer) {
         recognizer.start();
         recognitionActive.current = true;
         setListening(true);
-        console.log('Started recognition');
-      } else {
-        console.log('handleVoiceInputToggle: no recognizer exists');
       }
     }
   };
 
   // Initialize speech recognition
   useEffect(() => {
-
-    console.log('useEffect recognitionActive:', recognitionActive.current);
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -79,10 +68,6 @@ const AddReview: React.FC = () => {
             // Iterate through the results and append final and interim results
             for (let i = event.resultIndex; i < event.results.length; i++) {
               const transcript = event.results[i][0].transcript;
-
-              // console.log('Transcript:', transcript);
-              // console.log('isFinal:', event.results[i].isFinal);
-
               if (event.results[i].isFinal) {
                 finalTranscript += transcript; // Append final results to existing text
               } else {
@@ -92,11 +77,8 @@ const AddReview: React.FC = () => {
 
             return finalTranscript; // Return updated final transcript
           });
-
           setInterimText(''); // Clear interim text after final results are received
-
         }
-
       };
 
       recognition.onend = () => {
