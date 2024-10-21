@@ -53,11 +53,19 @@ const AddReview: React.FC = () => {
       recognition.interimResults = true; // Show partial results
 
       recognition.onresult = (event: any) => {
+        
         let interimTranscript = '';
         let finalTranscript = reviewText;
 
+        console.log('Speech recognition event:', event);
+        console.log('finalTranscript:', finalTranscript);
+        console.log('index:', event.resultIndex);
+        console.log('results:', event.results);
+
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
+          console.log('Transcript:', transcript);
+          console.log('isFinal:', event.results[i].isFinal);
           if (event.results[i].isFinal) {
             finalTranscript += transcript;
           } else {
