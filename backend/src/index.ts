@@ -212,7 +212,47 @@ const structuredReviewHandler: any = async (req: any, res: any): Promise<void> =
   }
 }
 
+// Handle natural language queries
+const queryReviewHandler: any = async(req: any, res: any): Promise<void> => {
+  const { query } = req.body;
+
+  try {
+    // Send the user's query to ChatGPT
+    // const gptResponse = await openai.createChatCompletion({
+    //   model: "gpt-4", // Adjust model if necessary
+    //   messages: [
+    //     { role: "system", content: "You're assisting with querying restaurant reviews." },
+    //     { role: "user", content: query },
+    //   ],
+    // });
+    const gptResponse = await openai.chat.completions.create({
+      model: "gpt-4", // Adjust based on the version you need
+      messages: [
+        { role: "system", content: "You're assisting with querying restaurant reviews." },
+        { role: "user", content: query },
+      ],
+    });
+
+    const parsedQuery = gptResponse.choices[0].message?.content;
+
+    console.log('parsedQuery:', parsedQuery);
+
+    res.sendStatus(200);
+    // Here you would parse 'parsedQuery' into actionable parts for MongoDB queries
+    // Example: Extract date range, restaurants, items, etc.
+
+    // Dummy query for example purposes (implement your actual database queries)
+    // const reviews = await Review.find({ date: { $gte: '2023-01-01' } });
+    
+    // res.json({ parsedQuery, reviews });
+  } catch (error) {
+    console.error('Error processing query:', error);
+    res.status(500).json({ error: 'Failed to process query' });
+  }
+};
+
 // Define your API routes first
+app.post('/api/query', queryReviewHandler);
 app.post('/api/reviews', structuredReviewHandler);
 app.post('/api/reviews/free-form', freeFormReviewHandler);
 app.use('/api/reviews', reviewsRouter);  // Your reviews router
