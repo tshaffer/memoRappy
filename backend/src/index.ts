@@ -213,22 +213,20 @@ const structuredReviewHandler: any = async (req: any, res: any): Promise<void> =
 }
 
 // Handle natural language queries
-const queryReviewHandler: any = async(req: any, res: any): Promise<void> => {
+const queryReviewHandler: any = async (req: any, res: any): Promise<void> => {
   const { query } = req.body;
 
   try {
     // Send the user's query to ChatGPT
-    // const gptResponse = await openai.createChatCompletion({
-    //   model: "gpt-4", // Adjust model if necessary
-    //   messages: [
-    //     { role: "system", content: "You're assisting with querying restaurant reviews." },
-    //     { role: "user", content: query },
-    //   ],
-    // });
     const gptResponse = await openai.chat.completions.create({
       model: "gpt-4", // Adjust based on the version you need
       messages: [
-        { role: "system", content: "You're assisting with querying restaurant reviews." },
+        {
+          role: "system",
+          content: `You are a query parser for a restaurant review app. You will receive natural language queries about restaurant reviews (e.g., "Where did I eat pizza?"). 
+                    Convert these queries into MongoDB query parameters based on fields such as 'restaurant name', 'location', 'food items', and 'date'. 
+                    Return only the structured query, not the answer.`
+        },
         { role: "user", content: query },
       ],
     });
@@ -243,7 +241,7 @@ const queryReviewHandler: any = async(req: any, res: any): Promise<void> => {
 
     // Dummy query for example purposes (implement your actual database queries)
     // const reviews = await Review.find({ date: { $gte: '2023-01-01' } });
-    
+
     // res.json({ parsedQuery, reviews });
   } catch (error) {
     console.error('Error processing query:', error);
