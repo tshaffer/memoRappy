@@ -151,7 +151,7 @@ const freeFormReviewHandler: any = async (req: any, res: any): Promise<void> => 
 
     // Manually extract and transform the rest of the data
     const extractedData = {
-      reviewer: "Ted",
+      reviewer: "Ted", // Replace with extracted reviewer if available
       restaurant: extractFieldFromResponse(messageContent, 'Restaurant name'),
       location: extractFieldFromResponse(messageContent, 'Location'),
       dateOfVisit: formattedDateOfVisit,
@@ -164,6 +164,7 @@ const freeFormReviewHandler: any = async (req: any, res: any): Promise<void> => 
           rating: parts ? parts[2].trim() : '',
         };
       }),
+      reviewText, // Add the full review text to the extracted data
     };
 
     console.log('Extracted data:', extractedData);
@@ -173,7 +174,7 @@ const freeFormReviewHandler: any = async (req: any, res: any): Promise<void> => 
       return;
     }
 
-    const newReview = new Review(extractedData);
+    const newReview = new Review(extractedData); // Save both structured data and reviewText
     await newReview.save();
 
     res.status(201).json({ message: 'Review saved successfully!', review: newReview });
