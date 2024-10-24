@@ -135,7 +135,14 @@ const AddReview: React.FC = () => {
             <Typography><strong>Restaurant:</strong> {parsedDetails.restaurant}</Typography>
             <Typography><strong>Location:</strong> {parsedDetails.location}</Typography>
             <Typography><strong>Date of Visit:</strong> {parsedDetails.dateOfVisit}</Typography>
-            <Typography><strong>Items Ordered and Ratings:</strong></Typography>
+            <Typography><strong>Items Ordered:</strong></Typography>
+            <ul>
+              {parsedDetails.itemsOrdered.map((item: string, idx: number) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+
+            <Typography><strong>Ratings:</strong></Typography>
             <ul>
               {parsedDetails.ratings.map((ratingObj: { item: string; rating: string }, idx: number) => (
                 <li key={idx}>
