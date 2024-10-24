@@ -130,6 +130,8 @@ const parseReviewHandler: any = async (req: any, res: any): Promise<void> => {
       return res.status(500).json({ error: 'Failed to extract data from OpenAI response.' });
     }
 
+    console.log('OpenAI response:', messageContent);
+    
     // Parsing the structured response (you might want to fine-tune this based on the structure returned by OpenAI)
     const parsedData = {
       reviewer: extractFieldFromResponse(messageContent, 'Reviewer name'),

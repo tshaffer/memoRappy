@@ -42,7 +42,7 @@ const AddReview: React.FC = () => {
         body: JSON.stringify({ reviewText }),
       });
       const parsedResponse = await response.json();
-  
+
       if (parsedResponse.error) {
         console.error('Error parsing review:', parsedResponse.error);
       } else {
@@ -135,10 +135,12 @@ const AddReview: React.FC = () => {
             <Typography><strong>Restaurant:</strong> {parsedDetails.restaurant}</Typography>
             <Typography><strong>Location:</strong> {parsedDetails.location}</Typography>
             <Typography><strong>Date of Visit:</strong> {parsedDetails.dateOfVisit}</Typography>
-            <Typography><strong>Items Ordered:</strong></Typography>
+            <Typography><strong>Items Ordered and Ratings:</strong></Typography>
             <ul>
-              {parsedDetails.itemsOrdered.map((item: string, idx: number) => (
-                <li key={idx}>{item}</li>
+              {parsedDetails.ratings.map((ratingObj: { item: string; rating: string }, idx: number) => (
+                <li key={idx}>
+                  {ratingObj.item} - <strong>Rating:</strong> {ratingObj.rating || 'No rating provided'}
+                </li>
               ))}
             </ul>
             <Typography><strong>Overall Experience:</strong> {parsedDetails.overallExperience}</Typography>
