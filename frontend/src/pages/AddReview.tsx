@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   TextField,
   Button,
@@ -7,35 +7,23 @@ import {
   Grid,
   ToggleButton,
   ToggleButtonGroup,
+  CircularProgress,
 } from '@mui/material';
-import MicIcon from '@mui/icons-material/Mic';
 
 // Manually define SpeechRecognition and webkitSpeechRecognition types
 declare global {
   interface Window {
-    // SpeechRecognition: any;
+    SpeechRecognition: any;
     webkitSpeechRecognition: any;
   }
 }
 
 const AddReview: React.FC = () => {
-
-  let recognitionActive: React.MutableRefObject<boolean> = useRef(false);
-
   const [inputMode, setInputMode] = useState('free-form');
   const [reviewText, setReviewText] = useState('');
-  const [listening, setListening] = useState(false);
-  const [recognizer, setRecognizer] = useState<SpeechRecognition | null>(null);
-  const [interimText, setInterimText] = useState(''); // Hold interim results
-
-  // Map spoken words to punctuation
-  const processPunctuation = (text: string) => {
-    return text
-      .replace(/\bcomma\b/gi, ',')
-      .replace(/\bperiod\b/gi, '.')
-      .replace(/\bquestion mark\b/gi, '?')
-      .replace(/\bexclamation mark\b/gi, '!');
-  };
+  const [isPreview, setIsPreview] = useState(false);
+  const [parsedDetails, setParsedDetails] = useState<any>(null);
+  const [loading, setLoading] = useState(false); // To show a loader during the OpenAI call
 
   // Toggle free-form or structured input
   const handleInputModeChange = (event: React.MouseEvent<HTMLElement>, newMode: string) => {
@@ -44,79 +32,63 @@ const AddReview: React.FC = () => {
     }
   };
 
-  // Handle voice input toggle
-  const handleVoiceInputToggle = () => {
-    if (recognitionActive.current && recognizer) {
-      recognizer.stop();
-      recognitionActive.current = false;
-      setListening(false);
-    } else {
-      if (recognizer) {
-        recognizer.start();
-        recognitionActive.current = true;
-        setListening(true);
+  // Handle Preview Button Click
+  const handlePreview = async () => {
+    setLoading(true);
+    try {
+      const prompt = `Extract the following information from this review:
+      - Reviewer name
+      - Restaurant name
+      - Location
+      - Date of visit (in the format YYYY-MM-DD)
+      - List of items ordered
+      - Ratings for each item
+      - Overall experience
+      Review: "${reviewText}"`;
+
+      // Call to OpenAI for parsing the review text
+      const response = await fetch('/api/reviews/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewText }),
+      });
+      const parsedResponse = await response.json();
+
+      if (parsedResponse.error) {
+        console.error('Error parsing review:', parsedResponse.error);
+      } else {
+        setParsedDetails(parsedResponse); // Save the parsed details
+        setIsPreview(true); // Switch to preview mode
       }
+    } catch (error) {
+      console.error('Error fetching preview:', error);
     }
+    setLoading(false);
   };
 
-  // Initialize speech recognition
-  useEffect(() => {
+  // Handle Back Button
+  const handleBack = () => {
+    setIsPreview(false);
+  };
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true; // Keep listening until manually stopped
-      recognition.interimResults = true; // Show partial results
-
-      recognition.onresult = (event: any) => {
-        if (recognitionActive) {
-          // Use functional setReviewText to ensure it accumulates correctly
-          setReviewText((prevReviewText) => {
-            let finalTranscript = prevReviewText; // Use accumulated text
-
-            // Iterate through the results and append final and interim results
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-              let transcript = event.results[i][0].transcript;
-              transcript = processPunctuation(transcript); // Process punctuation
-
-              if (event.results[i].isFinal) {
-                finalTranscript += transcript; // Append final results to existing text
-              } else {
-                setInterimText(transcript); // Set interim text separately
-              }
-            }
-
-            return finalTranscript; // Return updated final transcript
-          });
-          setInterimText(''); // Clear interim text after final results are received
-        }
-      };
-
-      recognition.onend = () => {
-        if (recognitionActive.current) {
-          recognition.start(); // Restart recognition if voice input mode is still active
-        }
-      };
-
-      setRecognizer(recognition);
-    }
-  }, []);
-
+  // Handle Submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const reviewData = { reviewText };
+    // Submit parsed details or handle structured submission here
     try {
       const response = await fetch('/api/reviews/free-form', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reviewData),
+        body: JSON.stringify(parsedDetails),
       });
       const data = await response.json();
-      console.log('Free-form review saved:', data);
+      console.log('Review submitted:', data);
     } catch (error) {
-      console.error('Error saving free-form review:', error);
+      console.error('Error submitting review:', error);
     }
   };
+
+  console.log('isPreview', isPreview);
 
   return (
     <Paper style={{ padding: 20 }}>
@@ -139,7 +111,7 @@ const AddReview: React.FC = () => {
         </ToggleButton>
       </ToggleButtonGroup>
 
-      {inputMode === 'free-form' && (
+      {!isPreview ? (
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
@@ -147,7 +119,7 @@ const AddReview: React.FC = () => {
               label="Write Your Review"
               multiline
               rows={8}
-              value={reviewText + interimText} // Combine final and interim text
+              value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
               placeholder="Describe your dining experience in detail..."
               required
@@ -157,19 +129,45 @@ const AddReview: React.FC = () => {
             <Button
               variant="contained"
               color="primary"
-              onClick={handleVoiceInputToggle}
-              startIcon={<MicIcon />}
+              onClick={handlePreview}
+              disabled={loading || !reviewText}
               fullWidth
             >
-              {listening ? 'Stop Listening' : 'Speak Your Review'}
-            </Button>
-          </Grid>
-          <Grid item xs={12}>
-            <Button type="submit" variant="contained" color="primary" fullWidth onClick={handleSubmit}>
-              Submit Review
+              {loading ? <CircularProgress size={24} /> : 'Preview'}
             </Button>
           </Grid>
         </Grid>
+      ) : (
+        <>
+          <Typography variant="h6" gutterBottom>
+            Review Preview
+          </Typography>
+          <Paper style={{ padding: 20, marginBottom: 20 }}>
+            <Typography><strong>Reviewer:</strong> {parsedDetails.reviewer}</Typography>
+            <Typography><strong>Restaurant:</strong> {parsedDetails.restaurant}</Typography>
+            <Typography><strong>Location:</strong> {parsedDetails.location}</Typography>
+            <Typography><strong>Date of Visit:</strong> {parsedDetails.dateOfVisit}</Typography>
+            <Typography><strong>Items Ordered:</strong></Typography>
+            <ul>
+              {parsedDetails.itemsOrdered.map((item: string, idx: number) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+            <Typography><strong>Overall Experience:</strong> {parsedDetails.overallExperience}</Typography>
+          </Paper>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <Button variant="contained" color="primary" onClick={handleSubmit} fullWidth>
+                Submit
+              </Button>
+            </Grid>
+            <Grid item xs={12}>
+              <Button variant="outlined" onClick={handleBack} fullWidth>
+                Back
+              </Button>
+            </Grid>
+          </Grid>
+        </>
       )}
     </Paper>
   );
