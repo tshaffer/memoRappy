@@ -1,5 +1,5 @@
 // import express, {  RequestHandler } from 'express';
-import path from 'path';
+import path, { parse } from 'path';
 // import cors from 'cors';
 import * as dotenv from 'dotenv';
 import OpenAI from 'openai';
@@ -95,6 +95,64 @@ const cleanDateString = (dateStr: string): string => {
   console.log(cleanedDate);
 
   return cleanedDate;
+};
+
+
+// POST /api/reviews/parse
+const parseReviewHandler: any = async (req: any, res: any): Promise<void> => {
+  const { reviewText } = req.body;
+
+  if (!reviewText) {
+    return res.status(400).json({ error: 'Review text is required.' });
+  }
+
+  try {
+    const prompt = `Extract the following information from this review:
+    - Reviewer name
+    - Restaurant name
+    - Location
+    - Date of visit (in the format YYYY-MM-DD)
+    - List of items ordered
+    - Ratings for each item
+    - Overall experience
+    Review: "${reviewText}"`;
+
+    // Call OpenAI API to get the structured data
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo", // Adjust to the appropriate model
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 500,
+      temperature: 0.5,
+    });
+
+    const messageContent = response.choices[0].message?.content;
+    if (!messageContent) {
+      return res.status(500).json({ error: 'Failed to extract data from OpenAI response.' });
+    }
+
+    // Parsing the structured response (you might want to fine-tune this based on the structure returned by OpenAI)
+    const parsedData = {
+      reviewer: extractFieldFromResponse(messageContent, 'Reviewer name'),
+      restaurant: extractFieldFromResponse(messageContent, 'Restaurant name'),
+      location: extractFieldFromResponse(messageContent, 'Location'),
+      dateOfVisit: extractFieldFromResponse(messageContent, 'Date of visit'),
+      itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered'),
+      overallExperience: extractFieldFromResponse(messageContent, 'Overall experience'),
+      ratings: extractListFromResponse(messageContent, 'Ratings for each item').map((ratingString: string) => {
+        const parts = ratingString.match(/(.+?)\s?\((.+?)\)/);
+        return {
+          item: parts ? parts[1].trim() : ratingString,
+          rating: parts ? parts[2].trim() : '',
+        };
+      }),
+    };
+
+    // Send the parsed data back to the frontend for the preview
+    return res.json(parsedData);
+  } catch (error) {
+    console.error('Error parsing review text:', error);
+    return res.status(500).json({ error: 'Failed to process the review text.' });
+  }
 };
 
 const freeFormReviewHandler: any = async (req: any, res: any): Promise<void> => {
@@ -264,6 +322,7 @@ const queryReviewsHandler: any = async (req: any, res: any): Promise<void> => {
 app.post('/api/query', queryReviewsHandler);
 app.post('/api/reviews', structuredReviewHandler);
 app.post('/api/reviews/free-form', freeFormReviewHandler);
+app.post('/api/reviews/parse', parseReviewHandler);
 app.use('/api/reviews', reviewsRouter);  // Your reviews router
 
 // Serve static files from the frontend build directory, adjusted for production

@@ -36,24 +36,13 @@ const AddReview: React.FC = () => {
   const handlePreview = async () => {
     setLoading(true);
     try {
-      const prompt = `Extract the following information from this review:
-      - Reviewer name
-      - Restaurant name
-      - Location
-      - Date of visit (in the format YYYY-MM-DD)
-      - List of items ordered
-      - Ratings for each item
-      - Overall experience
-      Review: "${reviewText}"`;
-
-      // Call to OpenAI for parsing the review text
       const response = await fetch('/api/reviews/parse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reviewText }),
       });
       const parsedResponse = await response.json();
-
+  
       if (parsedResponse.error) {
         console.error('Error parsing review:', parsedResponse.error);
       } else {
@@ -65,7 +54,6 @@ const AddReview: React.FC = () => {
     }
     setLoading(false);
   };
-
   // Handle Back Button
   const handleBack = () => {
     setIsPreview(false);
