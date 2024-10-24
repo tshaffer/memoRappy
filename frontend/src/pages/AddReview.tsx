@@ -76,8 +76,6 @@ const AddReview: React.FC = () => {
     }
   };
 
-  console.log('isPreview', isPreview);
-
   return (
     <Paper style={{ padding: 20 }}>
       <Typography variant="h4" gutterBottom>
@@ -138,15 +136,8 @@ const AddReview: React.FC = () => {
             <Typography><strong>Items Ordered:</strong></Typography>
             <ul>
               {parsedDetails.itemsOrdered.map((item: string, idx: number) => (
-                <li key={idx}>{item}</li>
-              ))}
-            </ul>
-
-            <Typography><strong>Ratings:</strong></Typography>
-            <ul>
-              {parsedDetails.ratings.map((ratingObj: { item: string; rating: string }, idx: number) => (
                 <li key={idx}>
-                  {ratingObj.item} - <strong>Rating:</strong> {ratingObj.rating || 'No rating provided'}
+                  {parsedDetails.itemsOrdered[idx]} - {parsedDetails.ratings[idx]?.rating || 'No rating provided'}
                 </li>
               ))}
             </ul>
