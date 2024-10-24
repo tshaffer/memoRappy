@@ -107,16 +107,29 @@ const parseReviewHandler: any = async (req: any, res: any): Promise<void> => {
   }
 
   try {
-    const prompt = `Extract the following information from this review:
+    const prompt = `
+    Extract the following information from this review:
     - Reviewer name
     - Restaurant name
     - Location
     - Date of visit (in the format YYYY-MM-DD)
     - List of items ordered
-    - Ratings for each item
+    - Ratings for each item (with the format: "item name (rating)")
     - Overall experience
-    Review: "${reviewText}"`;
-
+    
+    Review: "${reviewText}"
+    
+    Please provide the response in the following format:
+    
+    - Reviewer name: [Reviewer Name]
+    - Restaurant name: [Restaurant Name]
+    - Location: [Location]
+    - Date of visit: [YYYY-MM-DD]
+    - List of items ordered: [Item 1, Item 2, etc.]
+    - Ratings for each item: [Item 1 (Rating), Item 2 (Rating)]
+    - Overall experience: [Overall Experience]
+    `;
+    
     // Call OpenAI API to get the structured data
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo", // Adjust to the appropriate model
@@ -131,7 +144,7 @@ const parseReviewHandler: any = async (req: any, res: any): Promise<void> => {
     }
 
     console.log('OpenAI response:', messageContent);
-    
+
     // Parsing the structured response (you might want to fine-tune this based on the structure returned by OpenAI)
     const parsedData = {
       reviewer: extractFieldFromResponse(messageContent, 'Reviewer name'),
@@ -141,14 +154,14 @@ const parseReviewHandler: any = async (req: any, res: any): Promise<void> => {
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered'),
       overallExperience: extractFieldFromResponse(messageContent, 'Overall experience'),
       ratings: extractListFromResponse(messageContent, 'Ratings for each item').map((ratingString: string) => {
-        const parts = ratingString.match(/(.+?)\s?\((.+?)\)/);
+        const parts = ratingString.match(/(.+?)\s?\((.+?)\)/);  // Match the format "item (rating)"
         return {
           item: parts ? parts[1].trim() : ratingString,
           rating: parts ? parts[2].trim() : '',
         };
       }),
     };
-
+    
     // Send the parsed data back to the frontend for the preview
     return res.json(parsedData);
   } catch (error) {
