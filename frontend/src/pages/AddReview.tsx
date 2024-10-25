@@ -1,177 +1,134 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   TextField,
   Button,
   Typography,
   Paper,
   Grid,
-  ToggleButton,
-  ToggleButtonGroup,
-  CircularProgress,
 } from '@mui/material';
 
-// Manually define SpeechRecognition and webkitSpeechRecognition types
-declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
-  }
-}
-
-const AddReview: React.FC = () => {
-  const [inputMode, setInputMode] = useState('free-form');
+const AddReviewLeft: React.FC = () => {
   const [reviewText, setReviewText] = useState('');
-  const [isPreview, setIsPreview] = useState(false);
   const [parsedDetails, setParsedDetails] = useState<any>(null);
-  const [loading, setLoading] = useState(false); // To show a loader during the OpenAI call
+  const [previewMode, setPreviewMode] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
-  // Toggle free-form or structured input
-  const handleInputModeChange = (event: React.MouseEvent<HTMLElement>, newMode: string) => {
-    if (newMode) {
-      setInputMode(newMode);
+  useEffect(() => {
+    // Generate a session ID for each new review session
+    if (!sessionId) {
+      setSessionId(generateSessionId());
     }
-  };
+  }, [sessionId]);
 
-  // Handle Preview Button Click
   const handlePreview = async () => {
-    setLoading(true);
+    if (!sessionId) return;
+
     try {
-      const response = await fetch('/api/reviews/parse', {
+      const response = await fetch('/api/reviews/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reviewText }),
+        body: JSON.stringify({ reviewText, sessionId }),
       });
-      const parsedResponse = await response.json();
 
-      if (parsedResponse.error) {
-        console.error('Error parsing review:', parsedResponse.error);
-      } else {
-        setParsedDetails(parsedResponse); // Save the parsed details
-        setIsPreview(true); // Switch to preview mode
-      }
+      const data = await response.json();
+      setParsedDetails(data.parsedData);
+      setPreviewMode(true); // Enter preview mode
     } catch (error) {
-      console.error('Error fetching preview:', error);
+      console.error('Error previewing review:', error);
     }
-    setLoading(false);
   };
-  // Handle Back Button
+
   const handleBack = () => {
-    setIsPreview(false);
+    setPreviewMode(false);
+    setParsedDetails(null); // Reset preview data to allow editing
   };
 
-  // Handle Submit
-  const old_handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Submit parsed details or handle structured submission here
+  const handleSubmit = async () => {
+    if (!parsedDetails) return;
+
     try {
-      const response = await fetch('/api/reviews/free-form', {
+      const response = await fetch('/api/reviews/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parsedDetails),
+        body: JSON.stringify({ parsedData: { ...parsedDetails, fullReviewText: reviewText } }),
       });
+
       const data = await response.json();
       console.log('Review submitted:', data);
+      resetForm(); // Clear fields after successful submission
     } catch (error) {
       console.error('Error submitting review:', error);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const submissionData = {
-      ...parsedDetails,
-      fullReviewText: reviewText, // Include the full original text
-    };
-  
-    try {
-      const response = await fetch('/api/reviews/structured', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submissionData),
-      });
-      const data = await response.json();
-      console.log('Review submitted:', data);
-    } catch (error) {
-      console.error('Error submitting review:', error);
-    }
+  const resetForm = () => {
+    setReviewText('');
+    setParsedDetails(null);
+    setPreviewMode(false);
+    setSessionId(generateSessionId());
   };
-  
+
+  const generateSessionId = () => {
+    return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  };
+
   return (
     <Paper style={{ padding: 20 }}>
       <Typography variant="h4" gutterBottom>
         Add a Review
       </Typography>
 
-      <ToggleButtonGroup
-        value={inputMode}
-        exclusive
-        onChange={handleInputModeChange}
-        aria-label="input mode"
-        style={{ marginBottom: 20 }}
-      >
-        <ToggleButton value="free-form" aria-label="free-form input">
-          Free-Form Input
-        </ToggleButton>
-        <ToggleButton value="structured" aria-label="structured form">
-          Structured Form
-        </ToggleButton>
-      </ToggleButtonGroup>
-
-      {!isPreview ? (
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Write Your Review"
-              multiline
-              rows={8}
-              value={reviewText}
-              onChange={(e) => setReviewText(e.target.value)}
-              placeholder="Describe your dining experience in detail..."
-              required
-            />
+      {!previewMode ? (
+        <>
+          <TextField
+            fullWidth
+            label="Write Your Review"
+            multiline
+            rows={8}
+            value={reviewText}
+            onChange={(e) => setReviewText(e.target.value)}
+            placeholder="Describe your dining experience in detail..."
+            required
+          />
+          <Grid container spacing={2} style={{ marginTop: 20 }}>
+            <Grid item xs={6}>
+              <Button variant="contained" color="primary" fullWidth onClick={handlePreview}>
+                Preview
+              </Button>
+            </Grid>
+            <Grid item xs={6}>
+              <Button variant="contained" color="secondary" fullWidth onClick={resetForm}>
+                Clear
+              </Button>
+            </Grid>
           </Grid>
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handlePreview}
-              disabled={loading || !reviewText}
-              fullWidth
-            >
-              {loading ? <CircularProgress size={24} /> : 'Preview'}
-            </Button>
-          </Grid>
-        </Grid>
+        </>
       ) : (
         <>
-          <Typography variant="h6" gutterBottom>
-            Review Preview
-          </Typography>
-          <Paper style={{ padding: 20, marginBottom: 20 }}>
-            <Typography><strong>Reviewer:</strong> {parsedDetails.reviewer}</Typography>
-            <Typography><strong>Restaurant:</strong> {parsedDetails.restaurant}</Typography>
-            <Typography><strong>Location:</strong> {parsedDetails.location}</Typography>
-            <Typography><strong>Date of Visit:</strong> {parsedDetails.dateOfVisit}</Typography>
-            <Typography><strong>Items Ordered:</strong></Typography>
-            <ul>
-              {parsedDetails.itemsOrdered.map((item: string, idx: number) => (
-                <li key={idx}>
-                  {parsedDetails.itemsOrdered[idx]} - {parsedDetails.ratings[idx]?.rating || 'No rating provided'}
-                </li>
-              ))}
-            </ul>
-            <Typography><strong>Overall Experience:</strong> {parsedDetails.overallExperience}</Typography>
-          </Paper>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <Button variant="contained" color="primary" onClick={handleSubmit} fullWidth>
+          <Typography variant="h6">Preview of Your Review</Typography>
+          <Typography><strong>Reviewer:</strong> {parsedDetails.reviewer}</Typography>
+          <Typography><strong>Restaurant:</strong> {parsedDetails.restaurant}</Typography>
+          <Typography><strong>Location:</strong> {parsedDetails.location}</Typography>
+          <Typography><strong>Date of Visit:</strong> {parsedDetails.dateOfVisit}</Typography>
+          <Typography><strong>Overall Experience:</strong> {parsedDetails.overallExperience}</Typography>
+
+          <Typography><strong>Items Ordered:</strong></Typography>
+          <ul>
+            {parsedDetails.itemsOrdered.map((item: string, idx: number) => (
+              <li key={idx}>
+                {item} - {parsedDetails.ratings[idx]?.rating || 'No rating provided'}
+              </li>
+            ))}
+          </ul>
+
+          <Grid container spacing={2} style={{ marginTop: 20 }}>
+            <Grid item xs={6}>
+              <Button variant="contained" color="primary" fullWidth onClick={handleSubmit}>
                 Submit
               </Button>
             </Grid>
-            <Grid item xs={12}>
-              <Button variant="outlined" onClick={handleBack} fullWidth>
+            <Grid item xs={6}>
+              <Button variant="contained" color="secondary" fullWidth onClick={handleBack}>
                 Back
               </Button>
             </Grid>
@@ -182,4 +139,4 @@ const AddReview: React.FC = () => {
   );
 };
 
-export default AddReview;
+export default AddReviewLeft;

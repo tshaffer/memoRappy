@@ -292,23 +292,46 @@ const old_structuredReviewHandler: any = async (req: any, res: any): Promise<voi
 const reviewConversations: { [sessionId: string]: ChatCompletionMessageParam[] } = {};
 
 // Preview endpoint to get structured data without saving
-const previewReviewHandler = async (req: any, res: any) => {
+const previewReviewHandler = async (req: any, res: any): Promise<void> => {
   const { reviewText, sessionId } = req.body;
 
-  if (!sessionId || !reviewText) {
-    return res.status(400).json({ error: 'Session ID and review text are required.' });
-  }
-
-  // Initialize or continue conversation for the session
+  // Initialize session conversation history if it doesn't exist
   if (!reviewConversations[sessionId]) {
     reviewConversations[sessionId] = [
-      { role: "system", content: "You're assisting with creating structured restaurant reviews based on user input." }
+      {
+        role: "system",
+        content: `
+          Extract the following information from this review:
+          - Reviewer name
+          - Restaurant name
+          - Location
+          - Date of visit (in the format YYYY-MM-DD)
+          - List of items ordered
+          - Ratings for each item (with the format: "item name (rating)")
+          - Overall experience
+          
+          Review: "${reviewText}"
+          
+          Please provide the response in the following format:
+          
+          - Reviewer name: [Reviewer Name]
+          - Restaurant name: [Restaurant Name]
+          - Location: [Location]
+          - Date of visit: [YYYY-MM-DD]
+          - List of items ordered: [Item 1, Item 2, etc.]
+          - Ratings for each item: [Item 1 (Rating), Item 2 (Rating)]
+          - Overall experience: [Overall Experience]
+        `,
+      }
     ];
   }
 
-  reviewConversations[sessionId].push({ role: "user", content: reviewText });
+  // Add user input as the latest message in the conversation history
+  reviewConversations[sessionId].push({
+    role: "user",
+    content: reviewText,
+  });
 
-  // Create a chat completion for review structuring
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4",
@@ -319,10 +342,11 @@ const previewReviewHandler = async (req: any, res: any) => {
 
     const messageContent = response.choices[0].message?.content;
     if (!messageContent) {
-      return res.status(500).json({ error: 'Failed to parse review text.' });
+      res.status(500).json({ error: 'Failed to extract data from the response.' });
+      return;
     }
 
-    // Add structured data extraction from response here as needed
+    // Parse response data into a structured format
     const parsedData = {
       reviewer: extractFieldFromResponse(messageContent, 'Reviewer name'),
       restaurant: extractFieldFromResponse(messageContent, 'Restaurant name'),
@@ -337,13 +361,12 @@ const previewReviewHandler = async (req: any, res: any) => {
           rating: parts ? parts[2].trim() : '',
         };
       }),
-      fullReviewText: reviewText, // Store original review text
     };
 
-    return res.json({ parsedData });
+    res.json({ parsedData });
   } catch (error) {
-    console.error('Error processing preview:', error);
-    return res.status(500).json({ error: 'An error occurred while processing the review.' });
+    console.error('Error processing review preview:', error);
+    res.status(500).json({ error: 'An error occurred while processing the review preview.' });
   }
 };
 
