@@ -60,7 +60,7 @@ const AddReview: React.FC = () => {
   };
 
   // Handle Submit
-  const handleSubmit = async (e: React.FormEvent) => {
+  const old_handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Submit parsed details or handle structured submission here
     try {
@@ -76,6 +76,27 @@ const AddReview: React.FC = () => {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const submissionData = {
+      ...parsedDetails,
+      fullReviewText: reviewText, // Include the full original text
+    };
+  
+    try {
+      const response = await fetch('/api/reviews/structured', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData),
+      });
+      const data = await response.json();
+      console.log('Review submitted:', data);
+    } catch (error) {
+      console.error('Error submitting review:', error);
+    }
+  };
+  
   return (
     <Paper style={{ padding: 20 }}>
       <Typography variant="h4" gutterBottom>

@@ -257,7 +257,7 @@ const freeFormReviewHandler: any = async (req: any, res: any): Promise<void> => 
   }
 };
 
-const structuredReviewHandler: any = async (req: any, res: any): Promise<void> => {
+const old_structuredReviewHandler: any = async (req: any, res: any): Promise<void> => {
 
   console.log('structuredReviewHandler');
 
@@ -285,6 +285,33 @@ const structuredReviewHandler: any = async (req: any, res: any): Promise<void> =
     res.status(500).json({ error: 'An error occurred while saving the review.' });
   }
 }
+
+const structuredReviewHandler = async (req: any, res: any): Promise<void> => {
+  try {
+
+    console.log('structuredReviewHandler');
+    console.log(req.body);
+
+    const { fullReviewText, ...structuredData } = req.body;
+
+    console.log('fullReviewText:', fullReviewText);
+    console.log('structuredData:', structuredData);
+
+    // Add the full review text to the structured data
+    const newReview = new Review({
+      ...structuredData,
+      reviewText: fullReviewText,
+    });
+
+    console.log('newReview:', newReview);
+
+    // await newReview.save();
+    res.status(201).json({ message: 'Review saved successfully!', review: newReview });
+  } catch (error) {
+    console.error('Error saving structured review:', error);
+    res.status(500).json({ error: 'An error occurred while saving the review.' });
+  }
+};
 
 // Query reviews handler
 const queryReviewsHandler: any = async (req: any, res: any): Promise<void> => {
@@ -335,7 +362,8 @@ const queryReviewsHandler: any = async (req: any, res: any): Promise<void> => {
 
 // Define your API routes first
 app.post('/api/query', queryReviewsHandler);
-app.post('/api/reviews', structuredReviewHandler);
+// app.post('/api/reviews', structuredReviewHandler);
+app.post('/api/reviews/structured', structuredReviewHandler);
 app.post('/api/reviews/free-form', freeFormReviewHandler);
 app.post('/api/reviews/parse', parseReviewHandler);
 app.use('/api/reviews', reviewsRouter);  // Your reviews router
