@@ -3,10 +3,12 @@ import path, { parse } from 'path';
 // import cors from 'cors';
 import * as dotenv from 'dotenv';
 import OpenAI from 'openai';
+import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import mongoose from 'mongoose';
 import Review from './models/Review';
 const cors: any = require('cors');
-const express: any = require('express');
+// const express: any = require('express');
+import express, { Request, Response } from 'express';
 
 dotenv.config();
 
@@ -286,6 +288,84 @@ const old_structuredReviewHandler: any = async (req: any, res: any): Promise<voi
   }
 }
 
+// Store conversations for each session
+const reviewConversations: { [sessionId: string]: ChatCompletionMessageParam[] } = {};
+
+// Preview endpoint to get structured data without saving
+const previewReviewHandler = async (req: any, res: any) => {
+  const { reviewText, sessionId } = req.body;
+
+  if (!sessionId || !reviewText) {
+    return res.status(400).json({ error: 'Session ID and review text are required.' });
+  }
+
+  // Initialize or continue conversation for the session
+  if (!reviewConversations[sessionId]) {
+    reviewConversations[sessionId] = [
+      { role: "system", content: "You're assisting with creating structured restaurant reviews based on user input." }
+    ];
+  }
+
+  reviewConversations[sessionId].push({ role: "user", content: reviewText });
+
+  // Create a chat completion for review structuring
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: reviewConversations[sessionId],
+      max_tokens: 500,
+      temperature: 0.5,
+    });
+
+    const messageContent = response.choices[0].message?.content;
+    if (!messageContent) {
+      return res.status(500).json({ error: 'Failed to parse review text.' });
+    }
+
+    // Add structured data extraction from response here as needed
+    const parsedData = {
+      reviewer: extractFieldFromResponse(messageContent, 'Reviewer name'),
+      restaurant: extractFieldFromResponse(messageContent, 'Restaurant name'),
+      location: extractFieldFromResponse(messageContent, 'Location'),
+      dateOfVisit: extractFieldFromResponse(messageContent, 'Date of visit'),
+      itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered'),
+      overallExperience: extractFieldFromResponse(messageContent, 'Overall experience'),
+      ratings: extractListFromResponse(messageContent, 'Ratings for each item').map((ratingString: string) => {
+        const parts = ratingString.match(/(.+?)\s?\((.+?)\)/);
+        return {
+          item: parts ? parts[1].trim() : ratingString,
+          rating: parts ? parts[2].trim() : '',
+        };
+      }),
+      fullReviewText: reviewText, // Store original review text
+    };
+
+    return res.json({ parsedData });
+  } catch (error) {
+    console.error('Error processing preview:', error);
+    return res.status(500).json({ error: 'An error occurred while processing the review.' });
+  }
+};
+
+// Submit endpoint to save structured review in the database
+const submitReviewHandler = async (req: any, res: any) => {
+  const { parsedData } = req.body;
+
+  if (!parsedData || !parsedData.restaurant || !parsedData.dateOfVisit) {
+    return res.status(400).json({ error: 'Incomplete review data.' });
+  }
+
+  try {
+    const newReview = new Review(parsedData);
+    await newReview.save();
+
+    return res.status(201).json({ message: 'Review saved successfully!', review: newReview });
+  } catch (error) {
+    console.error('Error saving review:', error);
+    return res.status(500).json({ error: 'An error occurred while saving the review.' });
+  }
+};
+
 const structuredReviewHandler = async (req: any, res: any): Promise<void> => {
   try {
 
@@ -326,7 +406,7 @@ const queryReviewsHandler: any = async (req: any, res: any): Promise<void> => {
     }
 
     // Format the review texts to be sent to ChatGPT
-    const reviewsText = reviews.map((review) => `Review: "${review.reviewText}"`).join('\n\n');
+    const reviewsText = reviews.map((review) => `Review: "${review.fullReviewText}"`).join('\n\n');
 
     // Formulate the ChatGPT prompt
     const prompt = `
@@ -362,6 +442,11 @@ const queryReviewsHandler: any = async (req: any, res: any): Promise<void> => {
 
 // Define your API routes first
 app.post('/api/query', queryReviewsHandler);
+
+app.post('/api/reviews/preview', previewReviewHandler);
+app.post('/api/reviews/submit', submitReviewHandler);
+
+
 // app.post('/api/reviews', structuredReviewHandler);
 app.post('/api/reviews/structured', structuredReviewHandler);
 app.post('/api/reviews/free-form', freeFormReviewHandler);
