@@ -141,6 +141,24 @@ const AddReview: React.FC = () => {
             ))}
           </ul>
 
+          <Typography><strong>Keywords:</strong></Typography>
+          <ul>
+            {parsedDetails.keywords.map((keyword: string, idx: number) => (
+              <li key={idx}>
+                {keyword}
+              </li>
+            ))}
+          </ul>
+
+          <Typography><strong>Phrases:</strong></Typography>
+          <ul>
+            {parsedDetails.phrases.map((phrase: string, idx: number) => (
+              <li key={idx}>
+                {phrase}
+              </li>
+            ))}
+          </ul>
+
           <Grid container spacing={2} style={{ marginTop: 20 }}>
             <Grid item xs={6}>
               <Button variant="contained" color="primary" fullWidth onClick={handleSubmit}>
