@@ -77,6 +77,8 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
       dateOfVisit: extractFieldFromResponse(messageContent, 'Date of visit'),
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered'),
       overallExperience: extractFieldFromResponse(messageContent, 'Overall experience'),
+      keywords: extractListFromResponse(messageContent, 'Keywords'),
+      phrases: extractListFromResponse(messageContent, 'Phrases'),
       ratings: extractListFromResponse(messageContent, 'Ratings for each item').map((ratingString: string) => {
         const parts = ratingString.match(/(.+?)\s?\((.+?)\)/);
         return {

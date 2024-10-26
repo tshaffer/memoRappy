@@ -9,7 +9,9 @@ interface IReview extends Document {
   ratings: { item: string; rating: string }[];
   overallExperience: string;
   dateOfVisit: string;
-  fullReviewText: string; // Add the reviewText field
+  keywords: string[];
+  phrases: string[];
+  fullReviewText: string;
 }
 
 // Define the schema for the review
@@ -21,6 +23,8 @@ const ReviewSchema: Schema = new Schema({
   ratings: [{ item: String, rating: String }],
   overallExperience: { type: String },
   dateOfVisit: { type: String },
+  keywords: [{ type: String }],
+  phrases: [{ type: String }],
   fullReviewText: { type: String, required: true }, // Add the field here to store the full review
 });
 
