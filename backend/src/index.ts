@@ -84,9 +84,11 @@ const parseReviewHandler: any = async (req: any, res: any): Promise<void> => {
     - List of items ordered
     - Ratings for each item (with the format: "item name (rating)")
     - Overall experience
-    
+        
     Review: "${reviewText}"
-    
+
+    The restaurant name is required. All other fields are optional.
+
     Please provide the response in the following format:
     
     - Reviewer name: [Reviewer Name]
