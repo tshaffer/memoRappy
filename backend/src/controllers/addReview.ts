@@ -10,7 +10,7 @@ const reviewConversations: { [sessionId: string]: ChatCompletionMessageParam[] }
 
 // Preview endpoint to get structured data without saving
 export const previewReviewHandler = async (req: any, res: any): Promise<void> => {
-  const { reviewText, sessionId } = req.body;
+  const { restaurantName, reviewText, sessionId } = req.body;
 
   // Initialize session conversation history if it doesn't exist
   if (!reviewConversations[sessionId]) {
@@ -65,8 +65,8 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
 
     // Parse response data into a structured format
     const parsedData = {
+      restaurantName,
       reviewer: extractFieldFromResponse(messageContent, 'Reviewer name'),
-      restaurant: extractFieldFromResponse(messageContent, 'Restaurant name'),
       location: extractFieldFromResponse(messageContent, 'Location'),
       dateOfVisit: extractFieldFromResponse(messageContent, 'Date of visit'),
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered'),
