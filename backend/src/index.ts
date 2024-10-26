@@ -84,7 +84,9 @@ const parseReviewHandler: any = async (req: any, res: any): Promise<void> => {
     - List of items ordered
     - Ratings for each item (with the format: "item name (rating)")
     - Overall experience
-        
+    
+    Also, look for keywords that you might typically find in a restaurant review.
+    
     Review: "${reviewText}"
 
     The restaurant name is required. All other fields are optional.
@@ -98,6 +100,7 @@ const parseReviewHandler: any = async (req: any, res: any): Promise<void> => {
     - List of items ordered: [Item 1, Item 2, etc.]
     - Ratings for each item: [Item 1 (Rating), Item 2 (Rating)]
     - Overall experience: [Overall Experience]
+    - Keywords: [Keyword 1, Keyword 2, etc.]
     `;
     
     // Call OpenAI API to get the structured data

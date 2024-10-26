@@ -27,6 +27,8 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
           - Ratings for each item (with the format: "item name (rating)")
           - Overall experience
           
+          Also, look for keywords that you might typically find in a restaurant review.
+
           Review: "${reviewText}"
           
           Please provide the response in the following format:
@@ -38,6 +40,7 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
           - List of items ordered: [Item 1, Item 2, etc.]
           - Ratings for each item: [Item 1 (Rating), Item 2 (Rating)]
           - Overall experience: [Overall Experience]
+          - Keywords: [Keyword 1, Keyword 2, etc.]
         `,
       }
     ];
@@ -63,6 +66,8 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
       return;
     }
 
+    console.log('previewReviewHandler response:', messageContent);
+    
     // Parse response data into a structured format
     const parsedData = {
       restaurantName,
