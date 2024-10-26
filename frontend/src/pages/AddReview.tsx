@@ -32,6 +32,7 @@ const AddReview: React.FC = () => {
       });
 
       const data = await response.json();
+      console.log('handlePreview', data.parsedData);
       setParsedDetails(data.parsedData);
       setPreviewMode(true); // Enter preview mode
     } catch (error) {
@@ -41,10 +42,12 @@ const AddReview: React.FC = () => {
 
   const handleBack = () => {
     setPreviewMode(false);
+    console.log('handleBack');
     setParsedDetails(null); // Reset preview data to allow editing
   };
 
   const handleSubmit = async () => {
+
     if (!parsedDetails) return;
 
     try {
@@ -58,7 +61,7 @@ const AddReview: React.FC = () => {
 
       const data = await response.json();
       console.log('Review submitted:', data);
-      resetForm(); // Clear fields after successful submission
+      // resetForm(); // Clear fields after successful submission
     } catch (error) {
       console.error('Error submitting review:', error);
     }
@@ -67,6 +70,7 @@ const AddReview: React.FC = () => {
   const resetForm = () => {
     setRestaurantName(''); // Clear restaurant name
     setReviewText('');
+    console.log('resetForm');
     setParsedDetails(null);
     setPreviewMode(false);
     setSessionId(generateSessionId());
@@ -126,7 +130,7 @@ const AddReview: React.FC = () => {
         <>
           <Typography variant="h6">Preview of Your Review</Typography>
           <Typography><strong>Reviewer:</strong> {parsedDetails.reviewer}</Typography>
-          <Typography><strong>Restaurant:</strong> {parsedDetails.restaurant || restaurantName}</Typography>
+          <Typography><strong>Restaurant:</strong> {parsedDetails.restaurantName || restaurantName}</Typography>
           <Typography><strong>Location:</strong> {parsedDetails.location}</Typography>
           <Typography><strong>Date of Visit:</strong> {parsedDetails.dateOfVisit}</Typography>
           <Typography><strong>Overall Experience:</strong> {parsedDetails.overallExperience}</Typography>

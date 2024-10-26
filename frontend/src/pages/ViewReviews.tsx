@@ -50,7 +50,7 @@ const ViewReviews: React.FC = () => {
             <TableBody>
               {reviews.map((review) => (
                 <TableRow key={review._id}>
-                  <TableCell>{review.restaurant}</TableCell>
+                  <TableCell>{review.restaurantName}</TableCell>
                   <TableCell>{review.location}</TableCell>
                   <TableCell>{new Date(review.dateOfVisit).toLocaleDateString()}</TableCell>
                   <TableCell>{review.itemsOrdered.join(', ')}</TableCell>

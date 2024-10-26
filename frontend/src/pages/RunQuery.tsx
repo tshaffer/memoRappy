@@ -14,7 +14,7 @@ const useStyles = makeStyles((theme: Theme) => ({
 const RunQuery: React.FC = () => {
   const [reviews, setReviews] = useState<any[]>([]);
   const [filters, setFilters] = useState({
-    restaurant: '',
+    restaurantName: '',
     location: '',
     startDate: '',
     endDate: '',
@@ -32,7 +32,7 @@ const RunQuery: React.FC = () => {
   const fetchReviews = async () => {
     try {
       const queryParams = new URLSearchParams();
-      if (filters.restaurant) queryParams.append('restaurant', filters.restaurant);
+      if (filters.restaurantName) queryParams.append('restaurantName', filters.restaurantName);
       if (filters.location) queryParams.append('location', filters.location);
 
       // Convert startDate and endDate to ISO format
@@ -70,8 +70,8 @@ const RunQuery: React.FC = () => {
             <TextField
               fullWidth
               label="Restaurant"
-              value={filters.restaurant}
-              onChange={(e) => setFilters({ ...filters, restaurant: e.target.value })}
+              value={filters.restaurantName}
+              onChange={(e) => setFilters({ ...filters, restaurantName: e.target.value })}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={4}>
@@ -134,7 +134,7 @@ const RunQuery: React.FC = () => {
             <TableBody>
               {reviews.map((review) => (
                 <TableRow key={review._id}>
-                  <TableCell className={classes.tableCell}>{review.restaurant}</TableCell>
+                  <TableCell className={classes.tableCell}>{review.restaurantName}</TableCell>
                   <TableCell className={classes.tableCell}>{review.location}</TableCell>
                   <TableCell className={classes.tableCell}>{review.dateOfVisit}</TableCell>
                   <TableCell className={classes.tableCell}>{review.itemsOrdered.join(', ')}</TableCell>

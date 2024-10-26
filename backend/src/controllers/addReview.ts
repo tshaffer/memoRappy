@@ -91,7 +91,7 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
 export const submitReviewHandler = async (req: any, res: any) => {
   const { parsedData } = req.body;
 
-  if (!parsedData || !parsedData.restaurant || !parsedData.dateOfVisit) {
+  if (!parsedData || !parsedData.restaurantName || !parsedData.dateOfVisit) {
     return res.status(400).json({ error: 'Incomplete review data.' });
   }
 

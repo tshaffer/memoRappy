@@ -29,13 +29,13 @@ app.use(express.json());
 // Get all reviews or filter by query parameters
 const reviewsRouter = async (req: any, res: any) => {
   try {
-    const { restaurant, location, startDate, endDate, item } = req.query;
+    const { restaurantName, location, startDate, endDate, item } = req.query;
 
     // Build a dynamic query based on the provided filters
     const query: any = {};
 
-    if (restaurant) {
-      query.restaurant = new RegExp(restaurant as string, 'i'); // Case-insensitive search
+    if (restaurantName) {
+      query.restaurantName = new RegExp(restaurantName as string, 'i'); // Case-insensitive search
     }
 
     if (location) {
@@ -116,7 +116,7 @@ const parseReviewHandler: any = async (req: any, res: any): Promise<void> => {
     // Parsing the structured response (you might want to fine-tune this based on the structure returned by OpenAI)
     const parsedData = {
       reviewer: extractFieldFromResponse(messageContent, 'Reviewer name'),
-      restaurant: extractFieldFromResponse(messageContent, 'Restaurant name'),
+      restaurantName: extractFieldFromResponse(messageContent, 'Restaurant name'),
       location: extractFieldFromResponse(messageContent, 'Location'),
       dateOfVisit: extractFieldFromResponse(messageContent, 'Date of visit'),
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered'),
@@ -193,7 +193,7 @@ const freeFormReviewHandler: any = async (req: any, res: any): Promise<void> => 
     // Manually extract and transform the rest of the data
     const extractedData = {
       reviewer: "Ted", // Replace with extracted reviewer if available
-      restaurant: extractFieldFromResponse(messageContent, 'Restaurant name'),
+      restaurantName: extractFieldFromResponse(messageContent, 'Restaurant name'),
       location: extractFieldFromResponse(messageContent, 'Location'),
       dateOfVisit: formattedDateOfVisit,
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered'),
@@ -210,7 +210,7 @@ const freeFormReviewHandler: any = async (req: any, res: any): Promise<void> => 
 
     console.log('Extracted data:', extractedData);
 
-    if (!extractedData.restaurant || !extractedData.dateOfVisit) {
+    if (!extractedData.restaurantName || !extractedData.dateOfVisit) {
       res.status(400).json({ error: 'Restaurant name and date of visit are required.' });
       return;
     }
@@ -233,8 +233,7 @@ const old_structuredReviewHandler: any = async (req: any, res: any): Promise<voi
     const reviewData = req.body;
     console.log('reviewData:', reviewData);
 
-    // Basic validation: check if the restaurant name and date of visit are provided
-    if (!reviewData.restaurant || !reviewData.dateOfVisit) {
+    if (!reviewData.restaurantName || !reviewData.dateOfVisit) {
       res.status(400).json({ error: 'Restaurant name and date of visit are required.' });
       return;
     }
