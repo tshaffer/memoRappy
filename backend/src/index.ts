@@ -210,8 +210,8 @@ const freeFormReviewHandler: any = async (req: any, res: any): Promise<void> => 
 
     console.log('Extracted data:', extractedData);
 
-    if (!extractedData.restaurantName || !extractedData.dateOfVisit) {
-      res.status(400).json({ error: 'Restaurant name and date of visit are required.' });
+    if (!extractedData.restaurantName) {
+      res.status(400).json({ error: 'Restaurant name is required.' });
       return;
     }
 
@@ -233,8 +233,8 @@ const old_structuredReviewHandler: any = async (req: any, res: any): Promise<voi
     const reviewData = req.body;
     console.log('reviewData:', reviewData);
 
-    if (!reviewData.restaurantName || !reviewData.dateOfVisit) {
-      res.status(400).json({ error: 'Restaurant name and date of visit are required.' });
+    if (!reviewData.restaurantName) {
+      res.status(400).json({ error: 'Restaurant name is required.' });
       return;
     }
 
