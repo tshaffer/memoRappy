@@ -1,23 +1,13 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
+import { ReviewEntityWithFullText } from '../types'; // Update path accordingly
 
-// Define the interface for a review document
-interface IReview extends Document {
-  restaurantName: string;
-  location: string;
-  dateOfVisit: string;
-  itemsOrdered: string[];
-  ratings: { item: string; rating: string }[];
-  overallExperience: string;
-  reviewer: string;
-  keywords: string[];
-  phrases: string[];
-  fullReviewText: string;
-}
+// Extend ReviewEntityWithFullText with mongoose's Document interface
+interface IReview extends ReviewEntityWithFullText, Document {}
 
 // Define the schema for the review
-const ReviewSchema: Schema = new Schema({
+const ReviewSchema: Schema<IReview> = new Schema({
   restaurantName: { type: String, required: true },
-  location: { type: String},
+  location: { type: String },
   dateOfVisit: { type: String },
   itemsOrdered: [{ type: String }],
   ratings: [{ item: String, rating: String }],
@@ -28,7 +18,7 @@ const ReviewSchema: Schema = new Schema({
   fullReviewText: { type: String, required: true },
 });
 
-// Create the Review model using the schema
-const Review = mongoose.model<IReview>('Review', ReviewSchema);
+// Create the Review model using the schema and external interface
+const Review: Model<IReview> = mongoose.model<IReview>('Review', ReviewSchema);
 
 export default Review;

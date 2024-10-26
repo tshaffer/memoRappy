@@ -6,11 +6,12 @@ import {
   Paper,
   Grid,
 } from '@mui/material';
+import { ReviewEntity } from '../types';
 
 const AddReview: React.FC = () => {
   const [restaurantName, setRestaurantName] = useState(''); // New state for restaurant name
   const [reviewText, setReviewText] = useState('');
-  const [parsedDetails, setParsedDetails] = useState<any>(null);
+  const [parsedDetails, setParsedDetails] = useState<ReviewEntity | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
@@ -126,24 +127,24 @@ const AddReview: React.FC = () => {
       ) : (
         <>
           <Typography variant="h6">Preview of Your Review</Typography>
-          <Typography><strong>Reviewer:</strong> {parsedDetails.reviewer}</Typography>
-          <Typography><strong>Restaurant:</strong> {parsedDetails.restaurantName || restaurantName}</Typography>
-          <Typography><strong>Location:</strong> {parsedDetails.location}</Typography>
-          <Typography><strong>Date of Visit:</strong> {parsedDetails.dateOfVisit}</Typography>
-          <Typography><strong>Overall Experience:</strong> {parsedDetails.overallExperience}</Typography>
+          <Typography><strong>Reviewer:</strong> {parsedDetails!.reviewer}</Typography>
+          <Typography><strong>Restaurant:</strong> {parsedDetails!.restaurantName || restaurantName}</Typography>
+          <Typography><strong>Location:</strong> {parsedDetails!.location}</Typography>
+          <Typography><strong>Date of Visit:</strong> {parsedDetails!.dateOfVisit}</Typography>
+          <Typography><strong>Overall Experience:</strong> {parsedDetails!.overallExperience}</Typography>
 
           <Typography><strong>Items Ordered:</strong></Typography>
           <ul>
-            {parsedDetails.itemsOrdered.map((item: string, idx: number) => (
+            {parsedDetails!.itemsOrdered.map((item: string, idx: number) => (
               <li key={idx}>
-                {item} - {parsedDetails.ratings[idx]?.rating || 'No rating provided'}
+                {item} - {parsedDetails!.ratings[idx]?.rating || 'No rating provided'}
               </li>
             ))}
           </ul>
 
           <Typography><strong>Keywords:</strong></Typography>
           <ul>
-            {parsedDetails.keywords.map((keyword: string, idx: number) => (
+            {parsedDetails!.keywords.map((keyword: string, idx: number) => (
               <li key={idx}>
                 {keyword}
               </li>
@@ -152,7 +153,7 @@ const AddReview: React.FC = () => {
 
           <Typography><strong>Phrases:</strong></Typography>
           <ul>
-            {parsedDetails.phrases.map((phrase: string, idx: number) => (
+            {parsedDetails!.phrases.map((phrase: string, idx: number) => (
               <li key={idx}>
                 {phrase}
               </li>
