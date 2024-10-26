@@ -32,7 +32,6 @@ const AddReview: React.FC = () => {
       });
 
       const data = await response.json();
-      console.log('handlePreview', data.parsedData);
       setParsedDetails(data.parsedData);
       setPreviewMode(true); // Enter preview mode
     } catch (error) {
@@ -40,9 +39,8 @@ const AddReview: React.FC = () => {
     }
   };
 
-  const handleBack = () => {
+  const handleEdit = () => {
     setPreviewMode(false);
-    console.log('handleBack');
     setParsedDetails(null); // Reset preview data to allow editing
   };
 
@@ -70,7 +68,6 @@ const AddReview: React.FC = () => {
   const resetForm = () => {
     setRestaurantName(''); // Clear restaurant name
     setReviewText('');
-    console.log('resetForm');
     setParsedDetails(null);
     setPreviewMode(false);
     setSessionId(generateSessionId());
@@ -151,8 +148,8 @@ const AddReview: React.FC = () => {
               </Button>
             </Grid>
             <Grid item xs={6}>
-              <Button variant="contained" color="secondary" fullWidth onClick={handleBack}>
-                Back
+              <Button variant="contained" color="secondary" fullWidth onClick={handleEdit}>
+                Edit
               </Button>
             </Grid>
           </Grid>
