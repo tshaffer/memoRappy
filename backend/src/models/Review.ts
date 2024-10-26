@@ -2,13 +2,13 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 // Define the interface for a review document
 interface IReview extends Document {
-  reviewer: string;
   restaurantName: string;
   location: string;
+  dateOfVisit: string;
   itemsOrdered: string[];
   ratings: { item: string; rating: string }[];
   overallExperience: string;
-  dateOfVisit: string;
+  reviewer: string;
   keywords: string[];
   phrases: string[];
   fullReviewText: string;
@@ -16,16 +16,16 @@ interface IReview extends Document {
 
 // Define the schema for the review
 const ReviewSchema: Schema = new Schema({
-  reviewer: { type: String },
   restaurantName: { type: String, required: true },
   location: { type: String},
+  dateOfVisit: { type: String },
   itemsOrdered: [{ type: String }],
   ratings: [{ item: String, rating: String }],
   overallExperience: { type: String },
-  dateOfVisit: { type: String },
+  reviewer: { type: String },
   keywords: [{ type: String }],
   phrases: [{ type: String }],
-  fullReviewText: { type: String, required: true }, // Add the field here to store the full review
+  fullReviewText: { type: String, required: true },
 });
 
 // Create the Review model using the schema

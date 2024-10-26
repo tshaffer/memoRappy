@@ -2,6 +2,7 @@ import { ChatCompletionMessageParam } from 'openai/resources/chat';
 
 import { openai } from '../index';
 
+import { ReviewEntity } from '../types/';
 import Review from "../models/Review";
 import { extractFieldFromResponse, extractListFromResponse } from '../utilities';
 
@@ -70,15 +71,11 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
     console.log('previewReviewHandler response:', messageContent);
     
     // Parse response data into a structured format
-    const parsedData = {
+    const parsedData: ReviewEntity = {
       restaurantName,
-      reviewer: extractFieldFromResponse(messageContent, 'Reviewer name'),
       location: extractFieldFromResponse(messageContent, 'Location'),
       dateOfVisit: extractFieldFromResponse(messageContent, 'Date of visit'),
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered'),
-      overallExperience: extractFieldFromResponse(messageContent, 'Overall experience'),
-      keywords: extractListFromResponse(messageContent, 'Keywords'),
-      phrases: extractListFromResponse(messageContent, 'Phrases'),
       ratings: extractListFromResponse(messageContent, 'Ratings for each item').map((ratingString: string) => {
         const parts = ratingString.match(/(.+?)\s?\((.+?)\)/);
         return {
@@ -86,6 +83,10 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
           rating: parts ? parts[2].trim() : '',
         };
       }),
+      overallExperience: extractFieldFromResponse(messageContent, 'Overall experience'),
+      reviewer: extractFieldFromResponse(messageContent, 'Reviewer name'),
+      keywords: extractListFromResponse(messageContent, 'Keywords'),
+      phrases: extractListFromResponse(messageContent, 'Phrases'),
     };
 
     res.json({ parsedData });
