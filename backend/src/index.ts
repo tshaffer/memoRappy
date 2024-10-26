@@ -3,12 +3,16 @@ import path, { parse } from 'path';
 // import cors from 'cors';
 import * as dotenv from 'dotenv';
 import OpenAI from 'openai';
-import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import mongoose from 'mongoose';
 import Review from './models/Review';
 const cors: any = require('cors');
 // const express: any = require('express');
 import express, { Request, Response } from 'express';
+
+import { previewReviewHandler, submitReviewHandler } from './controllers/addReview';
+import { extractFieldFromResponse, extractListFromResponse, cleanDateString } from './utilities';
+
+export let openai: OpenAI;
 
 dotenv.config();
 
@@ -59,44 +63,6 @@ const reviewsRouter = async (req: any, res: any) => {
     console.error('Error retrieving reviews:', error);
     res.status(500).json({ error: 'An error occurred while retrieving the reviews.' });
   }
-};
-
-// Extract a field from the response based on a keyword
-const extractFieldFromResponse = (response: string, fieldName: string): string => {
-  const regex = new RegExp(`${fieldName}:\\s*(.*)`, 'i');
-  const match = response.match(regex);
-  return match ? match[1].trim() : '';
-};
-
-// Extract a list of items from the response based on a keyword
-const extractListFromResponse = (response: string, fieldName: string): string[] => {
-  const regex = new RegExp(`${fieldName}:\\s*(.*)`, 'i');
-  const match = response.match(regex);
-  return match ? match[1].split(',').map(item => item.trim()) : [];
-};
-
-// Helper function to clean the date string and add the current year if missing
-// TEDTODO - may no longer be needed given the changes to the OpenAI prompt 
-const cleanDateString = (dateStr: string): string => {
-
-  console.log('cleanDateString:');
-  console.log(dateStr);
-
-  const currentYear = new Date().getFullYear();
-
-  // Remove ordinal suffixes like "st", "nd", "rd", "th"
-  let cleanedDate = dateStr.replace(/(\d+)(st|nd|rd|th)/, '$1').trim();
-
-  // Check if the year is missing by seeing if the string contains a 4-digit number (year)
-  const yearRegex = /\b\d{4}\b/;
-  if (!yearRegex.test(cleanedDate)) {
-    // Append the current year if it's missing
-    cleanedDate += ` ${currentYear}`;
-  }
-
-  console.log(cleanedDate);
-
-  return cleanedDate;
 };
 
 
@@ -288,107 +254,6 @@ const old_structuredReviewHandler: any = async (req: any, res: any): Promise<voi
   }
 }
 
-// Store conversations for each session
-const reviewConversations: { [sessionId: string]: ChatCompletionMessageParam[] } = {};
-
-// Preview endpoint to get structured data without saving
-const previewReviewHandler = async (req: any, res: any): Promise<void> => {
-  const { reviewText, sessionId } = req.body;
-
-  // Initialize session conversation history if it doesn't exist
-  if (!reviewConversations[sessionId]) {
-    reviewConversations[sessionId] = [
-      {
-        role: "system",
-        content: `
-          Extract the following information from this review:
-          - Reviewer name
-          - Restaurant name
-          - Location
-          - Date of visit (in the format YYYY-MM-DD)
-          - List of items ordered
-          - Ratings for each item (with the format: "item name (rating)")
-          - Overall experience
-          
-          Review: "${reviewText}"
-          
-          Please provide the response in the following format:
-          
-          - Reviewer name: [Reviewer Name]
-          - Restaurant name: [Restaurant Name]
-          - Location: [Location]
-          - Date of visit: [YYYY-MM-DD]
-          - List of items ordered: [Item 1, Item 2, etc.]
-          - Ratings for each item: [Item 1 (Rating), Item 2 (Rating)]
-          - Overall experience: [Overall Experience]
-        `,
-      }
-    ];
-  }
-
-  // Add user input as the latest message in the conversation history
-  reviewConversations[sessionId].push({
-    role: "user",
-    content: reviewText,
-  });
-
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: reviewConversations[sessionId],
-      max_tokens: 500,
-      temperature: 0.5,
-    });
-
-    const messageContent = response.choices[0].message?.content;
-    if (!messageContent) {
-      res.status(500).json({ error: 'Failed to extract data from the response.' });
-      return;
-    }
-
-    // Parse response data into a structured format
-    const parsedData = {
-      reviewer: extractFieldFromResponse(messageContent, 'Reviewer name'),
-      restaurant: extractFieldFromResponse(messageContent, 'Restaurant name'),
-      location: extractFieldFromResponse(messageContent, 'Location'),
-      dateOfVisit: extractFieldFromResponse(messageContent, 'Date of visit'),
-      itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered'),
-      overallExperience: extractFieldFromResponse(messageContent, 'Overall experience'),
-      ratings: extractListFromResponse(messageContent, 'Ratings for each item').map((ratingString: string) => {
-        const parts = ratingString.match(/(.+?)\s?\((.+?)\)/);
-        return {
-          item: parts ? parts[1].trim() : ratingString,
-          rating: parts ? parts[2].trim() : '',
-        };
-      }),
-    };
-
-    res.json({ parsedData });
-  } catch (error) {
-    console.error('Error processing review preview:', error);
-    res.status(500).json({ error: 'An error occurred while processing the review preview.' });
-  }
-};
-
-// Submit endpoint to save structured review in the database
-const submitReviewHandler = async (req: any, res: any) => {
-  const { parsedData } = req.body;
-
-  if (!parsedData || !parsedData.restaurant || !parsedData.dateOfVisit) {
-    return res.status(400).json({ error: 'Incomplete review data.' });
-  }
-
-  try {
-    const newReview = new Review(parsedData);
-    await newReview.save();
-
-    return res.status(201).json({ message: 'Review saved successfully!', review: newReview });
-  } catch (error) {
-    console.error('Error saving review:', error);
-    return res.status(500).json({ error: 'An error occurred while saving the review.' });
-  }
-};
-
 const structuredReviewHandler = async (req: any, res: any): Promise<void> => {
   try {
 
@@ -469,7 +334,6 @@ app.post('/api/query', queryReviewsHandler);
 app.post('/api/reviews/preview', previewReviewHandler);
 app.post('/api/reviews/submit', submitReviewHandler);
 
-
 // app.post('/api/reviews', structuredReviewHandler);
 app.post('/api/reviews/structured', structuredReviewHandler);
 app.post('/api/reviews/free-form', freeFormReviewHandler);
@@ -491,7 +355,7 @@ app.get('*', (req: any, res: any) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
-const openai = new OpenAI({
+openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
