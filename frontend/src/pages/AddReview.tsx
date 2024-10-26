@@ -7,7 +7,8 @@ import {
   Grid,
 } from '@mui/material';
 
-const AddReviewLeft: React.FC = () => {
+const AddReview: React.FC = () => {
+  const [restaurantName, setRestaurantName] = useState(''); // New state for restaurant name
   const [reviewText, setReviewText] = useState('');
   const [parsedDetails, setParsedDetails] = useState<any>(null);
   const [previewMode, setPreviewMode] = useState(false);
@@ -27,7 +28,7 @@ const AddReviewLeft: React.FC = () => {
       const response = await fetch('/api/reviews/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reviewText, sessionId }),
+        body: JSON.stringify({ restaurantName, reviewText, sessionId }),
       });
 
       const data = await response.json();
@@ -50,7 +51,9 @@ const AddReviewLeft: React.FC = () => {
       const response = await fetch('/api/reviews/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ parsedData: { ...parsedDetails, fullReviewText: reviewText } }),
+        body: JSON.stringify({
+          parsedData: { ...parsedDetails, fullReviewText: reviewText, restaurantName },
+        }),
       });
 
       const data = await response.json();
@@ -62,6 +65,7 @@ const AddReviewLeft: React.FC = () => {
   };
 
   const resetForm = () => {
+    setRestaurantName(''); // Clear restaurant name
     setReviewText('');
     setParsedDetails(null);
     setPreviewMode(false);
@@ -82,6 +86,14 @@ const AddReviewLeft: React.FC = () => {
         <>
           <TextField
             fullWidth
+            label="Restaurant Name"
+            value={restaurantName}
+            onChange={(e) => setRestaurantName(e.target.value)}
+            placeholder="Enter the restaurant name"
+            required
+          />
+          <TextField
+            fullWidth
             label="Write Your Review"
             multiline
             rows={8}
@@ -89,10 +101,17 @@ const AddReviewLeft: React.FC = () => {
             onChange={(e) => setReviewText(e.target.value)}
             placeholder="Describe your dining experience in detail..."
             required
+            style={{ marginTop: 20 }}
           />
           <Grid container spacing={2} style={{ marginTop: 20 }}>
             <Grid item xs={6}>
-              <Button variant="contained" color="primary" fullWidth onClick={handlePreview}>
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                onClick={handlePreview}
+                disabled={!restaurantName || !reviewText}
+              >
                 Preview
               </Button>
             </Grid>
@@ -107,7 +126,7 @@ const AddReviewLeft: React.FC = () => {
         <>
           <Typography variant="h6">Preview of Your Review</Typography>
           <Typography><strong>Reviewer:</strong> {parsedDetails.reviewer}</Typography>
-          <Typography><strong>Restaurant:</strong> {parsedDetails.restaurant}</Typography>
+          <Typography><strong>Restaurant:</strong> {parsedDetails.restaurant || restaurantName}</Typography>
           <Typography><strong>Location:</strong> {parsedDetails.location}</Typography>
           <Typography><strong>Date of Visit:</strong> {parsedDetails.dateOfVisit}</Typography>
           <Typography><strong>Overall Experience:</strong> {parsedDetails.overallExperience}</Typography>
@@ -139,4 +158,4 @@ const AddReviewLeft: React.FC = () => {
   );
 };
 
-export default AddReviewLeft;
+export default AddReview;
