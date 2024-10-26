@@ -4,7 +4,7 @@ import { openai } from '../index';
 
 import { ReviewEntity } from '../types/';
 import Review from "../models/Review";
-import { extractFieldFromResponse, extractListFromResponse } from '../utilities';
+import { extractFieldFromResponse, extractListFromResponse, removeSquareBrackets } from '../utilities';
 
 // Store conversations for each session
 const reviewConversations: { [sessionId: string]: ChatCompletionMessageParam[] } = {};
@@ -72,23 +72,24 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
     
     // Parse response data into a structured format
     const parsedData: ReviewEntity = {
-      restaurantName,
-      location: extractFieldFromResponse(messageContent, 'Location'),
-      dateOfVisit: extractFieldFromResponse(messageContent, 'Date of visit'),
-      itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered'),
+      restaurantName: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Restaurant name')),
+      location: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Location')),
+      dateOfVisit: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Date of visit')),
+      itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered').map(removeSquareBrackets),
       ratings: extractListFromResponse(messageContent, 'Ratings for each item').map((ratingString: string) => {
-        const parts = ratingString.match(/(.+?)\s?\((.+?)\)/);
+        const cleanedString = removeSquareBrackets(ratingString);
+        const parts = cleanedString.match(/(.+?)\s?\((.+?)\)/);
         return {
-          item: parts ? parts[1].trim() : ratingString,
+          item: parts ? parts[1].trim() : cleanedString,
           rating: parts ? parts[2].trim() : '',
         };
       }),
-      overallExperience: extractFieldFromResponse(messageContent, 'Overall experience'),
-      reviewer: extractFieldFromResponse(messageContent, 'Reviewer name'),
-      keywords: extractListFromResponse(messageContent, 'Keywords'),
-      phrases: extractListFromResponse(messageContent, 'Phrases'),
+      overallExperience: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Overall experience')),
+      reviewer: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Reviewer name')),
+      keywords: extractListFromResponse(messageContent, 'Keywords').map(removeSquareBrackets),
+      phrases: extractListFromResponse(messageContent, 'Phrases').map(removeSquareBrackets),
     };
-
+    
     res.json({ parsedData });
   } catch (error) {
     console.error('Error processing review preview:', error);

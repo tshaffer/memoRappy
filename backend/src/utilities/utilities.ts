@@ -11,3 +11,7 @@ export const extractListFromResponse = (response: string, fieldName: string): st
   const match = response.match(regex);
   return match ? match[1].split(',').map(item => item.trim()) : [];
 };
+
+export function removeSquareBrackets(text: string): string {
+  return text.replace(/^\[|\]$/g, '').trim();
+}
