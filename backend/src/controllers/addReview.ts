@@ -89,7 +89,7 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
 
 // Chat endpoint for ongoing conversation
 export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
-  const { userInput, sessionId, existingReviewText } = req.body;
+  const { userInput, sessionId } = req.body;
 
   if (!reviewConversations[sessionId]) {
     res.status(400).json({ error: 'Session not found. Start with a preview first.' });
@@ -97,7 +97,20 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
   }
 
   // Add user input to the conversation
-  reviewConversations[sessionId].push({ role: "user", content: userInput });
+  reviewConversations[sessionId].push({
+    role: "user",
+    content: `${userInput}\n\nPlease apply any necessary changes and return the full structured data in JSON format as follows:\n\n{
+      "restaurantName": "[Updated Name]",
+      "location": "[Updated Location]",
+      "dateOfVisit": "[Updated Date]",
+      "itemsOrdered": [ "[Item 1]", "[Item 2]", etc. ],
+      "ratings": [ { "item": "[Item Name]", "rating": "[Rating]" }, etc. ],
+      "overallExperience": "[Updated Experience]",
+      "reviewer": "[Updated Reviewer]",
+      "keywords": [ "Keyword 1", "Keyword 2", etc. ],
+      "phrases": [ "Phrase 1", "Phrase 2", etc. ]
+    }`
+  });
 
   try {
     const response = await openai.chat.completions.create({
@@ -113,13 +126,14 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
       return;
     }
 
-    // Extract updated review text and structured data
-    const updatedReviewText = messageContent.match(/Updated Review Text:\s*"(.+?)"/)?.[1] ?? existingReviewText;
-    const structuredDataJSON = messageContent.match(/Structured Data:\s*(\{.*\})/s)?.[1];
-    const parsedData = structuredDataJSON ? JSON.parse(structuredDataJSON) : null;
-
-    // Send updated review text and structured data
-    res.json({ updatedReviewText, parsedData });
+    // Attempt to parse the structured data JSON from the AI response
+    const structuredDataJSON = messageContent.match(/({[\s\S]*})/)?.[1];
+    if (structuredDataJSON) {
+      const parsedData: ReviewEntity = JSON.parse(structuredDataJSON);
+      res.json({ parsedData });
+    } else {
+      res.status(500).json({ error: 'Failed to parse structured data from the response.' });
+    }
   } catch (error) {
     console.error('Error during chat interaction:', error);
     res.status(500).json({ error: 'An error occurred while processing the chat response.' });
