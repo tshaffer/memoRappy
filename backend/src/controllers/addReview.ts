@@ -125,8 +125,8 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
     }
 
     // Adjusted regular expressions to match the response format
-    const structuredDataMatch = messageContent.match(/^- Reviewer name:[\s\S]*?- Phrases:/);
-    const updatedReviewTextMatch = messageContent.match(/Updated Review:\s*"(.*)"/s);
+    const structuredDataMatch = messageContent.match(/^- Updated Structured Data:\s*([\s\S]*?)- Updated Review Text:/m);
+    const updatedReviewTextMatch = messageContent.match(/Updated Review Text:\s*"(.*)"/s);
 
     if (!structuredDataMatch || !updatedReviewTextMatch) {
       console.error('Parsing error: Expected structured data and updated review text not found');
@@ -134,7 +134,7 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
       return;
     }
 
-    const structuredDataText = structuredDataMatch[0].trim();
+    const structuredDataText = structuredDataMatch[1].trim();
     const updatedReviewText = updatedReviewTextMatch[1].trim();
 
     // Parse the structured data text into JSON-like format
