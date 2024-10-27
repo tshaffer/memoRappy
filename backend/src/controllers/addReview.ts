@@ -125,22 +125,37 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
       return;
     }
 
-    // Attempt to extract JSON for structured data and updated review text
-    const structuredDataMatch = messageContent.match(/Structured Data:\s*(\{.*\})/s);
-    const updatedReviewTextMatch = messageContent.match(/Updated Review Text:\s*(.+)/s);
+    // Adjusted regular expressions to match the response format
+    const structuredDataMatch = messageContent.match(/Updated Structured Information:\s*([\s\S]*?)Updated Review Text:/);
+    const updatedReviewTextMatch = messageContent.match(/Updated Review Text:\s*"(.*)"/s);
 
-    // Check if matches were found
     if (!structuredDataMatch || !updatedReviewTextMatch) {
       console.error('Parsing error: Expected structured data and updated review text not found');
       res.status(500).json({ error: 'Failed to parse updated data.' });
       return;
     }
 
-    const structuredDataJSON = structuredDataMatch[1];
+    const structuredDataText = structuredDataMatch[1].trim();
     const updatedReviewText = updatedReviewTextMatch[1].trim();
 
-    // Parse JSON for structured data
-    const parsedData: ReviewEntity = JSON.parse(structuredDataJSON);
+    // Parse the structured data text into JSON-like format
+    const parsedData: ReviewEntity = {
+      restaurantName: extractFieldFromResponse(structuredDataText, 'Restaurant name'),
+      location: extractFieldFromResponse(structuredDataText, 'Location'),
+      dateOfVisit: extractFieldFromResponse(structuredDataText, 'Date of visit'),
+      itemsOrdered: extractListFromResponse(structuredDataText, 'List of items ordered'),
+      ratings: extractListFromResponse(structuredDataText, 'Ratings').map((ratingString: string) => {
+        const parts = ratingString.match(/(.+?)\s?\((.+?)\)/);
+        return {
+          item: parts ? parts[1].trim() : ratingString,
+          rating: parts ? parts[2].trim() : '',
+        };
+      }),
+      overallExperience: extractFieldFromResponse(structuredDataText, 'Overall experience'),
+      reviewer: extractFieldFromResponse(structuredDataText, 'Reviewer name'),
+      keywords: extractListFromResponse(structuredDataText, 'Keywords'),
+      phrases: extractListFromResponse(structuredDataText, 'Phrases'),
+    };
 
     res.json({ parsedData, updatedReviewText });
   } catch (error) {
