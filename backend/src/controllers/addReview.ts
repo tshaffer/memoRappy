@@ -106,8 +106,8 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
         {
           role: "system",
           content: `Please provide:
-          1. The updated structured data based on the full conversation.
-          2. An updated review text that incorporates the latest user modifications.
+          1. The updated structured data based on the full conversation. Please ensure that the updated structured data begins with "Updated Structured Data:".
+          2. An updated review text that incorporates the latest user modifications. Please ensure that the updated review text begins with "Updated Review Text:".
 
           Original Review: "${fullReviewText}"`,
         },
@@ -125,7 +125,7 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
     }
 
     // Adjusted regular expressions to match the response format
-    const structuredDataMatch = messageContent.match(/^- Updated Structured Data:\s*([\s\S]*?)- Updated Review Text:/m);
+    const structuredDataMatch = messageContent.match(/^Updated Structured Data:\s*([\s\S]*?)Updated Review Text:/m);
     const updatedReviewTextMatch = messageContent.match(/Updated Review Text:\s*"(.*)"/s);
 
     if (!structuredDataMatch || !updatedReviewTextMatch) {
