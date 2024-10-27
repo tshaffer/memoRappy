@@ -30,6 +30,8 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
           
           Also, look for keywords and phrases that you might typically find in a restaurant review.
 
+          Given the information in the review, try to identify the restaurant.
+
           Review: "${reviewText}"
           
           Please provide the response in the following format:
@@ -43,7 +45,14 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
           - Overall experience: [Overall Experience]
           - Keywords: [Keyword 1, Keyword 2, etc.]
           - Phrases: [Phrase 1, Phrase 2, etc.]
-        `,
+        
+          If you're able to identify the restaurant, please include the following:
+          - Confidence level: [Confidence Level]
+          - Address: [Address]
+          - Phone number: [Phone Number]
+          - GPS coordinates: [Latitude, Longitude]
+          If not, respond with: "Unable to identify the restaurant."
+          `,
       }
     ];
   }
