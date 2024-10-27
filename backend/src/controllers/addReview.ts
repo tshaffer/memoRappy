@@ -26,7 +26,7 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
           - Items ordered with ratings (if available)
           - Overall experience
           - Keywords and phrases relevant to the review.
-          
+
           Format the response as follows:
           - Reviewer name: [Name]
           - Restaurant name: [Name]
@@ -38,7 +38,7 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
           - Keywords: [Keyword 1, Keyword 2]
           - Phrases: [Phrase 1, Phrase 2]
         `,
-      }
+      },
     ];
   }
 
@@ -89,7 +89,7 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
 
 // Chat endpoint for ongoing conversation
 export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
-  const { userInput, sessionId } = req.body;
+  const { userInput, sessionId, existingReviewText } = req.body;
 
   if (!reviewConversations[sessionId]) {
     res.status(400).json({ error: 'Session not found. Start with a preview first.' });
@@ -113,28 +113,13 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
       return;
     }
 
-    // Update parsedData to include new conversation output
-    const parsedData: ReviewEntity = {
-      restaurantName: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Restaurant name')),
-      location: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Location')),
-      dateOfVisit: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Date of visit')),
-      itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered').map(removeSquareBrackets),
-      ratings: extractListFromResponse(messageContent, 'Ratings for each item').map((ratingString: string) => {
-        const cleanedString = removeSquareBrackets(ratingString);
-        const parts = cleanedString.match(/(.+?)\s?\((.+?)\)/);
-        return {
-          item: parts ? parts[1].trim() : cleanedString,
-          rating: parts ? parts[2].trim() : '',
-        };
-      }),
-      overallExperience: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Overall experience')),
-      reviewer: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Reviewer name')),
-      keywords: extractListFromResponse(messageContent, 'Keywords').map(removeSquareBrackets),
-      phrases: extractListFromResponse(messageContent, 'Phrases').map(removeSquareBrackets),
-    };
+    // Extract updated review text and structured data
+    const updatedReviewText = messageContent.match(/Updated Review Text:\s*"(.+?)"/)?.[1] ?? existingReviewText;
+    const structuredDataJSON = messageContent.match(/Structured Data:\s*(\{.*\})/s)?.[1];
+    const parsedData = structuredDataJSON ? JSON.parse(structuredDataJSON) : null;
 
-    // Send back parsed data for chat display
-    res.json({ parsedData });
+    // Send updated review text and structured data
+    res.json({ updatedReviewText, parsedData });
   } catch (error) {
     console.error('Error during chat interaction:', error);
     res.status(500).json({ error: 'An error occurred while processing the chat response.' });

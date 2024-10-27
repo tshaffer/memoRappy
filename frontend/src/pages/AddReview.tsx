@@ -53,10 +53,11 @@ const AddReview: React.FC = () => {
       const response = await fetch('/api/reviews/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userInput: chatInput, sessionId }),
+        body: JSON.stringify({ userInput: chatInput, sessionId, existingReviewText: reviewText }),
       });
       const data = await response.json();
       setParsedDetails(data.parsedData);
+      setReviewText(data.updatedReviewText);
       setChatHistory([...chatHistory, `User: ${chatInput}`, `AI: ${JSON.stringify(data.parsedData, null, 2)}`]);
       setChatInput(''); // Clear input after sending
       setDisplayTab(2); // Keep focus on Chat History tab
