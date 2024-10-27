@@ -96,7 +96,7 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
     return;
   }
 
-  // Add user input to conversation
+  // Add user input to the conversation
   reviewConversations[sessionId].push({ role: "user", content: userInput });
 
   try {
@@ -118,22 +118,31 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
     });
 
     const messageContent = response.choices[0].message?.content;
+    console.log('ChatGPT response:', messageContent); // Debugging log
+
     if (!messageContent) {
       res.status(500).json({ error: 'Failed to extract data from the response.' });
       return;
     }
 
-    const structuredDataJSON = messageContent.match(/Structured Data:\s*(\{.*\})/s)?.[1];
-    const updatedReviewText = messageContent.match(/Updated Review Text:\s*(.*)/s)?.[1];
+    // Attempt to extract JSON for structured data and updated review text
+    const structuredDataMatch = messageContent.match(/Structured Data:\s*(\{.*\})/s);
+    const updatedReviewTextMatch = messageContent.match(/Updated Review Text:\s*(.+)/s);
 
-    // Parse structured data and updated review text
-    const parsedData: ReviewEntity = structuredDataJSON ? JSON.parse(structuredDataJSON) : null;
-    if (!parsedData || !updatedReviewText) {
+    // Check if matches were found
+    if (!structuredDataMatch || !updatedReviewTextMatch) {
+      console.error('Parsing error: Expected structured data and updated review text not found');
       res.status(500).json({ error: 'Failed to parse updated data.' });
       return;
     }
 
-    res.json({ parsedData, updatedReviewText: updatedReviewText.trim() });
+    const structuredDataJSON = structuredDataMatch[1];
+    const updatedReviewText = updatedReviewTextMatch[1].trim();
+
+    // Parse JSON for structured data
+    const parsedData: ReviewEntity = JSON.parse(structuredDataJSON);
+
+    res.json({ parsedData, updatedReviewText });
   } catch (error) {
     console.error('Error during chat interaction:', error);
     res.status(500).json({ error: 'An error occurred while processing the chat response.' });
