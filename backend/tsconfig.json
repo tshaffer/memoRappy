@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2015",                    // Target ECMAScript 2015 or higher
+    "target": "ES2018",                    // Target ECMAScript 2018 or higher
     "module": "commonjs",                  // Use CommonJS module system
     "strict": true,                        // Enable strict type checking
     "esModuleInterop": true,               // Allow default imports from CommonJS modules

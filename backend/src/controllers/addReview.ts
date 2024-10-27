@@ -1,7 +1,5 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat';
-
 import { openai } from '../index';
-
 import { ReviewEntity } from '../types/';
 import Review from "../models/Review";
 import { extractFieldFromResponse, extractListFromResponse, removeSquareBrackets } from '../utilities';
@@ -13,46 +11,39 @@ const reviewConversations: { [sessionId: string]: ChatCompletionMessageParam[] }
 export const previewReviewHandler = async (req: any, res: any): Promise<void> => {
   const { restaurantName, reviewText, sessionId } = req.body;
 
-  // Initialize session conversation history if it doesn't exist
+  // Initialize conversation history if it doesn't exist
   if (!reviewConversations[sessionId]) {
     reviewConversations[sessionId] = [
       {
         role: "system",
         content: `
-          Extract the following information from this review:
+          You are a helpful assistant aiding in extracting structured information from restaurant reviews.
+          Your task is to extract details such as:
           - Reviewer name
           - Restaurant name
           - Location
-          - Date of visit (in the format YYYY-MM-DD)
-          - List of items ordered
-          - Ratings for each item (with the format: "item name (rating)")
+          - Date of visit (in YYYY-MM-DD format)
+          - Items ordered with ratings (if available)
           - Overall experience
-          
-          Also, look for keywords and phrases that you might typically find in a restaurant review.
+          - Keywords and phrases relevant to the review.
 
-          Review: "${reviewText}"
-          
-          Please provide the response in the following format:
-          
-          - Reviewer name: [Reviewer Name]
-          - Restaurant name: [Restaurant Name]
+          Format the response as follows:
+          - Reviewer name: [Name]
+          - Restaurant name: [Name]
           - Location: [Location]
           - Date of visit: [YYYY-MM-DD]
           - List of items ordered: [Item 1, Item 2, etc.]
-          - Ratings for each item: [Item 1 (Rating), Item 2 (Rating)]
+          - Ratings: [Item 1 (Rating), Item 2 (Rating)]
           - Overall experience: [Overall Experience]
-          - Keywords: [Keyword 1, Keyword 2, etc.]
-          - Phrases: [Phrase 1, Phrase 2, etc.]
+          - Keywords: [Keyword 1, Keyword 2]
+          - Phrases: [Phrase 1, Phrase 2]
         `,
-      }
+      },
     ];
   }
 
   // Add user input as the latest message in the conversation history
-  reviewConversations[sessionId].push({
-    role: "user",
-    content: reviewText,
-  });
+  reviewConversations[sessionId].push({ role: "user", content: reviewText });
 
   try {
     const response = await openai.chat.completions.create({
@@ -68,9 +59,7 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
       return;
     }
 
-    console.log('previewReviewHandler response:', messageContent);
-    
-    // Parse response data into a structured format
+    // Parse response into structured data
     const parsedData: ReviewEntity = {
       restaurantName: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Restaurant name')),
       location: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Location')),
@@ -89,11 +78,88 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
       keywords: extractListFromResponse(messageContent, 'Keywords').map(removeSquareBrackets),
       phrases: extractListFromResponse(messageContent, 'Phrases').map(removeSquareBrackets),
     };
-    
+
+    // Respond with parsed data
     res.json({ parsedData });
   } catch (error) {
     console.error('Error processing review preview:', error);
     res.status(500).json({ error: 'An error occurred while processing the review preview.' });
+  }
+};
+
+export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
+  const { userInput, sessionId, fullReviewText } = req.body;
+
+  if (!reviewConversations[sessionId]) {
+    res.status(400).json({ error: 'Session not found. Start with a preview first.' });
+    return;
+  }
+
+  // Add user input to the conversation
+  reviewConversations[sessionId].push({ role: "user", content: userInput });
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        ...reviewConversations[sessionId],
+        {
+          role: "system",
+          content: `Please provide:
+          1. The updated structured data based on the full conversation. Please ensure that the updated structured data begins with "Updated Structured Data:".
+          2. An updated review text that incorporates the latest user modifications. Please ensure that the updated review text begins with "Updated Review Text:".
+
+          Original Review: "${fullReviewText}"`,
+        },
+      ],
+      max_tokens: 500,
+      temperature: 0.5,
+    });
+
+    const messageContent = response.choices[0].message?.content;
+    console.log('ChatGPT response:', messageContent); // Debugging log
+
+    if (!messageContent) {
+      res.status(500).json({ error: 'Failed to extract data from the response.' });
+      return;
+    }
+
+    // Adjusted regular expressions to match the response format
+    const structuredDataMatch = messageContent.match(/^Updated Structured Data:\s*([\s\S]*?)Updated Review Text:/m);
+    const updatedReviewTextMatch = messageContent.match(/Updated Review Text:\s*"(.*)"/s);
+
+    if (!structuredDataMatch || !updatedReviewTextMatch) {
+      console.error('Parsing error: Expected structured data and updated review text not found');
+      res.status(500).json({ error: 'Failed to parse updated data.' });
+      return;
+    }
+
+    const structuredDataText = structuredDataMatch[1].trim();
+    const updatedReviewText = updatedReviewTextMatch[1].trim();
+
+    // Parse the structured data text into JSON-like format
+    const parsedData: ReviewEntity = {
+      restaurantName: extractFieldFromResponse(structuredDataText, 'Restaurant name'),
+      location: extractFieldFromResponse(structuredDataText, 'Location'),
+      dateOfVisit: extractFieldFromResponse(structuredDataText, 'Date of visit'),
+      itemsOrdered: extractListFromResponse(structuredDataText, 'List of items ordered'),
+      ratings: extractListFromResponse(structuredDataText, 'Ratings').map((ratingString: string) => {
+        const parts = ratingString.match(/(.+?)\s?\((.+?)\)/);
+        return {
+          item: parts ? parts[1].trim() : ratingString,
+          rating: parts ? parts[2].trim() : '',
+        };
+      }),
+      overallExperience: extractFieldFromResponse(structuredDataText, 'Overall experience'),
+      reviewer: extractFieldFromResponse(structuredDataText, 'Reviewer name'),
+      keywords: extractListFromResponse(structuredDataText, 'Keywords'),
+      phrases: extractListFromResponse(structuredDataText, 'Phrases'),
+    };
+
+    res.json({ parsedData, updatedReviewText });
+  } catch (error) {
+    console.error('Error during chat interaction:', error);
+    res.status(500).json({ error: 'An error occurred while processing the chat response.' });
   }
 };
 
@@ -109,10 +175,12 @@ export const submitReviewHandler = async (req: any, res: any) => {
     const newReview = new Review(parsedData);
     await newReview.save();
 
+    // Clear conversation history for the session after submission
+    delete reviewConversations[req.body.sessionId];
+
     return res.status(201).json({ message: 'Review saved successfully!', review: newReview });
   } catch (error) {
     console.error('Error saving review:', error);
     return res.status(500).json({ error: 'An error occurred while saving the review.' });
   }
 };
-
