@@ -12,69 +12,61 @@ import {
 import { ReviewEntity } from '../types';
 
 const AddReview: React.FC = () => {
-  const [restaurantName, setRestaurantName] = useState(''); // State for restaurant name
+  const [restaurantName, setRestaurantName] = useState('');
   const [reviewText, setReviewText] = useState('');
   const [parsedDetails, setParsedDetails] = useState<ReviewEntity | null>(null);
-  const [tabIndex, setTabIndex] = useState(0); // Tab index for preview, review text, and chat history
+  const [displayTab, setDisplayTab] = useState(0); // 0 = Review Text, 1 = Extracted Information, 2 = Chat History
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [chatHistory, setChatHistory] = useState<string[]>([]); // Holds chat history
+  const [chatHistory, setChatHistory] = useState<string[]>([]);
+  const [chatInput, setChatInput] = useState<string>(''); // New input field for chat
 
   useEffect(() => {
-    // Generate session ID if one doesn't exist
     if (!sessionId) {
       setSessionId(generateSessionId());
     }
   }, [sessionId]);
 
-  // Handle tab change for displaying different information
   const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
-    setTabIndex(newValue);
+    setDisplayTab(newValue);
   };
 
-  // Handle preview button click
   const handlePreview = async () => {
     if (!sessionId) return;
-
     try {
       const response = await fetch('/api/reviews/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ restaurantName, reviewText, sessionId }),
       });
-
       const data = await response.json();
       setParsedDetails(data.parsedData);
       setChatHistory([...chatHistory, `User: ${reviewText}`, `AI: ${JSON.stringify(data.parsedData, null, 2)}`]);
-      setTabIndex(0); // Set tab to "Extracted Information" on preview
+      setDisplayTab(1); // Switch to Extracted Information on preview
     } catch (error) {
       console.error('Error previewing review:', error);
     }
   };
 
-  // Handle chat interaction for continued conversation with ChatGPT
-  const handleChat = async (userInput: string) => {
-    if (!sessionId) return;
-
+  const handleChat = async () => {
+    if (!sessionId || !chatInput) return;
     try {
       const response = await fetch('/api/reviews/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userInput, sessionId }),
+        body: JSON.stringify({ userInput: chatInput, sessionId }),
       });
-
       const data = await response.json();
       setParsedDetails(data.parsedData);
-      setChatHistory([...chatHistory, `User: ${userInput}`, `AI: ${JSON.stringify(data.parsedData, null, 2)}`]);
-      setTabIndex(2); // Set tab to "Chat History"
+      setChatHistory([...chatHistory, `User: ${chatInput}`, `AI: ${JSON.stringify(data.parsedData, null, 2)}`]);
+      setChatInput(''); // Clear input after sending
+      setDisplayTab(2); // Keep focus on Chat History tab
     } catch (error) {
       console.error('Error during chat:', error);
     }
   };
 
-  // Handle final review submission
   const handleSubmit = async () => {
     if (!parsedDetails) return;
-
     try {
       const response = await fetch('/api/reviews/submit', {
         method: 'POST',
@@ -83,26 +75,23 @@ const AddReview: React.FC = () => {
           parsedData: { ...parsedDetails, fullReviewText: reviewText, restaurantName },
         }),
       });
-
       const data = await response.json();
       console.log('Review submitted:', data);
-      resetForm(); // Reset after submission
+      resetForm();
     } catch (error) {
       console.error('Error submitting review:', error);
     }
   };
 
   const resetForm = () => {
-    setRestaurantName(''); // Clear restaurant name
+    setRestaurantName('');
     setReviewText('');
     setParsedDetails(null);
     setSessionId(generateSessionId());
     setChatHistory([]);
   };
 
-  const generateSessionId = () => {
-    return Math.random().toString(36).substring(2) + Date.now().toString(36);
-  };
+  const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
   return (
     <Paper style={{ padding: 20 }}>
@@ -110,38 +99,39 @@ const AddReview: React.FC = () => {
         Add a Review
       </Typography>
 
-      {/* Input fields for restaurant name and review text */}
-      <TextField
-        fullWidth
-        label="Restaurant Name"
-        value={restaurantName}
-        onChange={(e) => setRestaurantName(e.target.value)}
-        placeholder="Enter the restaurant name"
-        required
-        style={{ marginBottom: 20 }}
-      />
-      <TextField
-        fullWidth
-        label="Write Your Review"
-        multiline
-        rows={8}
-        value={reviewText}
-        onChange={(e) => setReviewText(e.target.value)}
-        placeholder="Describe your dining experience in detail..."
-        required
-        style={{ marginBottom: 20 }}
-      />
-
-      {/* Tabs for display modes */}
-      <Tabs value={tabIndex} onChange={handleTabChange} indicatorColor="primary" textColor="primary">
-        <Tab label="Extracted Information" />
+      {/* Display Toggle Tabs */}
+      <Tabs value={displayTab} onChange={handleTabChange} indicatorColor="primary" textColor="primary">
         <Tab label="Review Text" />
+        <Tab label="Extracted Information" />
         <Tab label="Chat History" />
       </Tabs>
 
       <Box mt={2}>
-        {/* Extracted Information tab content */}
-        {tabIndex === 0 && parsedDetails && (
+        {/* Display Content Based on Active Tab */}
+        {displayTab === 0 && (
+          <Box>
+            <TextField
+              fullWidth
+              label="Restaurant Name"
+              value={restaurantName}
+              onChange={(e) => setRestaurantName(e.target.value)}
+              placeholder="Enter the restaurant name"
+              required
+              style={{ marginBottom: 20 }}
+            />
+            <TextField
+              fullWidth
+              multiline
+              rows={8}
+              label="Write Your Review"
+              value={reviewText}
+              onChange={(e) => setReviewText(e.target.value)}
+              placeholder="Describe your dining experience in detail..."
+              required
+            />
+          </Box>
+        )}
+        {displayTab === 1 && parsedDetails && (
           <Box>
             <Typography><strong>Reviewer:</strong> {parsedDetails.reviewer}</Typography>
             <Typography><strong>Restaurant:</strong> {parsedDetails.restaurantName}</Typography>
@@ -158,31 +148,25 @@ const AddReview: React.FC = () => {
             </ul>
           </Box>
         )}
-
-        {/* Review Text tab content */}
-        {tabIndex === 1 && (
-          <TextField
-            fullWidth
-            multiline
-            rows={8}
-            variant="outlined"
-            value={reviewText}
-            onChange={(e) => setReviewText(e.target.value)}
-            placeholder="Describe your dining experience in detail..."
-          />
-        )}
-
-        {/* Chat History tab content */}
-        {tabIndex === 2 && (
+        {displayTab === 2 && (
           <Box>
             {chatHistory.map((msg, idx) => (
               <Typography key={idx}>{msg}</Typography>
             ))}
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter your message..."
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleChat()}
+              style={{ marginTop: 10 }}
+            />
           </Box>
         )}
       </Box>
 
-      {/* Action buttons */}
+      {/* Action Buttons */}
       <Grid container spacing={2} style={{ marginTop: 20 }}>
         <Grid item xs={4}>
           <Button
@@ -200,7 +184,8 @@ const AddReview: React.FC = () => {
             variant="contained"
             color="secondary"
             fullWidth
-            onClick={() => handleChat("Refine information")} // Use modal or input for detailed chat
+            onClick={handleChat}
+            disabled={!chatInput}
           >
             Chat
           </Button>
