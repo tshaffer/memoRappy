@@ -18,7 +18,7 @@ const AddReview: React.FC = () => {
   const [displayTab, setDisplayTab] = useState(0); // 0 = Review Text, 1 = Extracted Information, 2 = Chat History
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<string[]>([]);
-  const [chatInput, setChatInput] = useState<string>(''); // Input field for chat
+  const [chatInput, setChatInput] = useState<string>(''); // New input field for chat
 
   useEffect(() => {
     if (!sessionId) {
@@ -53,16 +53,16 @@ const AddReview: React.FC = () => {
       const response = await fetch('/api/reviews/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userInput: chatInput, sessionId }),
+        body: JSON.stringify({ userInput: chatInput, sessionId, fullReviewText: reviewText }),
       });
       const data = await response.json();
+      
+      // Update parsed details and review text based on the AI response
       setParsedDetails(data.parsedData);
+      setReviewText(data.updatedReviewText);
       setChatHistory([...chatHistory, `User: ${chatInput}`, `AI: ${JSON.stringify(data.parsedData, null, 2)}`]);
-
-      // Update Review Text based on user input and previous text
-      setReviewText((prevText) => `${prevText}\n${chatInput}`);
-      setChatInput(''); // Clear input after sending
-      setDisplayTab(2); // Keep focus on Chat History tab
+      setChatInput(''); // Clear chat input field after sending
+      setDisplayTab(2); // Switch to Chat History tab
     } catch (error) {
       console.error('Error during chat:', error);
     }

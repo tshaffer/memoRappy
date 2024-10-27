@@ -87,35 +87,32 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
   }
 };
 
-// Chat endpoint for ongoing conversation
+// Backend: chatReviewHandler
 export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
-  const { userInput, sessionId } = req.body;
+  const { userInput, sessionId, fullReviewText } = req.body;
 
   if (!reviewConversations[sessionId]) {
     res.status(400).json({ error: 'Session not found. Start with a preview first.' });
     return;
   }
 
-  // Add user input to the conversation
-  reviewConversations[sessionId].push({
-    role: "user",
-    content: `${userInput}\n\nPlease apply any necessary changes and return the full structured data in JSON format as follows:\n\n{
-      "restaurantName": "[Updated Name]",
-      "location": "[Updated Location]",
-      "dateOfVisit": "[Updated Date]",
-      "itemsOrdered": [ "[Item 1]", "[Item 2]", etc. ],
-      "ratings": [ { "item": "[Item Name]", "rating": "[Rating]" }, etc. ],
-      "overallExperience": "[Updated Experience]",
-      "reviewer": "[Updated Reviewer]",
-      "keywords": [ "Keyword 1", "Keyword 2", etc. ],
-      "phrases": [ "Phrase 1", "Phrase 2", etc. ]
-    }`
-  });
+  // Add user input to conversation
+  reviewConversations[sessionId].push({ role: "user", content: userInput });
 
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4",
-      messages: reviewConversations[sessionId],
+      messages: [
+        ...reviewConversations[sessionId],
+        {
+          role: "system",
+          content: `Please provide:
+          1. The updated structured data based on the full conversation.
+          2. An updated review text that incorporates the latest user modifications.
+
+          Original Review: "${fullReviewText}"`,
+        },
+      ],
       max_tokens: 500,
       temperature: 0.5,
     });
@@ -126,14 +123,17 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
       return;
     }
 
-    // Attempt to parse the structured data JSON from the AI response
-    const structuredDataJSON = messageContent.match(/({[\s\S]*})/)?.[1];
-    if (structuredDataJSON) {
-      const parsedData: ReviewEntity = JSON.parse(structuredDataJSON);
-      res.json({ parsedData });
-    } else {
-      res.status(500).json({ error: 'Failed to parse structured data from the response.' });
+    const structuredDataJSON = messageContent.match(/Structured Data:\s*(\{.*\})/s)?.[1];
+    const updatedReviewText = messageContent.match(/Updated Review Text:\s*(.*)/s)?.[1];
+
+    // Parse structured data and updated review text
+    const parsedData: ReviewEntity = structuredDataJSON ? JSON.parse(structuredDataJSON) : null;
+    if (!parsedData || !updatedReviewText) {
+      res.status(500).json({ error: 'Failed to parse updated data.' });
+      return;
     }
+
+    res.json({ parsedData, updatedReviewText: updatedReviewText.trim() });
   } catch (error) {
     console.error('Error during chat interaction:', error);
     res.status(500).json({ error: 'An error occurred while processing the chat response.' });
