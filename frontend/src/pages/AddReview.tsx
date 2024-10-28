@@ -8,6 +8,7 @@ import {
   Tabs,
   Tab,
   Box,
+  Card,
 } from '@mui/material';
 import { ReviewEntity } from '../types';
 
@@ -17,8 +18,8 @@ const AddReview: React.FC = () => {
   const [parsedDetails, setParsedDetails] = useState<ReviewEntity | null>(null);
   const [displayTab, setDisplayTab] = useState(0); // 0 = Review Text, 1 = Extracted Information, 2 = Chat History
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [chatHistory, setChatHistory] = useState<string[]>([]);
-  const [chatInput, setChatInput] = useState<string>(''); // New input field for chat
+  const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | ReviewEntity }[]>([]);
+  const [chatInput, setChatInput] = useState<string>('');
 
   useEffect(() => {
     if (!sessionId) {
@@ -40,8 +41,8 @@ const AddReview: React.FC = () => {
       });
       const data = await response.json();
       setParsedDetails(data.parsedData);
-      setChatHistory([...chatHistory, `User: ${reviewText}`, `AI: ${JSON.stringify(data.parsedData, null, 2)}`]);
-      setDisplayTab(1); // Switch to Extracted Information on preview
+      setChatHistory([...chatHistory, { role: 'user', message: reviewText }, { role: 'ai', message: data.parsedData }]);
+      setDisplayTab(1);
     } catch (error) {
       console.error('Error previewing review:', error);
     }
@@ -56,13 +57,12 @@ const AddReview: React.FC = () => {
         body: JSON.stringify({ userInput: chatInput, sessionId, fullReviewText: reviewText }),
       });
       const data = await response.json();
-      
-      // Update parsed details and review text based on the AI response
+
       setParsedDetails(data.parsedData);
       setReviewText(data.updatedReviewText);
-      setChatHistory([...chatHistory, `User: ${chatInput}`, `AI: ${JSON.stringify(data.parsedData, null, 2)}`]);
-      setChatInput(''); // Clear chat input field after sending
-      setDisplayTab(2); // Switch to Chat History tab
+      setChatHistory([...chatHistory, { role: 'user', message: chatInput }, { role: 'ai', message: data.parsedData }]);
+      setChatInput('');
+      setDisplayTab(2);
     } catch (error) {
       console.error('Error during chat:', error);
     }
@@ -95,6 +95,24 @@ const AddReview: React.FC = () => {
   };
 
   const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
+
+  const renderFormattedAIResponse = (data: ReviewEntity) => (
+    <Box sx={{ textAlign: 'left' }}>
+      <Typography><strong>Reviewer:</strong> {data.reviewer || 'Not provided'}</Typography>
+      <Typography><strong>Restaurant:</strong> {data.restaurantName || 'Not provided'}</Typography>
+      <Typography><strong>Location:</strong> {data.location || 'Not provided'}</Typography>
+      <Typography><strong>Date of Visit:</strong> {data.dateOfVisit || 'Not provided'}</Typography>
+      <Typography><strong>Overall Experience:</strong> {data.overallExperience || 'Not provided'}</Typography>
+      <Typography><strong>Items Ordered:</strong></Typography>
+      <ul>
+        {data.itemsOrdered.map((item, idx) => (
+          <li key={idx}>
+            {item} - {data.ratings[idx]?.rating || 'No rating provided'}
+          </li>
+        ))}
+      </ul>
+    </Box>
+  );
 
   return (
     <Paper style={{ padding: 20 }}>
@@ -134,27 +152,33 @@ const AddReview: React.FC = () => {
             />
           </Box>
         )}
-        {displayTab === 1 && parsedDetails && (
-          <Box>
-            <Typography><strong>Reviewer:</strong> {parsedDetails.reviewer}</Typography>
-            <Typography><strong>Restaurant:</strong> {parsedDetails.restaurantName}</Typography>
-            <Typography><strong>Location:</strong> {parsedDetails.location}</Typography>
-            <Typography><strong>Date of Visit:</strong> {parsedDetails.dateOfVisit}</Typography>
-            <Typography><strong>Overall Experience:</strong> {parsedDetails.overallExperience}</Typography>
-            <Typography><strong>Items Ordered:</strong></Typography>
-            <ul>
-              {parsedDetails.itemsOrdered.map((item, idx) => (
-                <li key={idx}>
-                  {item} - {parsedDetails.ratings[idx]?.rating || 'No rating provided'}
-                </li>
-              ))}
-            </ul>
-          </Box>
-        )}
+        {displayTab === 1 && parsedDetails && renderFormattedAIResponse(parsedDetails)}
         {displayTab === 2 && (
           <Box>
             {chatHistory.map((msg, idx) => (
-              <Typography key={idx}>{msg}</Typography>
+              <Box
+                key={idx}
+                sx={{
+                  display: 'flex',
+                  justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                  mb: 2,
+                }}
+              >
+                <Card
+                  sx={{
+                    backgroundColor: msg.role === 'user' ? 'lightgrey' : 'white',
+                    padding: 2,
+                    maxWidth: '80%',
+                    borderRadius: 2,
+                  }}
+                >
+                  {typeof msg.message === 'string' ? (
+                    <Typography variant="body1">{msg.message}</Typography>
+                  ) : (
+                    renderFormattedAIResponse(msg.message as ReviewEntity)
+                  )}
+                </Card>
+              </Box>
             ))}
             <TextField
               fullWidth
