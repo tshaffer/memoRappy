@@ -14,12 +14,15 @@ import { ReviewEntity } from '../types';
 
 const AddReview: React.FC = () => {
   const [restaurantName, setRestaurantName] = useState('');
+  const [location, setLocation] = useState(''); // New location state
   const [reviewText, setReviewText] = useState('');
   const [parsedDetails, setParsedDetails] = useState<ReviewEntity | null>(null);
-  const [displayTab, setDisplayTab] = useState(0); // 0 = Review Text, 1 = Extracted Information, 2 = Chat History
+  const [displayTab, setDisplayTab] = useState(0);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | ReviewEntity }[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
+  const [placeVerified, setPlaceVerified] = useState<boolean | null>(null);
+  const [placeDetails, setPlaceDetails] = useState<ReviewEntity | null>(null);
 
   useEffect(() => {
     if (!sessionId) {
@@ -29,6 +32,32 @@ const AddReview: React.FC = () => {
 
   const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setDisplayTab(newValue);
+  };
+
+  const handleVerifyLocation = async () => {
+    try {
+      const response = await fetch('/api/reviews/verifyLocation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ restaurantName, location }),
+      });
+      const data = await response.json();
+
+      if (data.status === 'success') {
+        setPlaceDetails(data.placeDetails);
+        setPlaceVerified(true);
+      } else {
+        setPlaceVerified(false); // Couldn’t find location
+      }
+    } catch (error) {
+      console.error('Error verifying location:', error);
+      setPlaceVerified(false);
+    }
+  };
+
+  const handleRetry = () => {
+    setPlaceVerified(null);
+    setPlaceDetails(null);
   };
 
   const handlePreview = async () => {
@@ -88,8 +117,11 @@ const AddReview: React.FC = () => {
 
   const resetForm = () => {
     setRestaurantName('');
+    setLocation('');
     setReviewText('');
     setParsedDetails(null);
+    setPlaceVerified(null);
+    setPlaceDetails(null);
     setSessionId(generateSessionId());
     setChatHistory([]);
   };
@@ -142,6 +174,15 @@ const AddReview: React.FC = () => {
             />
             <TextField
               fullWidth
+              label="Location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Enter the location (e.g., City or Address)"
+              required
+              style={{ marginBottom: 20 }}
+            />
+            <TextField
+              fullWidth
               multiline
               rows={8}
               label="Write Your Review"
@@ -150,6 +191,34 @@ const AddReview: React.FC = () => {
               placeholder="Describe your dining experience in detail..."
               required
             />
+            <Button variant="contained" color="primary" onClick={handleVerifyLocation} style={{ marginTop: 20 }}>
+              Verify Location
+            </Button>
+            {placeVerified === false && (
+              <Box mt={2}>
+                <Typography color="error">
+                  Location not found. Please adjust the details or proceed without verification.
+                </Typography>
+                <Button variant="contained" color="secondary" onClick={handleRetry}>
+                  Retry
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => setPlaceVerified(true)}
+                  style={{ marginLeft: '10px' }}
+                >
+                  Proceed Without Verification
+                </Button>
+              </Box>
+            )}
+            {placeVerified && placeDetails && (
+              <Box mt={2}>
+                <Typography>Location Verified:</Typography>
+                <Typography>{placeDetails.restaurantName}</Typography>
+                <Typography>{placeDetails.location}</Typography>
+              </Box>
+            )}
           </Box>
         )}
         {displayTab === 1 && parsedDetails && renderFormattedAIResponse(parsedDetails)}

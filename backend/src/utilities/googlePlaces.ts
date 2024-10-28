@@ -36,19 +36,3 @@ export const searchRestaurantOnGooglePlaces = async (restaurantName: string, loc
   }
 };
 
-// export const searchPlace = async (query: string, location: string): Promise<GooglePlacesResponse | null> => {
-//   try {
-//     const response = await axios.get<GooglePlacesResponse>('https://maps.googleapis.com/maps/api/place/textsearch/json', {
-//       params: {
-//         query,
-//         location,
-//         key: GOOGLE_PLACES_API_KEY,
-//       },
-//     });
-
-//     return response.data;
-//   } catch (error) {
-//     console.error('Error fetching data from Google Places API:', error);
-//     return null;
-//   }
-// };
