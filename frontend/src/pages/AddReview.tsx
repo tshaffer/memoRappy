@@ -22,7 +22,7 @@ const AddReview: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | ReviewEntity }[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
   const [placeVerified, setPlaceVerified] = useState<boolean | null>(null);
-  const [placeDetails, setPlaceDetails] = useState<ReviewEntity | null>(null);
+  const [placeDetails, setPlaceDetails] = useState<any | null>(null);
 
   useEffect(() => {
     if (!sessionId) {
@@ -35,20 +35,25 @@ const AddReview: React.FC = () => {
   };
 
   const handleVerifyLocation = async () => {
+    debugger;
     try {
-      const response = await fetch('/api/reviews/verifyLocation', {
+      const response = await fetch('/api/reviews/location', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ restaurantName, location }),
       });
-      const data = await response.json();
-
-      if (data.status === 'success') {
-        setPlaceDetails(data.placeDetails);
-        setPlaceVerified(true);
+      if (response.ok) {
+        const data = await response.json();
+        if (data) {
+          setPlaceDetails(data);
+          setPlaceVerified(true);
+        } else {
+          setPlaceVerified(false); // Couldn’t find location
+        }
       } else {
         setPlaceVerified(false); // Couldn’t find location
       }
+
     } catch (error) {
       console.error('Error verifying location:', error);
       setPlaceVerified(false);
@@ -287,3 +292,4 @@ const AddReview: React.FC = () => {
 };
 
 export default AddReview;
+

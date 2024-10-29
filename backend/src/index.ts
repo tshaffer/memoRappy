@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 import Review from './models/Review';
 import express from 'express';
 
-import { chatReviewHandler, getRestaurantLocationHandler, previewReviewHandler, submitReviewHandler, verifyLocationHandler } from './controllers';
+import { chatReviewHandler, getRestaurantLocationHandler, previewReviewHandler, submitReviewHandler } from './controllers';
 
 export let openai: OpenAI;
 
@@ -112,7 +112,6 @@ const queryReviewsHandler: any = async (req: any, res: any): Promise<void> => {
 app.post('/api/query', queryReviewsHandler);
 app.post('/api/reviews/preview', previewReviewHandler);
 app.post('/api/reviews/location', getRestaurantLocationHandler);
-app.post('/api/reviews/verifyLocation', verifyLocationHandler);
 app.post('/api/reviews/chat', chatReviewHandler);
 app.post('/api/reviews/submit', submitReviewHandler);
 app.use('/api/reviews', reviewsRouter);

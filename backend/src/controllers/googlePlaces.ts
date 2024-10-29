@@ -1,61 +1,36 @@
 import axios from 'axios';
 import { Request, Response } from 'express';
-import { searchRestaurantOnGooglePlaces } from '../utilities';
 import { GooglePlacesResponse } from '../types';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
 
-export const getRestaurantLocationHandler = async (req: Request, res: Response) => {
+export const getRestaurantLocationHandler = async (req: Request, res: Response): Promise<void> => {
   const { restaurantName, location } = req.body;
 
   try {
-    const placeData = await searchRestaurantOnGooglePlaces(restaurantName, location);
+    const placeData = await getRestaurantLocation(restaurantName, location);
     res.json(placeData);
   } catch (error) {
     res.status(500).json({ error: 'Could not find restaurant information' });
   }
 };
 
-export const verifyLocationHandler = async (req: Request, res: Response): Promise<void> => {
-  const { restaurantName, location } = req.body;
-
+const getRestaurantLocation = async (restaurantName: string, location: string): Promise<google.maps.places.PlaceResult> => {
   const query = `${restaurantName} ${location}`;
   const url = `${GOOGLE_PLACES_BASE_URL}?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}`;
-
-
   try {
-
-    console.log('verifyLocationHandler');
-    console.log('url', 'https://maps.googleapis.com/maps/api/place/textsearch/json');
-    console.log('params');
-    console.log('query', `${restaurantName} ${location}`);
-    console.log('key', GOOGLE_PLACES_API_KEY);
-
     const response = await axios.get<GooglePlacesResponse>(url);
-
-    // const response = await axios.get<GooglePlacesResponse>('https://maps.googleapis.com/maps/api/place/textsearch/json', {
-    //   params: {
-    //     query: `${restaurantName} ${location}`,
-    //     key: GOOGLE_PLACES_API_KEY,
-    //   },
-    // });
-
-    if (response.data.status === 'OK' && response.data.results.length > 0) {
-      const place: google.maps.places.PlaceResult = response.data.results[0]; // Use the top result
-      const placeDetails = {
-        restaurantName: place.name,
-        location: place.formatted_address,
-        latitude: place!.geometry!.location!.lat!,
-        longitude: place!.geometry!.location!.lng!,
-      };
-
-      res.json({ status: 'success', placeDetails });
-    } else {
-      res.json({ status: 'failure', message: 'Location not found.' });
+    const places: google.maps.places.PlaceResult[] = (response.data as { results: google.maps.places.PlaceResult[] }).results;
+    if (places.length === 0) {
+      throw new Error('No places found matching the query');
     }
+    // Return the most relevant result
+    const place: google.maps.places.PlaceResult = places[0];
+    return place;
+
   } catch (error) {
     console.error('Error with Google Places API:', error);
-    res.status(500).json({ status: 'error', message: 'An error occurred while verifying location.' });
+    throw error;
   }
 };
