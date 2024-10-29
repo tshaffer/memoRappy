@@ -197,19 +197,8 @@ const AddReview: React.FC = () => {
             {placeVerified === false && (
               <Box mt={2}>
                 <Typography color="error">
-                  Location not found. Please adjust the details or proceed without verification.
+                  Location not found. Please edt the location and retry or proceed without verification.
                 </Typography>
-                <Button variant="contained" color="secondary" onClick={handleRetry}>
-                  Retry
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => setPlaceVerified(true)}
-                  style={{ marginLeft: '10px' }}
-                >
-                  Proceed Without Verification
-                </Button>
               </Box>
             )}
             {placeVerified && placeDetails && (
