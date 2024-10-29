@@ -1,6 +1,14 @@
+export interface LocationInfo {
+  place_id?: string;
+  name?: string;
+  address?: string;
+  latitude: number;
+  longitude: number;
+}
+
 export interface ReviewEntity {
   restaurantName: string;
-  location: string;
+  location: LocationInfo | string | null;  // Union type
   dateOfVisit: string;
   itemsOrdered: string[];
   ratings: { item: string; rating: string }[];

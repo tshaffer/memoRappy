@@ -10,7 +10,7 @@ import {
   Box,
   Card,
 } from '@mui/material';
-import { ReviewEntity } from '../types';
+import { LocationInfo, ReviewEntity } from '../types';
 
 const AddReview: React.FC = () => {
   const [restaurantName, setRestaurantName] = useState('');
@@ -22,7 +22,7 @@ const AddReview: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | ReviewEntity }[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
   const [placeVerified, setPlaceVerified] = useState<boolean | null>(null);
-  const [placeDetails, setPlaceDetails] = useState<google.maps.places.PlaceResult | null>(null);
+  const [locationInfo, setLocationInfo] = useState<LocationInfo | null>(null);
 
   useEffect(() => {
     if (!sessionId) {
@@ -42,9 +42,9 @@ const AddReview: React.FC = () => {
         body: JSON.stringify({ restaurantName, location }),
       });
       if (response.ok) {
-        const data: google.maps.places.PlaceResult | null = await response.json();
+        const data: LocationInfo | null = await response.json();
         if (data) {
-          setPlaceDetails(data);
+          setLocationInfo(data);
           setPlaceVerified(true);
         } else {
           setPlaceVerified(false); // Couldn’t find location
@@ -120,7 +120,7 @@ const AddReview: React.FC = () => {
     setReviewText('');
     setParsedDetails(null);
     setPlaceVerified(null);
-    setPlaceDetails(null);
+    setLocationInfo(null);
     setSessionId(generateSessionId());
     setChatHistory([]);
   };
@@ -131,7 +131,7 @@ const AddReview: React.FC = () => {
     <Box sx={{ textAlign: 'left' }}>
       <Typography><strong>Reviewer:</strong> {data.reviewer || 'Not provided'}</Typography>
       <Typography><strong>Restaurant:</strong> {data.restaurantName || 'Not provided'}</Typography>
-      <Typography><strong>Location:</strong> {data.location || 'Not provided'}</Typography>
+      <Typography><strong>Location:</strong> {(data.location! as LocationInfo).address! || 'Not provided'}</Typography>
       <Typography><strong>Date of Visit:</strong> {data.dateOfVisit || 'Not provided'}</Typography>
       <Typography><strong>Overall Experience:</strong> {data.overallExperience || 'Not provided'}</Typography>
       <Typography><strong>Items Ordered:</strong></Typography>
@@ -200,11 +200,11 @@ const AddReview: React.FC = () => {
                 </Typography>
               </Box>
             )}
-            {placeVerified && placeDetails && (
+            {placeVerified && locationInfo && (
               <Box mt={2}>
                 <Typography>Location Verified:</Typography>
-                <Typography>{placeDetails.name}</Typography>
-                <Typography>{placeDetails.formatted_address}</Typography>
+                <Typography>{locationInfo.name}</Typography>
+                <Typography>{locationInfo.address}</Typography>
               </Box>
             )}
           </Box>
