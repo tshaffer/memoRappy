@@ -34,7 +34,7 @@ export const verifyLocationHandler = async (req: Request, res: Response): Promis
       },
     });
 
-    if (response.data.status === google.maps.places.PlacesServiceStatus.OK && response.data.results.length > 0) {
+    if (response.data.status === 'OK' && response.data.results.length > 0) {
       const place: google.maps.places.PlaceResult = response.data.results[0]; // Use the top result
       const placeDetails = {
         restaurantName: place.name,
