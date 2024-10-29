@@ -22,7 +22,7 @@ const AddReview: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | ReviewEntity }[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
   const [placeVerified, setPlaceVerified] = useState<boolean | null>(null);
-  const [placeDetails, setPlaceDetails] = useState<any | null>(null);
+  const [placeDetails, setPlaceDetails] = useState<google.maps.places.PlaceResult | null>(null);
 
   useEffect(() => {
     if (!sessionId) {
@@ -35,7 +35,6 @@ const AddReview: React.FC = () => {
   };
 
   const handleVerifyLocation = async () => {
-    debugger;
     try {
       const response = await fetch('/api/reviews/location', {
         method: 'POST',
@@ -43,7 +42,7 @@ const AddReview: React.FC = () => {
         body: JSON.stringify({ restaurantName, location }),
       });
       if (response.ok) {
-        const data = await response.json();
+        const data: google.maps.places.PlaceResult | null = await response.json();
         if (data) {
           setPlaceDetails(data);
           setPlaceVerified(true);
@@ -204,8 +203,8 @@ const AddReview: React.FC = () => {
             {placeVerified && placeDetails && (
               <Box mt={2}>
                 <Typography>Location Verified:</Typography>
-                <Typography>{placeDetails.restaurantName}</Typography>
-                <Typography>{placeDetails.location}</Typography>
+                <Typography>{placeDetails.name}</Typography>
+                <Typography>{placeDetails.formatted_address}</Typography>
               </Box>
             )}
           </Box>
