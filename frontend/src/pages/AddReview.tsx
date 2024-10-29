@@ -55,11 +55,6 @@ const AddReview: React.FC = () => {
     }
   };
 
-  const handleRetry = () => {
-    setPlaceVerified(null);
-    setPlaceDetails(null);
-  };
-
   const handlePreview = async () => {
     if (!sessionId) return;
     try {

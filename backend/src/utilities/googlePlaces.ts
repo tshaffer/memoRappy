@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { GooglePlacesResponse, MemorappyPlaceResult, PlaceResult } from '../types';
+import { GooglePlacesResponse, MemorappyPlaceResult } from '../types';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
@@ -14,21 +14,23 @@ export const searchRestaurantOnGooglePlaces = async (restaurantName: string, loc
   const query = `${restaurantName} ${location}`;
   const url = `${GOOGLE_PLACES_BASE_URL}?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}`;
 
+  console.log('searchRestaurantOnGooglePlaces', url);
+
   try {
     const response = await axios.get<GooglePlacesResponse>(url);
-    const places: PlaceResult[] = (response.data as { results: any[] }).results;
+    const places: google.maps.places.PlaceResult[] = (response.data as { results: google.maps.places.PlaceResult[] }).results;
 
     if (places.length === 0) {
       throw new Error('No places found matching the query');
     }
 
     // Return the most relevant result
-    const place: PlaceResult = places[0];
+    const place: google.maps.places.PlaceResult = places[0];
     return {
-      placeId: place.place_id,
-      name: place.name,
+      placeId: place.place_id!,
+      name: place.name!,
       address: place.formatted_address,
-      location: place.geometry.location,
+      location: place.geometry!.location,
     };
   } catch (error) {
     console.error('Error with Google Places API:', error);

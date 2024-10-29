@@ -20,6 +20,13 @@ export const verifyLocationHandler = async (req: Request, res: Response): Promis
   const { restaurantName, location } = req.body;
 
   try {
+
+    console.log('verifyLocationHandler');
+    console.log('url', 'https://maps.googleapis.com/maps/api/place/textsearch/json');
+    console.log('params');
+    console.log('query', `${restaurantName} ${location}`);
+    console.log('key', GOOGLE_PLACES_API_KEY);
+
     const response = await axios.get<GooglePlacesResponse>('https://maps.googleapis.com/maps/api/place/textsearch/json', {
       params: {
         query: `${restaurantName} ${location}`,
@@ -27,13 +34,13 @@ export const verifyLocationHandler = async (req: Request, res: Response): Promis
       },
     });
 
-    if (response.data.status === 'OK' && response.data.results.length > 0) {
-      const place = response.data.results[0]; // Use the top result
+    if (response.data.status === google.maps.places.PlacesServiceStatus.OK && response.data.results.length > 0) {
+      const place: google.maps.places.PlaceResult = response.data.results[0]; // Use the top result
       const placeDetails = {
         restaurantName: place.name,
         location: place.formatted_address,
-        latitude: place.geometry.location.lat,
-        longitude: place.geometry.location.lng,
+        latitude: place!.geometry!.location!.lat!,
+        longitude: place!.geometry!.location!.lng!,
       };
 
       res.json({ status: 'success', placeDetails });
