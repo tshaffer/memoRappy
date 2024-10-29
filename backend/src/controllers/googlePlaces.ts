@@ -4,6 +4,7 @@ import { searchRestaurantOnGooglePlaces } from '../utilities';
 import { GooglePlacesResponse } from '../types';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
+const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
 
 export const getRestaurantLocationHandler = async (req: Request, res: Response) => {
   const { restaurantName, location } = req.body;
@@ -19,6 +20,10 @@ export const getRestaurantLocationHandler = async (req: Request, res: Response) 
 export const verifyLocationHandler = async (req: Request, res: Response): Promise<void> => {
   const { restaurantName, location } = req.body;
 
+  const query = `${restaurantName} ${location}`;
+  const url = `${GOOGLE_PLACES_BASE_URL}?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}`;
+
+
   try {
 
     console.log('verifyLocationHandler');
@@ -27,12 +32,14 @@ export const verifyLocationHandler = async (req: Request, res: Response): Promis
     console.log('query', `${restaurantName} ${location}`);
     console.log('key', GOOGLE_PLACES_API_KEY);
 
-    const response = await axios.get<GooglePlacesResponse>('https://maps.googleapis.com/maps/api/place/textsearch/json', {
-      params: {
-        query: `${restaurantName} ${location}`,
-        key: GOOGLE_PLACES_API_KEY,
-      },
-    });
+    const response = await axios.get<GooglePlacesResponse>(url);
+
+    // const response = await axios.get<GooglePlacesResponse>('https://maps.googleapis.com/maps/api/place/textsearch/json', {
+    //   params: {
+    //     query: `${restaurantName} ${location}`,
+    //     key: GOOGLE_PLACES_API_KEY,
+    //   },
+    // });
 
     if (response.data.status === 'OK' && response.data.results.length > 0) {
       const place: google.maps.places.PlaceResult = response.data.results[0]; // Use the top result
