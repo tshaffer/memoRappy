@@ -1,13 +1,19 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import { ReviewEntityWithFullText } from '../types'; // Update path accordingly
+import { LocationInfo, ReviewEntityWithFullText } from '../types';
 
-// Extend ReviewEntityWithFullText with mongoose's Document interface
 interface IReview extends ReviewEntityWithFullText, Document {}
 
-// Define the schema for the review
+const LocationSchema: Schema<LocationInfo> = new Schema({
+  place_id: { type: String, required: true },
+  name: { type: String, required: true },
+  address: { type: String, required: true },
+  latitude: { type: Number, required: true },
+  longitude: { type: Number, required: true },
+});
+
 const ReviewSchema: Schema<IReview> = new Schema({
   restaurantName: { type: String, required: true },
-  location: { type: String },
+  location: { type: Schema.Types.Mixed, required: true },  // Use Mixed type to allow different formats
   dateOfVisit: { type: String },
   itemsOrdered: [{ type: String }],
   ratings: [{ item: String, rating: String }],
@@ -18,7 +24,6 @@ const ReviewSchema: Schema<IReview> = new Schema({
   fullReviewText: { type: String, required: true },
 });
 
-// Create the Review model using the schema and external interface
 const Review: Model<IReview> = mongoose.model<IReview>('Review', ReviewSchema);
 
 export default Review;
