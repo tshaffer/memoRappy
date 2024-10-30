@@ -62,7 +62,7 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
     // Parse response into structured data
     const parsedData: ReviewEntity = {
       restaurantName: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Restaurant name')),
-      location: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Location')),
+      userLocation: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Location')),
       dateOfVisit: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Date of visit')),
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered').map(removeSquareBrackets),
       ratings: extractListFromResponse(messageContent, 'Ratings for each item').map((ratingString: string) => {
@@ -140,7 +140,7 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
     // Parse the structured data text into JSON-like format
     const parsedData: ReviewEntity = {
       restaurantName: extractFieldFromResponse(structuredDataText, 'Restaurant name'),
-      location: extractFieldFromResponse(structuredDataText, 'Location'),
+      userLocation: extractFieldFromResponse(structuredDataText, 'Location'),
       dateOfVisit: extractFieldFromResponse(structuredDataText, 'Date of visit'),
       itemsOrdered: extractListFromResponse(structuredDataText, 'List of items ordered'),
       ratings: extractListFromResponse(structuredDataText, 'Ratings').map((ratingString: string) => {

@@ -1,9 +1,9 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import { LocationInfo, ReviewEntityWithFullText } from '../types';
+import { GoogleLocationInfo, ReviewEntityWithFullText } from '../types';
 
-interface IReview extends ReviewEntityWithFullText, Document {}
+interface IReview extends ReviewEntityWithFullText, Document { }
 
-const LocationSchema: Schema<LocationInfo> = new Schema({
+const LocationSchema: Schema<GoogleLocationInfo> = new Schema({
   place_id: { type: String, required: true },
   name: { type: String, required: true },
   address: { type: String, required: true },
@@ -13,7 +13,7 @@ const LocationSchema: Schema<LocationInfo> = new Schema({
 
 const ReviewSchema: Schema<IReview> = new Schema({
   restaurantName: { type: String, required: true },
-  location: { type: Schema.Types.Mixed, required: true },  // Use Mixed type to allow different formats
+  userLocation: { type: Schema.Types.Mixed, required: true },  // Use Mixed type to allow different formats
   dateOfVisit: { type: String },
   itemsOrdered: [{ type: String }],
   ratings: [{ item: String, rating: String }],

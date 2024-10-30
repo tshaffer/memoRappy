@@ -1,4 +1,4 @@
-export interface LocationInfo {
+export interface GoogleLocationInfo {
   place_id?: string;
   name?: string;
   address?: string;
@@ -8,7 +8,7 @@ export interface LocationInfo {
 
 export interface ReviewEntity {
   restaurantName: string;
-  location: LocationInfo | string | null;  // Union type
+  userLocation: string;
   dateOfVisit: string;
   itemsOrdered: string[];
   ratings: { item: string; rating: string }[];
@@ -20,4 +20,5 @@ export interface ReviewEntity {
 
 export interface ReviewEntityWithFullText extends ReviewEntity {
   fullReviewText: string;
+  googleLocation: GoogleLocationInfo;
 }
