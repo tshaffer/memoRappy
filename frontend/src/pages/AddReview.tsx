@@ -10,7 +10,7 @@ import {
   Box,
   Card,
 } from '@mui/material';
-import { GoogleLocationInfo, ReviewEntity } from '../types';
+import { GoogleLocation, ReviewEntity } from '../types';
 
 const AddReview: React.FC = () => {
   const [restaurantName, setRestaurantName] = useState('');
@@ -22,7 +22,7 @@ const AddReview: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | ReviewEntity }[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
   const [placeVerified, setPlaceVerified] = useState<boolean | null>(null);
-  const [googleLocation, setGoogleLocationInfo] = useState<GoogleLocationInfo | null>(null);
+  const [googleLocation, setGoogleLocation] = useState<GoogleLocation | null>(null);
 
   useEffect(() => {
     if (!sessionId) {
@@ -42,9 +42,9 @@ const AddReview: React.FC = () => {
         body: JSON.stringify({ restaurantName, location: userLocation }),
       });
       if (response.ok) {
-        const data: GoogleLocationInfo | null = await response.json();
+        const data: GoogleLocation | null = await response.json();
         if (data) {
-          setGoogleLocationInfo(data);
+          setGoogleLocation(data);
           setPlaceVerified(true);
         } else {
           setPlaceVerified(false); // Couldn’t find location
@@ -120,31 +120,31 @@ const AddReview: React.FC = () => {
     setReviewText('');
     setParsedDetails(null);
     setPlaceVerified(null);
-    setGoogleLocationInfo(null);
+    setGoogleLocation(null);
     setSessionId(generateSessionId());
     setChatHistory([]);
   };
 
   const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
-  const renderFormattedAIResponse = (data: ReviewEntity) => {
-    const googleLocationInfo: GoogleLocationInfo = (data as any).googleLocationInfo;
+  const renderFormattedAIResponse = (reviewEntity: ReviewEntity) => {
+    const googleLocation: GoogleLocation = reviewEntity.googleLocation;
     return (
       <Box sx={{ textAlign: 'left' }}>
-        <Typography><strong>Reviewer:</strong> {data.reviewer || 'Not provided'}</Typography>
-        <Typography><strong>Restaurant:</strong> {data.restaurantName || 'Not provided'}</Typography>
-        <Typography><strong>Location:</strong> {data.userLocation || 'Not provided'}</Typography>
-        <Typography><strong>Date of Visit:</strong> {data.dateOfVisit || 'Not provided'}</Typography>
-        <Typography><strong>Overall Experience:</strong> {data.overallExperience || 'Not provided'}</Typography>
+        <Typography><strong>Reviewer:</strong> {reviewEntity.reviewer || 'Not provided'}</Typography>
+        <Typography><strong>Restaurant:</strong> {reviewEntity.restaurantName || 'Not provided'}</Typography>
+        <Typography><strong>Location:</strong> {reviewEntity.userLocation || 'Not provided'}</Typography>
+        <Typography><strong>Date of Visit:</strong> {reviewEntity.dateOfVisit || 'Not provided'}</Typography>
+        <Typography><strong>Overall Experience:</strong> {reviewEntity.overallExperience || 'Not provided'}</Typography>
         <Typography><strong>Items Ordered:</strong></Typography>
         <ul>
-          {data.itemsOrdered.map((item, idx) => (
+          {reviewEntity.itemsOrdered.map((item, idx) => (
             <li key={idx}>
-              {item} - {data.ratings[idx]?.rating || 'No rating provided'}
+              {item} - {reviewEntity.ratings[idx]?.rating || 'No rating provided'}
             </li>
           ))}
         </ul>
-        <Typography><strong>Retrieved Location:</strong>{googleLocationInfo?.address}</Typography>
+        <Typography><strong>Retrieved Location:</strong>{googleLocation?.address}</Typography>
       </Box>
     )
   };

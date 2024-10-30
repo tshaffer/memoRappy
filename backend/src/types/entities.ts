@@ -1,4 +1,4 @@
-export interface GoogleLocationInfo {
+export interface GoogleLocation {
   place_id?: string;
   name?: string;
   address?: string;
@@ -16,10 +16,9 @@ export interface ReviewEntity {
   reviewer: string;
   keywords: string[];
   phrases: string[];
-  googleLocationInfo: GoogleLocationInfo;
+  googleLocation: GoogleLocation;
 }
 
 export interface ReviewEntityWithFullText extends ReviewEntity {
   fullReviewText: string;
-  googleLocationInfo: GoogleLocationInfo;
 }

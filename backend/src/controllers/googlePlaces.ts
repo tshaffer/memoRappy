@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Request, Response } from 'express';
-import { GooglePlacesResponse, GoogleLocationInfo } from '../types';
+import { GooglePlacesResponse, GoogleLocation } from '../types';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
@@ -16,7 +16,7 @@ export const getRestaurantLocationHandler = async (req: Request, res: Response):
   }
 };
 
-export const getRestaurantLocation = async (restaurantName: string, location: string): Promise<GoogleLocationInfo> => {
+export const getRestaurantLocation = async (restaurantName: string, location: string): Promise<GoogleLocation> => {
   const query = `${restaurantName} ${location}`;
   const url = `${GOOGLE_PLACES_BASE_URL}?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}`;
   try {
@@ -28,7 +28,7 @@ export const getRestaurantLocation = async (restaurantName: string, location: st
     // Return the most relevant result
     const place: google.maps.places.PlaceResult = places[0];
 
-    const locationInfo: GoogleLocationInfo = {
+    const locationInfo: GoogleLocation = {
       place_id: place.place_id,
       name: place.name,
       address: place.formatted_address,
