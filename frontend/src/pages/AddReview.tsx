@@ -69,6 +69,7 @@ const AddReview: React.FC = () => {
       });
       const data = await response.json();
       setParsedDetails(data.parsedData);
+      setGoogleLocation(data.parsedData.googleLocation);
       setChatHistory([...chatHistory, { role: 'user', message: reviewText }, { role: 'ai', message: data.parsedData }]);
       setDisplayTab(1);
     } catch (error) {
@@ -108,22 +109,22 @@ const AddReview: React.FC = () => {
       });
       const data = await response.json();
       console.log('Review submitted:', data);
-      resetForm();
+      // resetForm();
     } catch (error) {
       console.error('Error submitting review:', error);
     }
   };
 
-  const resetForm = () => {
-    setRestaurantName('');
-    setUserLocation('');
-    setReviewText('');
-    setParsedDetails(null);
-    setPlaceVerified(null);
-    setGoogleLocation(null);
-    setSessionId(generateSessionId());
-    setChatHistory([]);
-  };
+  // const resetForm = () => {
+  //   setRestaurantName('');
+  //   setUserLocation('');
+  //   setReviewText('');
+  //   setParsedDetails(null);
+  //   setPlaceVerified(null);
+  //   setGoogleLocation(null);
+  //   setSessionId(generateSessionId());
+  //   setChatHistory([]);
+  // };
 
   const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
