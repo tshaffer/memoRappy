@@ -14,7 +14,7 @@ import { LocationInfo, ReviewEntity } from '../types';
 
 const AddReview: React.FC = () => {
   const [restaurantName, setRestaurantName] = useState('');
-  const [location, setLocation] = useState(''); // New location state
+  const [location, setLocation] = useState<LocationInfo | string | null>(null);
   const [reviewText, setReviewText] = useState('');
   const [parsedDetails, setParsedDetails] = useState<ReviewEntity | null>(null);
   const [displayTab, setDisplayTab] = useState(0);
@@ -65,7 +65,7 @@ const AddReview: React.FC = () => {
       const response = await fetch('/api/reviews/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ restaurantName, reviewText, sessionId }),
+        body: JSON.stringify({ restaurantName, locationInfo, reviewText, sessionId }),
       });
       const data = await response.json();
       setParsedDetails(data.parsedData);
@@ -103,7 +103,7 @@ const AddReview: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          parsedData: { ...parsedDetails, fullReviewText: reviewText, restaurantName },
+          parsedData: { ...parsedDetails, fullReviewText: reviewText, restaurantName, locationInfo},
         }),
       });
       const data = await response.json();
