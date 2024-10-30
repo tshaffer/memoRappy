@@ -103,7 +103,7 @@ const AddReview: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          parsedData: { ...parsedDetails, fullReviewText: reviewText, restaurantName, locationInfo: googleLocation},
+          parsedData: { ...parsedDetails, fullReviewText: reviewText, restaurantName, locationInfo: googleLocation },
         }),
       });
       const data = await response.json();
@@ -127,23 +127,27 @@ const AddReview: React.FC = () => {
 
   const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
-  const renderFormattedAIResponse = (data: ReviewEntity) => (
-    <Box sx={{ textAlign: 'left' }}>
-      <Typography><strong>Reviewer:</strong> {data.reviewer || 'Not provided'}</Typography>
-      <Typography><strong>Restaurant:</strong> {data.restaurantName || 'Not provided'}</Typography>
-      <Typography><strong>Location:</strong> {data.userLocation || 'Not provided'}</Typography>
-      <Typography><strong>Date of Visit:</strong> {data.dateOfVisit || 'Not provided'}</Typography>
-      <Typography><strong>Overall Experience:</strong> {data.overallExperience || 'Not provided'}</Typography>
-      <Typography><strong>Items Ordered:</strong></Typography>
-      <ul>
-        {data.itemsOrdered.map((item, idx) => (
-          <li key={idx}>
-            {item} - {data.ratings[idx]?.rating || 'No rating provided'}
-          </li>
-        ))}
-      </ul>
-    </Box>
-  );
+  const renderFormattedAIResponse = (data: ReviewEntity) => {
+    const googleLocationInfo: GoogleLocationInfo = (data as any).googleLocationInfo;
+    return (
+      <Box sx={{ textAlign: 'left' }}>
+        <Typography><strong>Reviewer:</strong> {data.reviewer || 'Not provided'}</Typography>
+        <Typography><strong>Restaurant:</strong> {data.restaurantName || 'Not provided'}</Typography>
+        <Typography><strong>Location:</strong> {data.userLocation || 'Not provided'}</Typography>
+        <Typography><strong>Date of Visit:</strong> {data.dateOfVisit || 'Not provided'}</Typography>
+        <Typography><strong>Overall Experience:</strong> {data.overallExperience || 'Not provided'}</Typography>
+        <Typography><strong>Items Ordered:</strong></Typography>
+        <ul>
+          {data.itemsOrdered.map((item, idx) => (
+            <li key={idx}>
+              {item} - {data.ratings[idx]?.rating || 'No rating provided'}
+            </li>
+          ))}
+        </ul>
+        <Typography><strong>Retrieved Location:</strong>{googleLocationInfo?.address}</Typography>
+      </Box>
+    )
+  };
 
   return (
     <Paper style={{ padding: 20 }}>

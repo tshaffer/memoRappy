@@ -65,7 +65,7 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
 
     // Parse response into structured data
     const parsedData: ReviewEntity = {
-      restaurantName: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Restaurant name')),
+      restaurantName,
       userLocation: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Location')),
       dateOfVisit: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Date of visit')),
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered').map(removeSquareBrackets),
