@@ -11,6 +11,8 @@ import {
   Card,
 } from '@mui/material';
 import { AddReviewDisplayTabs, GoogleLocation, ReviewEntity } from '../types';
+import { Directions } from '@mui/icons-material';
+import DirectionsButton from './DirectionsButton';
 
 const AddReview: React.FC = () => {
   const [restaurantName, setRestaurantName] = useState('');
@@ -256,7 +258,7 @@ const AddReview: React.FC = () => {
 
       {/* Action Buttons */}
       <Grid container spacing={2} style={{ marginTop: 20 }}>
-        <Grid item xs={4}>
+        <Grid item xs={3}>
           <Button
             variant="contained"
             color="primary"
@@ -267,7 +269,7 @@ const AddReview: React.FC = () => {
             Preview
           </Button>
         </Grid>
-        <Grid item xs={4}>
+        <Grid item xs={3}>
           <Button
             variant="contained"
             color="secondary"
@@ -278,7 +280,7 @@ const AddReview: React.FC = () => {
             Chat
           </Button>
         </Grid>
-        <Grid item xs={4}>
+        <Grid item xs={3}>
           <Button
             variant="contained"
             color="primary"
@@ -288,6 +290,12 @@ const AddReview: React.FC = () => {
           >
             Submit
           </Button>
+        </Grid>
+        <Grid item xs={3}>
+          <DirectionsButton
+            latitude={googleLocation?.latitude || 0}
+            longitude={googleLocation?.longitude || 0}
+          />
         </Grid>
       </Grid>
     </Paper>
