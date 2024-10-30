@@ -177,7 +177,7 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
 export const submitReviewHandler = async (req: any, res: any) => {
   const { parsedData } = req.body;
 
-  if (!parsedData || !parsedData.restaurantName || !parsedData.dateOfVisit) {
+  if (!parsedData || !parsedData.restaurantName) {
     return res.status(400).json({ error: 'Incomplete review data.' });
   }
 

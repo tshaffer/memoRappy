@@ -103,7 +103,7 @@ const AddReview: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          parsedData: { ...parsedDetails, fullReviewText: reviewText, restaurantName, locationInfo: googleLocation },
+          parsedData: { ...parsedDetails, fullReviewText: reviewText, restaurantName, googleLocation },
         }),
       });
       const data = await response.json();
