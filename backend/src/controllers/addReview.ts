@@ -10,7 +10,7 @@ const reviewConversations: { [sessionId: string]: ChatCompletionMessageParam[] }
 
 // Preview endpoint to get structured data without saving
 export const previewReviewHandler = async (req: any, res: any): Promise<void> => {
-  const { restaurantName, reviewText, sessionId } = req.body;
+  const { restaurantName, userLocation, reviewText, sessionId } = req.body;
 
   // Initialize conversation history if it doesn't exist
   if (!reviewConversations[sessionId]) {
@@ -60,13 +60,12 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
       return;
     }
 
-    const userLocation: string = removeSquareBrackets(extractFieldFromResponse(messageContent, 'Location'));
     const googleLocation: GoogleLocation = await getRestaurantLocation(restaurantName, userLocation);
 
     // Parse response into structured data
     const parsedData: ReviewEntity = {
       restaurantName,
-      userLocation: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Location')),
+      userLocation,
       dateOfVisit: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Date of visit')),
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered').map(removeSquareBrackets),
       ratings: extractListFromResponse(messageContent, 'Ratings for each item').map((ratingString: string) => {
