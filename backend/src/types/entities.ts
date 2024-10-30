@@ -16,6 +16,7 @@ export interface ReviewEntity {
   reviewer: string;
   keywords: string[];
   phrases: string[];
+  googleLocationInfo: GoogleLocationInfo;
 }
 
 export interface ReviewEntityWithFullText extends ReviewEntity {

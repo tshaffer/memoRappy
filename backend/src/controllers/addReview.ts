@@ -1,8 +1,9 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import { openai } from '../index';
-import { ReviewEntity } from '../types/';
+import { GoogleLocationInfo, ReviewEntity } from '../types/';
 import Review from "../models/Review";
 import { extractFieldFromResponse, extractListFromResponse, removeSquareBrackets } from '../utilities';
+import { getRestaurantLocation } from './googlePlaces';
 
 // Store conversations for each session
 const reviewConversations: { [sessionId: string]: ChatCompletionMessageParam[] } = {};
@@ -59,6 +60,9 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
       return;
     }
 
+    const userLocation: string = removeSquareBrackets(extractFieldFromResponse(messageContent, 'Location'));
+    const googleLocationInfo: GoogleLocationInfo = await getRestaurantLocation(restaurantName, userLocation);
+
     // Parse response into structured data
     const parsedData: ReviewEntity = {
       restaurantName: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Restaurant name')),
@@ -77,6 +81,7 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
       reviewer: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Reviewer name')),
       keywords: extractListFromResponse(messageContent, 'Keywords').map(removeSquareBrackets),
       phrases: extractListFromResponse(messageContent, 'Phrases').map(removeSquareBrackets),
+      googleLocationInfo,
     };
 
     // Respond with parsed data
@@ -137,10 +142,14 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
     const structuredDataText = structuredDataMatch[1].trim();
     const updatedReviewText = updatedReviewTextMatch[1].trim();
 
+    const restaurantName: string = extractFieldFromResponse(messageContent, 'Restaurant name');
+    const userLocation: string = removeSquareBrackets(extractFieldFromResponse(messageContent, 'Location'));
+    const googleLocationInfo: GoogleLocationInfo = await getRestaurantLocation(restaurantName, userLocation);
+
     // Parse the structured data text into JSON-like format
     const parsedData: ReviewEntity = {
-      restaurantName: extractFieldFromResponse(structuredDataText, 'Restaurant name'),
-      userLocation: extractFieldFromResponse(structuredDataText, 'Location'),
+      restaurantName,
+      userLocation,
       dateOfVisit: extractFieldFromResponse(structuredDataText, 'Date of visit'),
       itemsOrdered: extractListFromResponse(structuredDataText, 'List of items ordered'),
       ratings: extractListFromResponse(structuredDataText, 'Ratings').map((ratingString: string) => {
@@ -154,6 +163,7 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
       reviewer: extractFieldFromResponse(structuredDataText, 'Reviewer name'),
       keywords: extractListFromResponse(structuredDataText, 'Keywords'),
       phrases: extractListFromResponse(structuredDataText, 'Phrases'),
+      googleLocationInfo,
     };
 
     res.json({ parsedData, updatedReviewText });

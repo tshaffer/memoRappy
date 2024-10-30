@@ -191,7 +191,7 @@ const AddReview: React.FC = () => {
               required
             />
             <Button variant="contained" color="primary" onClick={handleVerifyLocation} style={{ marginTop: 20 }}>
-              Verify Location
+              Retrieve Location
             </Button>
             {placeVerified === false && (
               <Box mt={2}>
@@ -202,7 +202,6 @@ const AddReview: React.FC = () => {
             )}
             {placeVerified && googleLocation && (
               <Box mt={2}>
-                <Typography>Location Verified:</Typography>
                 <Typography>{googleLocation.name}</Typography>
                 <Typography>{googleLocation.address}</Typography>
               </Box>

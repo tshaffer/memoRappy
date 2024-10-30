@@ -16,7 +16,7 @@ export const getRestaurantLocationHandler = async (req: Request, res: Response):
   }
 };
 
-const getRestaurantLocation = async (restaurantName: string, location: string): Promise<GoogleLocationInfo> => {
+export const getRestaurantLocation = async (restaurantName: string, location: string): Promise<GoogleLocationInfo> => {
   const query = `${restaurantName} ${location}`;
   const url = `${GOOGLE_PLACES_BASE_URL}?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}`;
   try {
