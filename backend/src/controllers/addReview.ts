@@ -24,9 +24,13 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
           - Restaurant name
           - Location
           - Date of visit (in YYYY-MM-DD format)
-          - Items ordered with ratings (if available)
+          - List of items ordered
+          - Ratings for each item (with the format: "item name (rating)")
           - Overall experience
-          - Keywords and phrases relevant to the review.
+
+          Also, look for keywords and phrases that you might typically find in a restaurant review.
+
+           Review: "${reviewText}"
 
           Format the response as follows:
           - Reviewer name: [Name]
@@ -34,10 +38,10 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
           - Location: [Location]
           - Date of visit: [YYYY-MM-DD]
           - List of items ordered: [Item 1, Item 2, etc.]
-          - Ratings: [Item 1 (Rating), Item 2 (Rating)]
+          - Ratings for each item: [Item 1 (Rating), Item 2 (Rating)]
           - Overall experience: [Overall Experience]
-          - Keywords: [Keyword 1, Keyword 2]
-          - Phrases: [Phrase 1, Phrase 2]
+          - Keywords: [Keyword 1, Keyword 2, etc.]
+          - Phrases: [Phrase 1, Phrase 2, etc.]
         `,
       },
     ];
