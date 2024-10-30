@@ -10,14 +10,14 @@ import {
   Box,
   Card,
 } from '@mui/material';
-import { GoogleLocation, ReviewEntity } from '../types';
+import { AddReviewDisplayTabs, GoogleLocation, ReviewEntity } from '../types';
 
 const AddReview: React.FC = () => {
   const [restaurantName, setRestaurantName] = useState('');
   const [userLocation, setUserLocation] = useState<string>('');
   const [reviewText, setReviewText] = useState('');
   const [parsedDetails, setParsedDetails] = useState<ReviewEntity | null>(null);
-  const [displayTab, setDisplayTab] = useState(0);
+  const [displayTab, setDisplayTab] = useState(AddReviewDisplayTabs.ReviewText);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | ReviewEntity }[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
@@ -164,7 +164,7 @@ const AddReview: React.FC = () => {
 
       <Box mt={2}>
         {/* Display Content Based on Active Tab */}
-        {displayTab === 0 && (
+        {displayTab === AddReviewDisplayTabs.ReviewText && (
           <Box>
             <TextField
               fullWidth
@@ -212,8 +212,8 @@ const AddReview: React.FC = () => {
             )}
           </Box>
         )}
-        {displayTab === 1 && parsedDetails && renderFormattedAIResponse(parsedDetails)}
-        {displayTab === 2 && (
+        {displayTab === AddReviewDisplayTabs.ExtractedInformation && parsedDetails && renderFormattedAIResponse(parsedDetails)}
+        {displayTab === AddReviewDisplayTabs.ChatHistory && (
           <Box>
             {chatHistory.map((msg, idx) => (
               <Box
