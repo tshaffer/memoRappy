@@ -10,11 +10,11 @@ import {
   Box,
   Card,
 } from '@mui/material';
-import { LocationInfo, ReviewEntity } from '../types';
+import { GoogleLocationInfo, ReviewEntity } from '../types';
 
 const AddReview: React.FC = () => {
   const [restaurantName, setRestaurantName] = useState('');
-  const [location, setLocation] = useState<LocationInfo | string | null>(null);
+  const [userLocation, setUserLocation] = useState<string>('');
   const [reviewText, setReviewText] = useState('');
   const [parsedDetails, setParsedDetails] = useState<ReviewEntity | null>(null);
   const [displayTab, setDisplayTab] = useState(0);
@@ -22,7 +22,7 @@ const AddReview: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | ReviewEntity }[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
   const [placeVerified, setPlaceVerified] = useState<boolean | null>(null);
-  const [locationInfo, setLocationInfo] = useState<LocationInfo | null>(null);
+  const [googleLocation, setGoogleLocationInfo] = useState<GoogleLocationInfo | null>(null);
 
   useEffect(() => {
     if (!sessionId) {
@@ -39,12 +39,12 @@ const AddReview: React.FC = () => {
       const response = await fetch('/api/reviews/location', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ restaurantName, location }),
+        body: JSON.stringify({ restaurantName, location: userLocation }),
       });
       if (response.ok) {
-        const data: LocationInfo | null = await response.json();
+        const data: GoogleLocationInfo | null = await response.json();
         if (data) {
-          setLocationInfo(data);
+          setGoogleLocationInfo(data);
           setPlaceVerified(true);
         } else {
           setPlaceVerified(false); // Couldn’t find location
@@ -65,7 +65,7 @@ const AddReview: React.FC = () => {
       const response = await fetch('/api/reviews/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ restaurantName, locationInfo, reviewText, sessionId }),
+        body: JSON.stringify({ restaurantName, locationInfo: googleLocation, reviewText, sessionId }),
       });
       const data = await response.json();
       setParsedDetails(data.parsedData);
@@ -103,7 +103,7 @@ const AddReview: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          parsedData: { ...parsedDetails, fullReviewText: reviewText, restaurantName, locationInfo},
+          parsedData: { ...parsedDetails, fullReviewText: reviewText, restaurantName, locationInfo: googleLocation},
         }),
       });
       const data = await response.json();
@@ -116,11 +116,11 @@ const AddReview: React.FC = () => {
 
   const resetForm = () => {
     setRestaurantName('');
-    setLocation('');
+    setUserLocation('');
     setReviewText('');
     setParsedDetails(null);
     setPlaceVerified(null);
-    setLocationInfo(null);
+    setGoogleLocationInfo(null);
     setSessionId(generateSessionId());
     setChatHistory([]);
   };
@@ -131,7 +131,7 @@ const AddReview: React.FC = () => {
     <Box sx={{ textAlign: 'left' }}>
       <Typography><strong>Reviewer:</strong> {data.reviewer || 'Not provided'}</Typography>
       <Typography><strong>Restaurant:</strong> {data.restaurantName || 'Not provided'}</Typography>
-      <Typography><strong>Location:</strong> {(data.location! as LocationInfo).address! || 'Not provided'}</Typography>
+      <Typography><strong>Location:</strong> {data.userLocation || 'Not provided'}</Typography>
       <Typography><strong>Date of Visit:</strong> {data.dateOfVisit || 'Not provided'}</Typography>
       <Typography><strong>Overall Experience:</strong> {data.overallExperience || 'Not provided'}</Typography>
       <Typography><strong>Items Ordered:</strong></Typography>
@@ -174,8 +174,8 @@ const AddReview: React.FC = () => {
             <TextField
               fullWidth
               label="Location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              value={userLocation}
+              onChange={(e) => setUserLocation(e.target.value)}
               placeholder="Enter the location (e.g., City or Address)"
               required
               style={{ marginBottom: 20 }}
@@ -200,11 +200,11 @@ const AddReview: React.FC = () => {
                 </Typography>
               </Box>
             )}
-            {placeVerified && locationInfo && (
+            {placeVerified && googleLocation && (
               <Box mt={2}>
                 <Typography>Location Verified:</Typography>
-                <Typography>{locationInfo.name}</Typography>
-                <Typography>{locationInfo.address}</Typography>
+                <Typography>{googleLocation.name}</Typography>
+                <Typography>{googleLocation.address}</Typography>
               </Box>
             )}
           </Box>
