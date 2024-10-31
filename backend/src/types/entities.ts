@@ -36,5 +36,5 @@ export interface ReviewEntity {
 }
 
 export interface ReviewEntityWithFullText extends ReviewEntity {
-  fullReviewText: string;
+  reviewText: string;
 }

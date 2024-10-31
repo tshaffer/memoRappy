@@ -171,23 +171,46 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
 };
 
 // Submit endpoint to save structured review in the database
-export const submitReviewHandler = async (req: any, res: any) => {
-  const { parsedData } = req.body;
+export const submitReviewHandler = async (req: Request, res: Response): Promise<void> => {
 
-  if (!parsedData || !parsedData.restaurantName) {
-    return res.status(400).json({ error: 'Incomplete review data.' });
+  const { structuredReviewProperties, parsedReviewProperties, reviewText, sessionId } = req.body;
+  if (!structuredReviewProperties || !parsedReviewProperties || !reviewText || !sessionId) {
+    res.status(400).json({ error: 'Incomplete review data.' });
+    return;
+  }
+
+  const { restaurantName, userLocation, dateOfVisit } = structuredReviewProperties;
+  const { itemsOrdered, ratings, overallExperience, reviewer, keywords, phrases, googleLocation } = parsedReviewProperties;
+  if (!restaurantName) {
+    res.status(400).json({ error: 'Incomplete review data.' });
+    return;
   }
 
   try {
-    const newReview = new Review(parsedData);
+    const newReview = new Review({
+      restaurantName,
+      userLocation,
+      dateOfVisit,
+      itemsOrdered,
+      ratings,
+      overallExperience,
+      reviewer,
+      keywords,
+      phrases,
+      googleLocation,
+      reviewText
+    });
+    
     await newReview.save();
 
     // Clear conversation history for the session after submission
     delete reviewConversations[req.body.sessionId];
 
-    return res.status(201).json({ message: 'Review saved successfully!', review: newReview });
+    res.status(201).json({ message: 'Review saved successfully!', review: newReview });
+    return;
   } catch (error) {
     console.error('Error saving review:', error);
-    return res.status(500).json({ error: 'An error occurred while saving the review.' });
+    res.status(500).json({ error: 'An error occurred while saving the review.' });
+    return;
   }
 };

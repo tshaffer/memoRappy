@@ -22,7 +22,7 @@ const ReviewSchema: Schema<IReview> = new Schema({
   keywords: [{ type: String }],
   phrases: [{ type: String }],
   googleLocation: { type: LocationSchema },  // Use Mixed type to allow different formats
-  fullReviewText: { type: String, required: true },
+  reviewText: { type: String, required: true },
 });
 
 const Review: Model<IReview> = mongoose.model<IReview>('Review', ReviewSchema);

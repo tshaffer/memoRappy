@@ -74,7 +74,7 @@ const queryReviewsHandler: any = async (req: any, res: any): Promise<void> => {
     }
 
     // Format the review texts to be sent to ChatGPT
-    const reviewsText = reviews.map((review) => `Review: "${review.fullReviewText}"`).join('\n\n');
+    const reviewsText = reviews.map((review) => `Review: "${review.reviewText}"`).join('\n\n');
 
     // Formulate the ChatGPT prompt
     const prompt = `

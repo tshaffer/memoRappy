@@ -122,11 +122,18 @@ const AddReview: React.FC = () => {
   const handleSubmit = async () => {
     if (!parsedReviewProperties) return;
     try {
+      const submitBody: any = {
+        structuredReviewProperties: { restaurantName, userLocation, dateOfVisit },
+        parsedReviewProperties,
+        reviewText,
+        sessionId,
+      };
+
       const response = await fetch('/api/reviews/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          parsedData: { ...parsedReviewProperties, fullReviewText: reviewText, restaurantName, googleLocation },
+          ...submitBody,
         }),
       });
       const data = await response.json();
