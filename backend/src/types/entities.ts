@@ -19,7 +19,7 @@ export interface ParsedReviewProperties {
   reviewer: string;
   keywords: string[];
   phrases: string[];
-  googleLocation: GoogleLocation;
+  googleLocation?: GoogleLocation;
 }
 
 export interface ReviewEntity {
@@ -37,4 +37,9 @@ export interface ReviewEntity {
 
 export interface ReviewEntityWithFullText extends ReviewEntity {
   reviewText: string;
+}
+
+export interface ChatResponse {
+  parsedReviewProperties: ParsedReviewProperties;
+  updatedReviewText: string;
 }

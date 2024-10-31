@@ -36,5 +36,10 @@ export interface ReviewEntity {
 }
 
 export interface ReviewEntityWithFullText extends ReviewEntity {
-  fullReviewText: string;
+  reviewText: string;
+}
+
+export interface ChatResponse {
+  parsedReviewProperties: ParsedReviewProperties;
+  updatedReviewText: string;
 }

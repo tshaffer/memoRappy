@@ -10,7 +10,7 @@ import {
   Box,
   Card,
 } from '@mui/material';
-import { AddReviewDisplayTabs, GoogleLocation, ParsedReviewProperties, ReviewEntity } from '../types';
+import { AddReviewDisplayTabs, ChatResponse, GoogleLocation, ParsedReviewProperties, ReviewEntity } from '../types';
 
 const AddReview: React.FC = () => {
 
@@ -105,13 +105,14 @@ const AddReview: React.FC = () => {
       const response = await fetch('/api/reviews/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userInput: chatInput, sessionId, fullReviewText: reviewText }),
+        body: JSON.stringify({ userInput: chatInput, sessionId, reviewText }),
       });
-      const data = await response.json();
+      const chatResponse: ChatResponse = await response.json();
+      debugger;
 
-      setParsedReviewProperties(data.parsedData);
-      setReviewText(data.updatedReviewText);
-      setChatHistory([...chatHistory, { role: 'user', message: chatInput }, { role: 'ai', message: data.parsedData }]);
+      setParsedReviewProperties(chatResponse.parsedReviewProperties);
+      setReviewText(chatResponse.updatedReviewText);
+      setChatHistory([...chatHistory, { role: 'user', message: chatInput }, { role: 'ai', message: chatResponse.parsedData }]);
       setChatInput('');
       setDisplayTab(2);
     } catch (error) {

@@ -1,6 +1,6 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import { openai } from '../index';
-import { GoogleLocation, ParsedReviewProperties, ReviewEntity } from '../types/';
+import { ChatResponse, GoogleLocation, ParsedReviewProperties, ReviewEntity } from '../types/';
 import Review from "../models/Review";
 import { extractFieldFromResponse, extractListFromResponse, removeSquareBrackets } from '../utilities';
 import { getRestaurantLocation } from './googlePlaces';
@@ -90,7 +90,7 @@ export const previewReviewHandler = async (req: Request, res: Response): Promise
 };
 
 export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
-  const { userInput, sessionId, fullReviewText } = req.body;
+  const { userInput, sessionId, reviewText } = req.body;
 
   if (!reviewConversations[sessionId]) {
     res.status(400).json({ error: 'Session not found. Start with a preview first.' });
@@ -111,7 +111,7 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
           1. The updated structured data based on the full conversation. Please ensure that the updated structured data begins with "Updated Structured Data:".
           2. An updated review text that incorporates the latest user modifications. Please ensure that the updated review text begins with "Updated Review Text:".
 
-          Original Review: "${fullReviewText}"`,
+          Original Review: "${reviewText}"`,
         },
       ],
       max_tokens: 500,
@@ -139,16 +139,11 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
     const structuredDataText = structuredDataMatch[1].trim();
     const updatedReviewText = updatedReviewTextMatch[1].trim();
 
-    const restaurantName: string = extractFieldFromResponse(messageContent, 'Restaurant name');
-    const userLocation: string = removeSquareBrackets(extractFieldFromResponse(messageContent, 'Location'));
-    const googleLocation: GoogleLocation = await getRestaurantLocation(restaurantName, userLocation);
+    // const restaurantName: string = extractFieldFromResponse(messageContent, 'Restaurant name');
+    // const userLocation: string = removeSquareBrackets(extractFieldFromResponse(messageContent, 'Location'));
 
-    // Parse the structured data text into JSON-like format
-    const parsedData: ReviewEntity = {
-      restaurantName,
-      userLocation,
-      dateOfVisit: extractFieldFromResponse(structuredDataText, 'Date of visit'),
-      itemsOrdered: extractListFromResponse(structuredDataText, 'List of items ordered'),
+    const parsedReviewProperties: ParsedReviewProperties = {
+      itemsOrdered: extractListFromResponse(structuredDataText, 'List of items ordered').map(removeSquareBrackets),
       ratings: extractListFromResponse(structuredDataText, 'Ratings').map((ratingString: string) => {
         const parts = ratingString.match(/(.+?)\s?\((.+?)\)/);
         return {
@@ -156,14 +151,18 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
           rating: parts ? parts[2].trim() : '',
         };
       }),
-      overallExperience: extractFieldFromResponse(structuredDataText, 'Overall experience'),
-      reviewer: extractFieldFromResponse(structuredDataText, 'Reviewer name'),
-      keywords: extractListFromResponse(structuredDataText, 'Keywords'),
-      phrases: extractListFromResponse(structuredDataText, 'Phrases'),
-      googleLocation,
+      overallExperience: removeSquareBrackets(extractFieldFromResponse(structuredDataText, 'Overall experience')),
+      reviewer: removeSquareBrackets(extractFieldFromResponse(structuredDataText, 'Reviewer name')),
+      keywords: extractListFromResponse(structuredDataText, 'Keywords').map(removeSquareBrackets),
+      phrases: extractListFromResponse(structuredDataText, 'Phrases').map(removeSquareBrackets),
     };
 
-    res.json({ parsedData, updatedReviewText });
+    const chatResponse: ChatResponse = {
+      parsedReviewProperties,
+      updatedReviewText,
+    };
+
+    res.json(chatResponse);
   } catch (error) {
     console.error('Error during chat interaction:', error);
     res.status(500).json({ error: 'An error occurred while processing the chat response.' });
