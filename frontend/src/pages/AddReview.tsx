@@ -35,7 +35,7 @@ const AddReview: React.FC = () => {
   const [parsedReviewProperties, setParsedReviewProperties] = useState<ParsedReviewProperties | null>(null);
   const [displayTab, setDisplayTab] = useState(AddReviewDisplayTabs.ReviewText);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | ReviewEntity }[]>([]);
+  const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | ParsedReviewProperties }[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
   const [placeVerified, setPlaceVerified] = useState<boolean | null>(null);
   const [googleLocation, setGoogleLocation] = useState<GoogleLocation | null>(null);
@@ -108,11 +108,11 @@ const AddReview: React.FC = () => {
         body: JSON.stringify({ userInput: chatInput, sessionId, reviewText }),
       });
       const chatResponse: ChatResponse = await response.json();
-      debugger;
+      const  { parsedReviewProperties, updatedReviewText } = chatResponse;
 
-      setParsedReviewProperties(chatResponse.parsedReviewProperties);
-      setReviewText(chatResponse.updatedReviewText);
-      setChatHistory([...chatHistory, { role: 'user', message: chatInput }, { role: 'ai', message: chatResponse.parsedData }]);
+      setParsedReviewProperties(parsedReviewProperties);
+      setReviewText(updatedReviewText);
+      setChatHistory([...chatHistory, { role: 'user', message: chatInput }, { role: 'ai', message: parsedReviewProperties }]);
       setChatInput('');
       setDisplayTab(2);
     } catch (error) {
