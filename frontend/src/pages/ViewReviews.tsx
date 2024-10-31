@@ -1,11 +1,24 @@
-// ViewReviews.tsx
-
-import React, { useEffect, useState } from 'react';
-import { Typography, List, ListItemText, Card, CardContent, Divider, Grid, ListItemButton } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import {
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TableSortLabel,
+  Typography,
+  Box,
+  Grid,
+} from '@mui/material';
 import { ReviewEntityWithFullText } from '../types';
 
 const ViewReviews: React.FC = () => {
   const [reviews, setReviews] = useState<ReviewEntityWithFullText[]>([]);
+  const [sortBy, setSortBy] = useState<keyof ReviewEntityWithFullText>('restaurantName');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortedReviews, setSortedReviews] = useState<ReviewEntityWithFullText[]>([]);
   const [selectedReview, setSelectedReview] = useState<ReviewEntityWithFullText | null>(null);
 
   useEffect(() => {
@@ -23,71 +36,130 @@ const ViewReviews: React.FC = () => {
     fetchReviews();
   }, []);
 
-  return (
-    <Grid container spacing={2} style={{ padding: 20 }}>
-      {/* Master view - list of reviews */}
-      <Grid item xs={12} md={4}>
-        <Card>
-          <CardContent>
-            <Typography variant="h5" gutterBottom>Reviews</Typography>
-            <List>
-              {reviews.map((review, index) => (
-                <React.Fragment key={index}>
-                  <ListItemButton
-                    onClick={() => setSelectedReview(review)}
-                    selected={selectedReview === review}
-                  >
-                    <ListItemText
-                      primary={review.restaurantName}
-                      secondary={`Overall Experience: ${review.overallExperience}`}
-                    />
-                  </ListItemButton>
-                  <Divider />
-                </React.Fragment>
-              ))}
-            </List>
-          </CardContent>
-        </Card>
-      </Grid>
+  useEffect(() => {
+    // Sort reviews based on current sortBy and sortDirection
+    const sorted = [...reviews].sort((a, b) => {
+      const aValue = a[sortBy];
+      const bValue = b[sortBy];
 
-      {/* Detail view - details of the selected review */}
-      <Grid item xs={12} md={8}>
-        {selectedReview ? (
-          <Card>
-            <CardContent>
-              <Typography variant="h5" gutterBottom>{selectedReview.restaurantName}</Typography>
-              <Typography variant="subtitle1" color="textSecondary" gutterBottom>
-                {selectedReview.dateOfVisit}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Reviewer:</strong> {selectedReview.reviewer}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Overall Experience:</strong> {selectedReview.overallExperience}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Items Ordered:</strong>
-              </Typography>
-              <ul>
-                {selectedReview.itemsOrdered.map((item, idx) => (
-                  <li key={idx}>
-                    {item} - {selectedReview.ratings[idx]?.rating || 'No rating provided'}
-                  </li>
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortDirection === 'asc'
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      return 0;
+    });
+    setSortedReviews(sorted);
+  }, [reviews, sortBy, sortDirection]);
+
+  const handleSort = (property: keyof ReviewEntityWithFullText) => {
+    const isAsc = sortBy === property && sortDirection === 'asc';
+    setSortBy(property);
+    setSortDirection(isAsc ? 'desc' : 'asc');
+  };
+
+  const renderDetailPanel = () => {
+    if (!selectedReview) {
+      return (
+        <Box p={3}>
+          <Typography variant="h6" color="textSecondary">
+            Select a review to see the details.
+          </Typography>
+        </Box>
+      );
+    }
+    return (
+      <Box p={3}>
+        <Typography variant="h6" gutterBottom>
+          {selectedReview.restaurantName}
+        </Typography>
+        <Typography><strong>Location:</strong> {selectedReview.userLocation || 'Not provided'}</Typography>
+        <Typography><strong>Date of Visit:</strong> {selectedReview.dateOfVisit || 'Not provided'}</Typography>
+        <Typography><strong>Reviewer:</strong> {selectedReview.reviewer || 'Anonymous'}</Typography>
+        <Typography><strong>Overall Experience:</strong> {selectedReview.overallExperience || 'No rating'}</Typography>
+
+        <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+          Items Ordered
+        </Typography>
+        <ul>
+          {selectedReview.itemsOrdered.map((item, idx) => (
+            <li key={idx}>
+              {item} - {selectedReview.ratings[idx]?.rating || 'No rating provided'}
+            </li>
+          ))}
+        </ul>
+
+        <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+          Review Text
+        </Typography>
+        <Typography>{selectedReview.reviewText}</Typography>
+      </Box>
+    );
+  };
+
+  return (
+    <Grid container spacing={2}>
+      <Grid item xs={12} md={6}>
+        <Paper>
+          <Typography variant="h4" gutterBottom>
+            View Reviews
+          </Typography>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>
+                    <TableSortLabel
+                      active={sortBy === 'restaurantName'}
+                      direction={sortBy === 'restaurantName' ? sortDirection : 'asc'}
+                      onClick={() => handleSort('restaurantName')}
+                    >
+                      Restaurant Name
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={sortBy === 'overallExperience'}
+                      direction={sortBy === 'overallExperience' ? sortDirection : 'asc'}
+                      onClick={() => handleSort('overallExperience')}
+                    >
+                      Overall Experience
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={sortBy === 'dateOfVisit'}
+                      direction={sortBy === 'dateOfVisit' ? sortDirection : 'asc'}
+                      onClick={() => handleSort('dateOfVisit')}
+                    >
+                      Date of Visit
+                    </TableSortLabel>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {sortedReviews.map((review) => (
+                  <TableRow
+                    key={review.restaurantName} // Replace with unique key if available
+                    hover
+                    onClick={() => setSelectedReview(review)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <TableCell>{review.restaurantName}</TableCell>
+                    <TableCell>{review.overallExperience}</TableCell>
+                    <TableCell>{review.dateOfVisit}</TableCell>
+                  </TableRow>
                 ))}
-              </ul>
-              <Typography variant="body1" gutterBottom>
-                <strong>Review:</strong> {selectedReview.reviewText}
-              </Typography>
-              {selectedReview.googleLocation && (
-                <Typography variant="body2" color="textSecondary" gutterBottom>
-                  <strong>Location:</strong> {selectedReview.googleLocation.address}
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <Typography variant="body1">Select a review to see details.</Typography>
-        )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <Paper>{renderDetailPanel()}</Paper>
       </Grid>
     </Grid>
   );
