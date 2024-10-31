@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 import Review from './models/Review';
 import express from 'express';
 
-import { chatReviewHandler, getRestaurantLocationHandler, previewReviewHandler, submitReviewHandler } from './controllers';
+import { chatReviewHandler, getRestaurantLocationHandler, previewReviewHandler, reviewsRouter, submitReviewHandler } from './controllers';
 
 export let openai: OpenAI;
 
@@ -21,45 +21,6 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
-// Get all reviews or filter by query parameters
-const reviewsRouter = async (req: any, res: any) => {
-  try {
-    const { restaurantName, location, startDate, endDate, item } = req.query;
-
-    // Build a dynamic query based on the provided filters
-    const query: any = {};
-
-    if (restaurantName) {
-      query.restaurantName = new RegExp(restaurantName as string, 'i'); // Case-insensitive search
-    }
-
-    if (location) {
-      query.location = new RegExp(location as string, 'i'); // Case-insensitive search
-    }
-
-    // Use the raw ISO date strings for date filtering
-    if (startDate && endDate) {
-      query.dateOfVisit = {
-        $gte: startDate as string,
-        $lte: endDate as string,
-      };
-    } else if (startDate) {
-      query.dateOfVisit = { $gte: startDate as string };
-    }
-
-    if (item) {
-      query.itemsOrdered = { $in: [new RegExp(item as string, 'i')] }; // Find if item exists in the list
-    }
-
-    // Query the MongoDB database for matching reviews
-    const reviews = await Review.find(query).exec();
-    res.status(200).json({ reviews });
-  } catch (error) {
-    console.error('Error retrieving reviews:', error);
-    res.status(500).json({ error: 'An error occurred while retrieving the reviews.' });
-  }
-};
 
 // Query reviews handler
 const queryReviewsHandler: any = async (req: any, res: any): Promise<void> => {
