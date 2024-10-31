@@ -10,9 +10,15 @@ import {
   Box,
   Card,
 } from '@mui/material';
-import { AddReviewDisplayTabs, GoogleLocation, ReviewEntity } from '../types';
+import { AddReviewDisplayTabs, GoogleLocation, ParsedReviewProperties, ReviewEntity } from '../types';
 
 const AddReview: React.FC = () => {
+
+  const formatDateToMMDDYYYY = (dateString: string) => {
+    if (!dateString) return '';
+    const [year, month, day] = dateString.split('-');
+    return `${month}/${day}/${year}`;
+  };
 
   const getFormattedDate = () => {
     const today = new Date();
@@ -26,7 +32,7 @@ const AddReview: React.FC = () => {
   const [userLocation, setUserLocation] = useState<string>('');
   const [dateOfVisit, setDateOfVisit] = useState('');
   const [reviewText, setReviewText] = useState('');
-  const [parsedDetails, setParsedDetails] = useState<ReviewEntity | null>(null);
+  const [parsedReviewProperties, setParsedReviewProperties] = useState<ParsedReviewProperties | null>(null);
   const [displayTab, setDisplayTab] = useState(AddReviewDisplayTabs.ReviewText);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | ReviewEntity }[]>([]);
@@ -73,15 +79,20 @@ const AddReview: React.FC = () => {
   const handlePreview = async () => {
     if (!sessionId) return;
     try {
+      const previewBody: any = {
+        structuredReviewProperties: { restaurantName, userLocation, dateOfVisit },
+        reviewText,
+        sessionId,
+      };
       const response = await fetch('/api/reviews/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ restaurantName, userLocation, googleLocation, reviewText, sessionId }),
+        body: JSON.stringify(previewBody),
       });
       const data = await response.json();
-      setParsedDetails(data.parsedData);
-      setGoogleLocation(data.parsedData.googleLocation);
-      setChatHistory([...chatHistory, { role: 'user', message: reviewText }, { role: 'ai', message: data.parsedData }]);
+      setParsedReviewProperties(data.parsedReviewProperties);
+      setGoogleLocation(data.parsedReviewProperties.googleLocation);
+      setChatHistory([...chatHistory, { role: 'user', message: reviewText }, { role: 'ai', message: data.parsedReviewProperties }]);
       setDisplayTab(1);
     } catch (error) {
       console.error('Error previewing review:', error);
@@ -98,7 +109,7 @@ const AddReview: React.FC = () => {
       });
       const data = await response.json();
 
-      setParsedDetails(data.parsedData);
+      setParsedReviewProperties(data.parsedData);
       setReviewText(data.updatedReviewText);
       setChatHistory([...chatHistory, { role: 'user', message: chatInput }, { role: 'ai', message: data.parsedData }]);
       setChatInput('');
@@ -109,13 +120,13 @@ const AddReview: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!parsedDetails) return;
+    if (!parsedReviewProperties) return;
     try {
       const response = await fetch('/api/reviews/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          parsedData: { ...parsedDetails, fullReviewText: reviewText, restaurantName, googleLocation },
+          parsedData: { ...parsedReviewProperties, fullReviewText: reviewText, restaurantName, googleLocation },
         }),
       });
       const data = await response.json();
@@ -139,20 +150,20 @@ const AddReview: React.FC = () => {
 
   const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
-  const renderFormattedAIResponse = (reviewEntity: ReviewEntity) => {
-    const googleLocation: GoogleLocation = reviewEntity.googleLocation;
+  const renderFormattedAIResponse = (parsedReviewProperties: ParsedReviewProperties) => {
+    const googleLocation: GoogleLocation = parsedReviewProperties.googleLocation;
     return (
       <Box sx={{ textAlign: 'left' }}>
-        <Typography><strong>Reviewer:</strong> {reviewEntity.reviewer || 'Not provided'}</Typography>
-        <Typography><strong>Restaurant:</strong> {reviewEntity.restaurantName || 'Not provided'}</Typography>
-        <Typography><strong>Location:</strong> {reviewEntity.userLocation || 'Not provided'}</Typography>
-        <Typography><strong>Date of Visit:</strong> {reviewEntity.dateOfVisit || 'Not provided'}</Typography>
-        <Typography><strong>Overall Experience:</strong> {reviewEntity.overallExperience || 'Not provided'}</Typography>
+        <Typography><strong>Reviewer:</strong> {parsedReviewProperties.reviewer || 'Not provided'}</Typography>
+        <Typography><strong>Restaurant:</strong> {restaurantName || 'Not provided'}</Typography>
+        <Typography><strong>Location:</strong> {userLocation || 'Not provided'}</Typography>
+        <Typography><strong>Date of Visit:</strong> {formatDateToMMDDYYYY(dateOfVisit) || 'Not provided'}</Typography>
+        <Typography><strong>Overall Experience:</strong> {parsedReviewProperties.overallExperience || 'Not provided'}</Typography>
         <Typography><strong>Items Ordered:</strong></Typography>
         <ul>
-          {reviewEntity.itemsOrdered.map((item, idx) => (
+          {parsedReviewProperties.itemsOrdered.map((item, idx) => (
             <li key={idx}>
-              {item} - {reviewEntity.ratings[idx]?.rating || 'No rating provided'}
+              {item} - {parsedReviewProperties.ratings[idx]?.rating || 'No rating provided'}
             </li>
           ))}
         </ul>
@@ -175,7 +186,6 @@ const AddReview: React.FC = () => {
       </Tabs>
 
       <Box mt={2}>
-        {/* Display Content Based on Active Tab */}
         {displayTab === AddReviewDisplayTabs.ReviewText && (
           <Box>
             <TextField
@@ -232,7 +242,7 @@ const AddReview: React.FC = () => {
             )}
           </Box>
         )}
-        {displayTab === AddReviewDisplayTabs.ExtractedInformation && parsedDetails && renderFormattedAIResponse(parsedDetails)}
+        {displayTab === AddReviewDisplayTabs.ExtractedInformation && parsedReviewProperties && renderFormattedAIResponse(parsedReviewProperties)}
         {displayTab === AddReviewDisplayTabs.ChatHistory && (
           <Box>
             {chatHistory.map((msg, idx) => (
@@ -303,7 +313,7 @@ const AddReview: React.FC = () => {
             color="primary"
             fullWidth
             onClick={handleSubmit}
-            disabled={!parsedDetails}
+            disabled={!parsedReviewProperties}
           >
             Submit
           </Button>

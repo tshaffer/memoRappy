@@ -1,16 +1,19 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import { openai } from '../index';
-import { GoogleLocation, ReviewEntity } from '../types/';
+import { GoogleLocation, ParsedReviewProperties, ReviewEntity } from '../types/';
 import Review from "../models/Review";
 import { extractFieldFromResponse, extractListFromResponse, removeSquareBrackets } from '../utilities';
 import { getRestaurantLocation } from './googlePlaces';
+import { Request, Response } from 'express';
 
 // Store conversations for each session
 const reviewConversations: { [sessionId: string]: ChatCompletionMessageParam[] } = {};
 
 // Preview endpoint to get structured data without saving
-export const previewReviewHandler = async (req: any, res: any): Promise<void> => {
-  const { restaurantName, userLocation, reviewText, sessionId } = req.body;
+export const previewReviewHandler = async (req: Request, res: Response): Promise<void> => {
+
+  const { structuredReviewProperties, reviewText, sessionId } = req.body;
+  const { restaurantName, userLocation, dateOfVisit } = structuredReviewProperties;
 
   // Initialize conversation history if it doesn't exist
   if (!reviewConversations[sessionId]) {
@@ -21,8 +24,6 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
           You are a helpful assistant aiding in extracting structured information from restaurant reviews.
           Your task is to extract details such as:
           - Reviewer name
-          - Restaurant name
-          - Location
           - Date of visit (in YYYY-MM-DD format)
           - List of items ordered
           - Ratings for each item (with the format: "item name (rating)")
@@ -34,8 +35,6 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
 
           Format the response as follows:
           - Reviewer name: [Name]
-          - Restaurant name: [Name]
-          - Location: [Location]
           - Date of visit: [YYYY-MM-DD]
           - List of items ordered: [Item 1, Item 2, etc.]
           - Ratings for each item: [Item 1 (Rating), Item 2 (Rating)]
@@ -66,11 +65,7 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
 
     const googleLocation: GoogleLocation = await getRestaurantLocation(restaurantName, userLocation);
 
-    // Parse response into structured data
-    const parsedData: ReviewEntity = {
-      restaurantName,
-      userLocation,
-      dateOfVisit: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Date of visit')),
+    const parsedReviewProperties: ParsedReviewProperties = {
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered').map(removeSquareBrackets),
       ratings: extractListFromResponse(messageContent, 'Ratings for each item').map((ratingString: string) => {
         const cleanedString = removeSquareBrackets(ratingString);
@@ -87,8 +82,7 @@ export const previewReviewHandler = async (req: any, res: any): Promise<void> =>
       googleLocation,
     };
 
-    // Respond with parsed data
-    res.json({ parsedData });
+    res.json({ parsedReviewProperties });
   } catch (error) {
     console.error('Error processing review preview:', error);
     res.status(500).json({ error: 'An error occurred while processing the review preview.' });
