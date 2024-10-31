@@ -63,18 +63,16 @@ export const previewReviewHandler = async (req: Request, res: Response): Promise
       return;
     }
 
+    console.log('previewReviewHandler response:', messageContent); // Debugging log
+    console.log('list of items ordered', extractListFromResponse(messageContent, 'List of items ordered'));
+    console.log('comments about each item', extractCommentsFromItems(messageContent, 'Comments about each item'));
+
     const googleLocation: GoogleLocation = await getRestaurantLocation(restaurantName, userLocation);
 
+    // Extract structured information using adjusted parsing
     const parsedReviewProperties: ParsedReviewProperties = {
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered').map(removeSquareBrackets),
-      ratings: extractListFromResponse(messageContent, 'Comments about each item').map((ratingString: string) => {
-        const cleanedString = removeSquareBrackets(ratingString);
-        const parts = cleanedString.match(/(.+?)\s?\((.+?)\)/);
-        return {
-          item: parts ? parts[1].trim() : cleanedString,
-          rating: parts ? parts[2].trim() : '',
-        };
-      }),
+      ratings: extractCommentsFromItems(messageContent, 'Comments about each item'), // Use the adjusted function
       overallExperience: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Overall experience')),
       reviewer: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Reviewer name')),
       keywords: extractListFromResponse(messageContent, 'Keywords').map(removeSquareBrackets),
@@ -88,6 +86,29 @@ export const previewReviewHandler = async (req: Request, res: Response): Promise
     res.status(500).json({ error: 'An error occurred while processing the review preview.' });
   }
 };
+
+// New function to accurately parse comments about each item
+function extractCommentsFromItems(responseText: string, fieldName: string): { item: string; rating: string }[] {
+  // Capture the whole field section for comments about each item
+  const fieldRegex = new RegExp(`${fieldName}:\\s*([\\s\\S]*?)\\n`, 'i');
+  const fieldMatch = responseText.match(fieldRegex);
+
+  if (!fieldMatch || !fieldMatch[1]) return [];
+
+  // Separate each item with comments, using commas outside parentheses as separators
+  const itemsWithComments = fieldMatch[1].match(/[^,]+?\(.+?\)/g);
+
+  if (!itemsWithComments) return [];
+
+  // Extract item name and comment from each match
+  return itemsWithComments.map((itemText: string) => {
+    const itemMatch = itemText.match(/(.+?)\s*\((.+?)\)/);
+    return {
+      item: itemMatch ? itemMatch[1].trim() : itemText,
+      rating: itemMatch ? itemMatch[2].trim() : '',
+    };
+  });
+}
 
 export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
   const { userInput, sessionId, reviewText } = req.body;
@@ -142,6 +163,10 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
     // const restaurantName: string = extractFieldFromResponse(messageContent, 'Restaurant name');
     // const userLocation: string = removeSquareBrackets(extractFieldFromResponse(messageContent, 'Location'));
 
+    console.log('chatReviewHandler updatedReviewText:', updatedReviewText); // Debugging log
+    console.log('list of items ordered', extractListFromResponse(updatedReviewText, 'List of items ordered'));
+    console.log('comments about each item', extractListFromResponse(updatedReviewText, 'Comments about each item'));
+
     const parsedReviewProperties: ParsedReviewProperties = {
       itemsOrdered: extractListFromResponse(structuredDataText, 'List of items ordered').map(removeSquareBrackets),
       ratings: extractListFromResponse(structuredDataText, 'Comments').map((ratingString: string) => {
@@ -179,7 +204,7 @@ export const submitReviewHandler = async (req: Request, res: Response): Promise<
   }
 
   const { restaurantName, userLocation, dateOfVisit } = structuredReviewProperties;
-  const { itemsOrdered, comments, overallExperience, reviewer, keywords, phrases, googleLocation } = parsedReviewProperties;
+  const { itemsOrdered, ratings, overallExperience, reviewer, keywords, phrases, googleLocation } = parsedReviewProperties;
   if (!restaurantName) {
     res.status(400).json({ error: 'Incomplete review data.' });
     return;
@@ -191,7 +216,7 @@ export const submitReviewHandler = async (req: Request, res: Response): Promise<
       userLocation,
       dateOfVisit,
       itemsOrdered,
-      ratings: comments,
+      ratings,
       overallExperience,
       reviewer,
       keywords,
