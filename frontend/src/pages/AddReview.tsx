@@ -13,8 +13,18 @@ import {
 import { AddReviewDisplayTabs, GoogleLocation, ReviewEntity } from '../types';
 
 const AddReview: React.FC = () => {
+
+  const getFormattedDate = () => {
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const year = today.getFullYear();
+    return `${year}-${month}-${day}`;
+  };
+
   const [restaurantName, setRestaurantName] = useState('');
   const [userLocation, setUserLocation] = useState<string>('');
+  const [dateOfVisit, setDateOfVisit] = useState('');
   const [reviewText, setReviewText] = useState('');
   const [parsedDetails, setParsedDetails] = useState<ReviewEntity | null>(null);
   const [displayTab, setDisplayTab] = useState(AddReviewDisplayTabs.ReviewText);
@@ -25,6 +35,7 @@ const AddReview: React.FC = () => {
   const [googleLocation, setGoogleLocation] = useState<GoogleLocation | null>(null);
 
   useEffect(() => {
+    setDateOfVisit(getFormattedDate());
     if (!sessionId) {
       setSessionId(generateSessionId());
     }
@@ -182,10 +193,18 @@ const AddReview: React.FC = () => {
               value={userLocation}
               onChange={(e) => setUserLocation(e.target.value)}
               placeholder="Enter the location (e.g., City or Address)"
-              required
               style={{ marginBottom: 20 }}
             />
             <TextField
+              fullWidth
+              type="date"
+              value={dateOfVisit}
+              onChange={(e) => setDateOfVisit(e.target.value)}
+              placeholder="mm/dd/yyyy"
+              label="Date of Visit"
+            />
+            <TextField
+              style={{ marginTop: 20 }}
               fullWidth
               multiline
               rows={8}
