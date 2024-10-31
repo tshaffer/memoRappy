@@ -26,7 +26,7 @@ export const previewReviewHandler = async (req: Request, res: Response): Promise
           - Reviewer name
           - Date of visit (in YYYY-MM-DD format)
           - List of items ordered
-          - Ratings for each item (with the format: "item name (rating)")
+          - Comments about each item (with the format: "item name (comments)")
           - Overall experience
 
           Also, look for keywords and phrases that you might typically find in a restaurant review.
@@ -37,7 +37,7 @@ export const previewReviewHandler = async (req: Request, res: Response): Promise
           - Reviewer name: [Name]
           - Date of visit: [YYYY-MM-DD]
           - List of items ordered: [Item 1, Item 2, etc.]
-          - Ratings for each item: [Item 1 (Rating), Item 2 (Rating)]
+          - Comments about each item: [Item 1 (Comment), Item 2 (Comment)]
           - Overall experience: [Overall Experience]
           - Keywords: [Keyword 1, Keyword 2, etc.]
           - Phrases: [Phrase 1, Phrase 2, etc.]
@@ -67,7 +67,7 @@ export const previewReviewHandler = async (req: Request, res: Response): Promise
 
     const parsedReviewProperties: ParsedReviewProperties = {
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered').map(removeSquareBrackets),
-      ratings: extractListFromResponse(messageContent, 'Ratings for each item').map((ratingString: string) => {
+      ratings: extractListFromResponse(messageContent, 'Comments about each item').map((ratingString: string) => {
         const cleanedString = removeSquareBrackets(ratingString);
         const parts = cleanedString.match(/(.+?)\s?\((.+?)\)/);
         return {
@@ -144,7 +144,7 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
 
     const parsedReviewProperties: ParsedReviewProperties = {
       itemsOrdered: extractListFromResponse(structuredDataText, 'List of items ordered').map(removeSquareBrackets),
-      ratings: extractListFromResponse(structuredDataText, 'Ratings').map((ratingString: string) => {
+      ratings: extractListFromResponse(structuredDataText, 'Comments').map((ratingString: string) => {
         const parts = ratingString.match(/(.+?)\s?\((.+?)\)/);
         return {
           item: parts ? parts[1].trim() : ratingString,
@@ -179,7 +179,7 @@ export const submitReviewHandler = async (req: Request, res: Response): Promise<
   }
 
   const { restaurantName, userLocation, dateOfVisit } = structuredReviewProperties;
-  const { itemsOrdered, ratings, overallExperience, reviewer, keywords, phrases, googleLocation } = parsedReviewProperties;
+  const { itemsOrdered, comments, overallExperience, reviewer, keywords, phrases, googleLocation } = parsedReviewProperties;
   if (!restaurantName) {
     res.status(400).json({ error: 'Incomplete review data.' });
     return;
@@ -191,7 +191,7 @@ export const submitReviewHandler = async (req: Request, res: Response): Promise<
       userLocation,
       dateOfVisit,
       itemsOrdered,
-      ratings,
+      ratings: comments,
       overallExperience,
       reviewer,
       keywords,
