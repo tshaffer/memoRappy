@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { GoogleLocation } from '../types';
 
 // Define the map container style and initial options
 const mapContainerStyle = { width: '100%', height: '500px' };
 const initialMapOptions = { zoom: 14 };
-
-interface Location {
-  name?: string;
-  address?: string;
-  latitude: number;
-  longitude: number;
-  placeId?: string; // Optional, if available from Google Place API
-}
 
 interface Coordinates {
   lat: number;
@@ -19,7 +12,7 @@ interface Coordinates {
 }
 
 interface MapWithMarkersProps {
-  locations: Location[];
+  locations: GoogleLocation[];
 }
 
 // Component to render a map with current location and destination markers
