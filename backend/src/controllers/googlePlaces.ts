@@ -3,7 +3,8 @@ import { Request, Response } from 'express';
 import { GooglePlacesResponse, GoogleLocation } from '../types';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
-const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
+const GOOGLE_PLACES_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
+const GOOGLE_PLACE_DETAILS_BASE_URL ='https://maps.googleapis.com/maps/api/place/details/json';
 
 export const getRestaurantLocationHandler = async (req: Request, res: Response): Promise<void> => {
   const { restaurantName, location } = req.body;
@@ -18,7 +19,7 @@ export const getRestaurantLocationHandler = async (req: Request, res: Response):
 
 export const getRestaurantLocation = async (restaurantName: string, location: string): Promise<GoogleLocation> => {
   const query = `${restaurantName} ${location}`;
-  const url = `${GOOGLE_PLACES_BASE_URL}?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}`;
+  const url = `${GOOGLE_PLACES_URL}?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}`;
   try {
     const response = await axios.get<GooglePlacesResponse>(url);
     const places: google.maps.places.PlaceResult[] = (response.data as { results: google.maps.places.PlaceResult[] }).results;
@@ -28,10 +29,16 @@ export const getRestaurantLocation = async (restaurantName: string, location: st
     // Return the most relevant result
     const place: google.maps.places.PlaceResult = places[0];
 
+    console.log('Place:', place);
+
+    const cityName = await getCityName(place!.place_id!, GOOGLE_PLACES_API_KEY!);
+    console.log('City name:', cityName);
+
     const locationInfo: GoogleLocation = {
       place_id: place.place_id,
       name: place.name,
       address: place.formatted_address,
+      cityName,
       latitude: place.geometry!.location!.lat as unknown as number,
       longitude: place.geometry!.location!.lng as unknown as number,
     };
@@ -43,3 +50,27 @@ export const getRestaurantLocation = async (restaurantName: string, location: st
     throw error;
   }
 };
+
+async function getCityName(placeId: string, apiKey: string): Promise<string | null> {
+  try {
+    const response: any = await axios.get(
+      `https://maps.googleapis.com/maps/api/place/details/json`,
+      {
+        params: {
+          place_id: placeId,
+          key: apiKey,
+        },
+      }
+    );
+
+    const addressComponents = response.data.result.address_components;
+    const cityComponent = addressComponents.find((component: any) =>
+      component.types.includes("locality")
+    );
+
+    return cityComponent ? cityComponent.long_name : null;
+  } catch (error) {
+    console.error("Error fetching city name:", error);
+    return null;
+  }
+}

@@ -238,7 +238,7 @@ const AddReview: React.FC = () => {
             {placeVerified === false && (
               <Box mt={2}>
                 <Typography color="error">
-                  Location not found. Please edt the location and retry or proceed without verification.
+                  Location not found. Please edit the location and retry or proceed without verification.
                 </Typography>
               </Box>
             )}

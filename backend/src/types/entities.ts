@@ -2,6 +2,7 @@ export interface GoogleLocation {
   place_id?: string;
   name?: string;
   address?: string;
+  cityName: string | null;
   latitude: number;
   longitude: number;
 }

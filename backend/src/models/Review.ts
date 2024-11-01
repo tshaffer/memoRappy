@@ -7,6 +7,7 @@ const LocationSchema: Schema<GoogleLocation> = new Schema({
   place_id: { type: String, required: true },
   name: { type: String, required: true },
   address: { type: String, required: true },
+  cityName: { type: String, required: true },
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },
 });
@@ -21,7 +22,7 @@ const ReviewSchema: Schema<IReview> = new Schema({
   reviewer: { type: String },
   keywords: [{ type: String }],
   phrases: [{ type: String }],
-  googleLocation: { type: LocationSchema },  // Use Mixed type to allow different formats
+  googleLocation: { type: LocationSchema },
   reviewText: { type: String, required: true },
 });
 
