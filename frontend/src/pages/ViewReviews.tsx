@@ -230,7 +230,7 @@ const ViewReviews: React.FC = () => {
           variant="contained"
           color="primary"
           fullWidth
-          onClick={handleShowMap}
+          onClick={() => setShowMap(true)}
           disabled={selectedReviews.length === 0 || !currentLocation}
         >
           Show Map
