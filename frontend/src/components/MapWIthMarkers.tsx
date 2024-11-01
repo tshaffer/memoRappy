@@ -38,8 +38,10 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
   // Center the map either on the user's location or the first location in the list
   const mapCenter = currentLocation || (locations[0] && { lat: locations[0].latitude, lng: locations[0].longitude });
 
+  const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY!;
+
   return (
-    <LoadScript googleMapsApiKey={''}>
+    <LoadScript googleMapsApiKey={googleMapsApiKey}>
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         center={mapCenter}
