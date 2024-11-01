@@ -11,8 +11,11 @@ import {
   Typography,
   Box,
   Grid,
+  Checkbox,
+  Button,
 } from '@mui/material';
-import { ReviewEntityWithFullText } from '../types';
+import { GoogleLocation, ReviewEntityWithFullText } from '../types';
+import MapWithMarkers from '../components/MapWithMarkers';
 
 const ViewReviews: React.FC = () => {
   const [reviews, setReviews] = useState<ReviewEntityWithFullText[]>([]);
@@ -20,6 +23,9 @@ const ViewReviews: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [sortedReviews, setSortedReviews] = useState<ReviewEntityWithFullText[]>([]);
   const [selectedReview, setSelectedReview] = useState<ReviewEntityWithFullText | null>(null);
+  const [selectedReviews, setSelectedReviews] = useState<ReviewEntityWithFullText[]>([]);
+  const [showMap, setShowMap] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     // Fetch the reviews from the API
@@ -32,14 +38,23 @@ const ViewReviews: React.FC = () => {
         setSelectedReview(data[0]); // Select the first review by default
       }
     };
-
     fetchReviews();
+
+    // Get the user's current location
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCurrentLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      (error) => console.error('Error getting current location:', error)
+    );
   }, []);
 
   useEffect(() => {
     // Sort reviews based on current sortBy and sortDirection
     const sorted = [...reviews].sort((a, b) => {
-
       let aValue;
       let bValue;
 
@@ -48,7 +63,7 @@ const ViewReviews: React.FC = () => {
         bValue = b.googleLocation.cityName || '';
       } else {
         aValue = a[sortBy];
-        bValue = b[sortBy];  
+        bValue = b[sortBy];
       }
 
       if (typeof aValue === 'string' && typeof bValue === 'string') {
@@ -68,6 +83,14 @@ const ViewReviews: React.FC = () => {
     const isAsc = sortBy === property && sortDirection === 'asc';
     setSortBy(property);
     setSortDirection(isAsc ? 'desc' : 'asc');
+  };
+
+  const handleSelectReview = (review: ReviewEntityWithFullText) => {
+    setSelectedReviews((prevSelected) =>
+      prevSelected.includes(review)
+        ? prevSelected.filter((r) => r !== review)
+        : [...prevSelected, review]
+    );
   };
 
   const renderDetailPanel = () => {
@@ -109,6 +132,8 @@ const ViewReviews: React.FC = () => {
     );
   };
 
+  const locations: GoogleLocation[] = selectedReviews.map((review) => review.googleLocation);
+  
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} md={6}>
@@ -120,6 +145,9 @@ const ViewReviews: React.FC = () => {
             <Table>
               <TableHead>
                 <TableRow>
+                  <TableCell padding="checkbox">
+                    <Checkbox />
+                  </TableCell>
                   <TableCell>
                     <TableSortLabel
                       active={sortBy === 'restaurantName'}
@@ -161,11 +189,17 @@ const ViewReviews: React.FC = () => {
               <TableBody>
                 {sortedReviews.map((review) => (
                   <TableRow
-                    key={review.restaurantName} // Replace with unique key if available
+                    key={review.restaurantName}
                     hover
                     onClick={() => setSelectedReview(review)}
-                    style={{ cursor: 'pointer' }}
+                    selected={selectedReviews.includes(review)}
                   >
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={selectedReviews.includes(review)}
+                        onChange={() => handleSelectReview(review)}
+                      />
+                    </TableCell>
                     <TableCell>{review.restaurantName}</TableCell>
                     <TableCell>{review.googleLocation.cityName}</TableCell>
                     <TableCell>{review.overallExperience}</TableCell>
@@ -176,10 +210,24 @@ const ViewReviews: React.FC = () => {
             </Table>
           </TableContainer>
         </Paper>
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          onClick={() => setShowMap(true)}
+          disabled={selectedReviews.length === 0 || !currentLocation}
+        >
+          Show Map
+        </Button>
       </Grid>
       <Grid item xs={12} md={6}>
         <Paper>{renderDetailPanel()}</Paper>
       </Grid>
+      {showMap && (
+        <MapWithMarkers
+          locations={locations}
+        />
+      )}
     </Grid>
   );
 };
