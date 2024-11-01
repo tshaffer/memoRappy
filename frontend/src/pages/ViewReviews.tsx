@@ -12,8 +12,7 @@ import {
   Box,
   Grid,
 } from '@mui/material';
-import { GoogleLocation, ReviewEntityWithFullText } from '../types';
-import MapWithMarkers from '../components/MapWIthMarkers';
+import { ReviewEntityWithFullText } from '../types';
 
 const ViewReviews: React.FC = () => {
   const [reviews, setReviews] = useState<ReviewEntityWithFullText[]>([]);
@@ -109,7 +108,7 @@ const ViewReviews: React.FC = () => {
       </Box>
     );
   };
-/*
+
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} md={6}>
@@ -183,15 +182,6 @@ const ViewReviews: React.FC = () => {
       </Grid>
     </Grid>
   );
-*/
-
-const locations: GoogleLocation[] = reviews.map((review) => review.googleLocation);
-
-return (
-  <div>
-    <MapWithMarkers locations={locations} />
-  </div>
-)
 };
 
 export default ViewReviews;
