@@ -133,7 +133,23 @@ const ViewReviews: React.FC = () => {
   };
 
   const locations: GoogleLocation[] = selectedReviews.map((review) => review.googleLocation);
-  
+
+  const generateGoogleMapsUrl = () => {
+    const locations: GoogleLocation[] = selectedReviews.map((review) => review.googleLocation);
+    const destination = locations[locations.length - 1];
+    const waypoints = locations.slice(0, -1).map(loc => `${loc.latitude},${loc.longitude}`).join('|');
+
+    return `https://www.google.com/maps/dir/?api=1` +
+      `&origin=${currentLocation ? `${currentLocation.lat},${currentLocation.lng}` : 'My+Location'}` +
+      `&destination=${destination.latitude},${destination.longitude}` +
+      (waypoints ? `&waypoints=${waypoints}` : '');
+  };
+
+  const handleShowMap = () => {
+    const googleMapsUrl = generateGoogleMapsUrl();
+    window.open(googleMapsUrl, '_blank');
+  };
+
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} md={6}>
@@ -214,7 +230,7 @@ const ViewReviews: React.FC = () => {
           variant="contained"
           color="primary"
           fullWidth
-          onClick={() => setShowMap(true)}
+          onClick={handleShowMap}
           disabled={selectedReviews.length === 0 || !currentLocation}
         >
           Show Map
