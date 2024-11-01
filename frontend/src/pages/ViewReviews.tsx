@@ -39,8 +39,17 @@ const ViewReviews: React.FC = () => {
   useEffect(() => {
     // Sort reviews based on current sortBy and sortDirection
     const sorted = [...reviews].sort((a, b) => {
-      const aValue = a[sortBy];
-      const bValue = b[sortBy];
+
+      let aValue;
+      let bValue;
+
+      if (sortBy === 'googleLocation') {
+        aValue = a.googleLocation.cityName || '';
+        bValue = b.googleLocation.cityName || '';
+      } else {
+        aValue = a[sortBy];
+        bValue = b[sortBy];  
+      }
 
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         return sortDirection === 'asc'
@@ -76,7 +85,7 @@ const ViewReviews: React.FC = () => {
         <Typography variant="h6" gutterBottom>
           {selectedReview.restaurantName}
         </Typography>
-        <Typography><strong>Location:</strong> {selectedReview.userLocation || 'Not provided'}</Typography>
+        <Typography><strong>Location:</strong> {selectedReview.googleLocation.cityName || 'Not provided'}</Typography>
         <Typography><strong>Date of Visit:</strong> {selectedReview.dateOfVisit || 'Not provided'}</Typography>
         <Typography><strong>Reviewer:</strong> {selectedReview.reviewer || 'Anonymous'}</Typography>
         <Typography><strong>Overall Experience:</strong> {selectedReview.overallExperience || 'No rating'}</Typography>
@@ -122,6 +131,15 @@ const ViewReviews: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <TableSortLabel
+                      active={sortBy === 'googleLocation'}
+                      direction={sortBy === 'googleLocation' ? sortDirection : 'asc'}
+                      onClick={() => handleSort('googleLocation')}
+                    >
+                      Location
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
                       active={sortBy === 'overallExperience'}
                       direction={sortBy === 'overallExperience' ? sortDirection : 'asc'}
                       onClick={() => handleSort('overallExperience')}
@@ -149,6 +167,7 @@ const ViewReviews: React.FC = () => {
                     style={{ cursor: 'pointer' }}
                   >
                     <TableCell>{review.restaurantName}</TableCell>
+                    <TableCell>{review.googleLocation.cityName}</TableCell>
                     <TableCell>{review.overallExperience}</TableCell>
                     <TableCell>{review.dateOfVisit}</TableCell>
                   </TableRow>
