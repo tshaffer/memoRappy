@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
-// import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { GoogleLocation } from '../types';
 import { AdvancedMarker, APIProvider, Map, Marker, Pin } from '@vis.gl/react-google-maps';
-
-// Define the map container style and initial options
-const mapContainerStyle = { width: '100%', height: '500px' };
-const initialMapOptions = { zoom: 14 };
 
 interface Coordinates {
   lat: number;
@@ -15,6 +10,9 @@ interface Coordinates {
 interface MapWithMarkersProps {
   locations: GoogleLocation[];
 }
+
+const DEFAULT_CENTER = { lat: 37.3944829, lng: -122.0790619 };
+const DEFAULT_ZOOM = 14;
 
 const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
   const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
@@ -37,9 +35,6 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
 
   const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY!;
 
-  const DEFAULT_CENTER = { lat: 37.3944829, lng: -122.0790619 };
-  const DEFAULT_ZOOM = 12;
-
   return (
     <APIProvider
       apiKey={googleMapsApiKey}
@@ -52,58 +47,18 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
           center={DEFAULT_CENTER}
           zoom={DEFAULT_ZOOM}
           gestureHandling="none"
-          disableDefaultUI
           fullscreenControl={false}
           zoomControl={false}>
-          <AdvancedMarker position={{ lat: 37.3944829, lng: -122.0790619 }}>
-            <Pin
-              background={'#FBBC04'}
-              glyphColor={'#000'}
-              borderColor={'#000'}
-            />
-          </AdvancedMarker>
+          <AdvancedMarker position={{ lat: 37.3944829, lng: -122.0790619 }} />
+          <AdvancedMarker position={{ lat: 37.3974265, lng: -122.0611825 }} />
+          {currentLocation && (
+            <Marker position={currentLocation} />
+          )}
         </Map>
       </div>
 
     </APIProvider>
   );
-  /*
-      <Map
-        style={{ width: '100vw', height: '100vh' }}
-        zoom={12}
-        center={{ lat: 37.3944829, lng: -122.0790619 }}
-      >
-        <Marker position={{ lat: 37.3944829, lng: -122.0790619 }} />
-        <Marker position={{ lat: 37.3974265, lng: -122.0611825 }} />
-        <Marker position={{ lat: currentLocation!.lat, lng: currentLocation!.lng }} />
-        </Map >
-        */
-  //   <APIProvider apiKey={googleMapsApiKey}>
-  //     <Map
-  //       style={{ width: '100vw', height: '100vh' }}
-  //       zoom={12}
-  //       center={{ lat: 37.3944829, lng: -122.0790619 }}
-  //     // center={{ lat: currentLocation!.lat, lng: currentLocation!.lng }}
-  //     >
-  //       <Marker position={{ lat: 37.3944829, lng: -122.0790619 }} />
-  //       <Marker position={{ lat: 37.3974265, lng: -122.0611825 }} />
-  //       {/* <Marker position={{ lat: currentLocation!.lat, lng:currentLocation!.lng }} /> */}
-  //     </Map>
-  //   </APIProvider>
-  // );
-  /*
-    return (
-      <APIProvider apiKey={googleMapsApiKey}>
-        <Map
-          style={{ width: '100vw', height: '100vh' }}
-          defaultCenter={{ lat: 22.54992, lng: 0 }}
-          defaultZoom={3}
-          gestureHandling={'greedy'}
-          disableDefaultUI={true}
-        />
-      </APIProvider>
-    );
-  */
 };
 
 export default MapWithMarkers;
