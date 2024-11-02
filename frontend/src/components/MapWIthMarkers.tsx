@@ -37,19 +37,57 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
 
   const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY!;
 
+  const DEFAULT_CENTER = { lat: 37.3944829, lng: -122.0790619 };
+  const DEFAULT_ZOOM = 12;
+
   return (
-    <APIProvider apiKey={googleMapsApiKey}>
+    <APIProvider
+      solutionChannel="GMP_visgl_rgmlibrary_v1_extendedcomponentlibraryexample"
+      apiKey={googleMapsApiKey}
+      version="beta">
+      <div className="SplitLayoutContainer" slot="main">
+        <Map
+          style={{ width: '100vw', height: '100vh' }}
+          id="gmap"
+          mapId="8c732c82e4ec29d9"
+          center={DEFAULT_CENTER}
+          zoom={DEFAULT_ZOOM}
+          gestureHandling="none"
+          disableDefaultUI
+          fullscreenControl={false}
+          zoomControl={false}>
+
+          {/* <ControlPanel /> */}
+        </Map>
+      </div>
+
+    </APIProvider>
+
+  );
+  /*
       <Map
         style={{ width: '100vw', height: '100vh' }}
         zoom={12}
         center={{ lat: 37.3944829, lng: -122.0790619 }}
-        // center={{ lat: currentLocation!.lat, lng: currentLocation!.lng }}
       >
         <Marker position={{ lat: 37.3944829, lng: -122.0790619 }} />
         <Marker position={{ lat: 37.3974265, lng: -122.0611825 }} />
-        {/* <Marker position={{ lat: currentLocation!.lat, lng:currentLocation!.lng }} /> */}
-      </Map>
-    </APIProvider>);
+        <Marker position={{ lat: currentLocation!.lat, lng: currentLocation!.lng }} />
+        </Map >
+        */
+  //   <APIProvider apiKey={googleMapsApiKey}>
+  //     <Map
+  //       style={{ width: '100vw', height: '100vh' }}
+  //       zoom={12}
+  //       center={{ lat: 37.3944829, lng: -122.0790619 }}
+  //     // center={{ lat: currentLocation!.lat, lng: currentLocation!.lng }}
+  //     >
+  //       <Marker position={{ lat: 37.3944829, lng: -122.0790619 }} />
+  //       <Marker position={{ lat: 37.3974265, lng: -122.0611825 }} />
+  //       {/* <Marker position={{ lat: currentLocation!.lat, lng:currentLocation!.lng }} /> */}
+  //     </Map>
+  //   </APIProvider>
+  // );
   /*
     return (
       <APIProvider apiKey={googleMapsApiKey}>
