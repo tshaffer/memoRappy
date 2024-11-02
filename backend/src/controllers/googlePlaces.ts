@@ -10,7 +10,7 @@ export const getRestaurantLocationHandler = async (req: Request, res: Response):
   const { restaurantName, location } = req.body;
 
   try {
-    const placeData = await getRestaurantProperties(restaurantName, location);
+    const placeData: PlaceProperties = await getRestaurantProperties(restaurantName, location);
     res.json(placeData);
   } catch (error) {
     res.status(500).json({ error: 'Could not find restaurant information' });
@@ -76,12 +76,6 @@ const getGooglePlaceDetails = async (placeId: string): Promise<GooglePlaceDetail
     const placeDetailsResponse: GooglePlaceDetailsResponse = response.data;
     const googlePlaceDetails: GooglePlaceDetails = placeDetailsResponse.result;
     return googlePlaceDetails;
-    // const addressComponents = response.data.result.address_components;
-    // const cityComponent = addressComponents.find((component: any) =>
-    //   component.types.includes("locality")
-    // );
-
-    // return cityComponent ? cityComponent.long_name : null;
   } catch (error) {
     console.error("Error fetching city name:", error);
     return null;
@@ -112,6 +106,7 @@ const getRestaurantPropertiesFromGoogleProperties = (place: google.maps.places.P
 const memoRappPropertiesTemplate: MemoRappPlaceProperties = {
   place_id: '',
   formatted_address: '',
+  name: '',
   website: '',
 };
 

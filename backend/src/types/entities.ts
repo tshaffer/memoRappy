@@ -1,5 +1,3 @@
-import { AddressComponent } from "./GooglePlacesAPI";
-
 export interface PlaceProperties extends MemoRappPlaceProperties {
   cityName: string | null;
   latitude: number;
@@ -8,17 +6,9 @@ export interface PlaceProperties extends MemoRappPlaceProperties {
 
 export interface MemoRappPlaceProperties {
   place_id: string;
+  name: string;
   formatted_address: string;
   website: string;
-}
-
-export interface GoogleLocation {
-  place_id?: string;
-  name?: string;
-  address?: string;
-  cityName: string | null;
-  latitude: number;
-  longitude: number;
 }
 
 export interface StructuredReviewProperties {
@@ -34,7 +24,7 @@ export interface ParsedReviewProperties {
   reviewer: string;
   keywords: string[];
   phrases: string[];
-  googleLocation?: GoogleLocation;
+  placeProperties?: PlaceProperties;
 }
 
 export interface ReviewEntity {
@@ -47,7 +37,7 @@ export interface ReviewEntity {
   reviewer: string;
   keywords: string[];
   phrases: string[];
-  googleLocation: GoogleLocation;
+  placeProperties: PlaceProperties;
 }
 
 export interface ReviewEntityWithFullText extends ReviewEntity {

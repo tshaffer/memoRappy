@@ -1,6 +1,6 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import { openai } from '../index';
-import { ChatResponse, GoogleLocation, ParsedReviewProperties, ReviewEntity } from '../types/';
+import { ChatResponse, ParsedReviewProperties, PlaceProperties, ReviewEntity } from '../types/';
 import Review from "../models/Review";
 import { extractFieldFromResponse, extractListFromResponse, removeSquareBrackets } from '../utilities';
 import { getRestaurantProperties } from './googlePlaces';
@@ -67,8 +67,7 @@ export const previewReviewHandler = async (req: Request, res: Response): Promise
     console.log('list of items ordered', extractListFromResponse(messageContent, 'List of items ordered'));
     console.log('comments about each item', extractCommentsFromItems(messageContent, 'Comments about each item'));
 
-    // const googleLocation: GoogleLocation = await getRestaurantProperties(restaurantName, userLocation);
-    const googleLocation: any = await getRestaurantProperties(restaurantName, userLocation);
+    const placeProperties: PlaceProperties = await getRestaurantProperties(restaurantName, userLocation);
 
     // Extract structured information using adjusted parsing
     const parsedReviewProperties: ParsedReviewProperties = {
@@ -78,7 +77,7 @@ export const previewReviewHandler = async (req: Request, res: Response): Promise
       reviewer: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Reviewer name')),
       keywords: extractListFromResponse(messageContent, 'Keywords').map(removeSquareBrackets),
       phrases: extractListFromResponse(messageContent, 'Phrases').map(removeSquareBrackets),
-      googleLocation,
+      placeProperties,
     };
 
     res.json({ parsedReviewProperties });
@@ -161,9 +160,6 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
     const structuredDataText = structuredDataMatch[1].trim();
     const updatedReviewText = updatedReviewTextMatch[1].trim();
 
-    // const restaurantName: string = extractFieldFromResponse(messageContent, 'Restaurant name');
-    // const userLocation: string = removeSquareBrackets(extractFieldFromResponse(messageContent, 'Location'));
-
     console.log('chatReviewHandler updatedReviewText:', updatedReviewText); // Debugging log
     console.log('list of items ordered', extractListFromResponse(updatedReviewText, 'List of items ordered'));
     console.log('comments about each item', extractListFromResponse(updatedReviewText, 'Comments about each item'));
@@ -205,7 +201,7 @@ export const submitReviewHandler = async (req: Request, res: Response): Promise<
   }
 
   const { restaurantName, userLocation, dateOfVisit } = structuredReviewProperties;
-  const { itemsOrdered, ratings, overallExperience, reviewer, keywords, phrases, googleLocation } = parsedReviewProperties;
+  const { itemsOrdered, ratings, overallExperience, reviewer, keywords, phrases, placeProperties } = parsedReviewProperties;
   if (!restaurantName) {
     res.status(400).json({ error: 'Incomplete review data.' });
     return;
@@ -222,7 +218,7 @@ export const submitReviewHandler = async (req: Request, res: Response): Promise<
       reviewer,
       keywords,
       phrases,
-      googleLocation,
+      placeProperties,
       reviewText
     });
 

@@ -1,12 +1,12 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import { GoogleLocation, ReviewEntityWithFullText } from '../types';
+import { PlaceProperties, ReviewEntityWithFullText } from '../types';
 
 interface IReview extends ReviewEntityWithFullText, Document { }
 
-const LocationSchema: Schema<GoogleLocation> = new Schema({
+const PlacePropertiesSchema: Schema<PlaceProperties> = new Schema({
   place_id: { type: String, required: true },
   name: { type: String, required: true },
-  address: { type: String, required: true },
+  formatted_address: { type: String, required: true },
   cityName: { type: String, required: true },
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },
@@ -22,7 +22,7 @@ const ReviewSchema: Schema<IReview> = new Schema({
   reviewer: { type: String },
   keywords: [{ type: String }],
   phrases: [{ type: String }],
-  googleLocation: { type: LocationSchema },
+  placeProperties: { type: PlacePropertiesSchema },
   reviewText: { type: String, required: true },
 });
 
