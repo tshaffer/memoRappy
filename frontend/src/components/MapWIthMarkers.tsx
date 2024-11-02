@@ -33,6 +33,17 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
     }
   }, []);
 
+  const CustomBlueDot = () => (
+    <div style={{
+      width: '16px',
+      height: '16px',
+      backgroundColor: '#4285F4',  // Google blue color
+      borderRadius: '50%',
+      border: '2px solid #FFFFFF',  // White border
+      boxShadow: '0 0 8px rgba(66, 133, 244, 0.5)',  // Shadow for emphasis
+    }} />
+  );
+
   const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY!;
 
   return (
@@ -52,7 +63,9 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
           <AdvancedMarker position={{ lat: 37.3944829, lng: -122.0790619 }} />
           <AdvancedMarker position={{ lat: 37.3974265, lng: -122.0611825 }} />
           {currentLocation && (
-            <Marker position={currentLocation} />
+            <AdvancedMarker position={currentLocation}>
+              <CustomBlueDot />
+            </AdvancedMarker>
           )}
         </Map>
       </div>
