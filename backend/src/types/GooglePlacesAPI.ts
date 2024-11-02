@@ -5,3 +5,4 @@ export interface GooglePlacesResponse {
   results: google.maps.places.PlaceResult[];
   status: google.maps.places.PlacesServiceStatus;
 }
+
