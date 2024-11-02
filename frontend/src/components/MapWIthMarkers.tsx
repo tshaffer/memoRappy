@@ -15,9 +15,9 @@ const DEFAULT_CENTER = { lat: 37.3944829, lng: -122.0790619 };
 const DEFAULT_ZOOM = 14;
 
 const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
+
   const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
 
-  // Fetch the user's current location
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -44,7 +44,18 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
     }} />
   );
 
+  const getLocationMarkers = (): JSX.Element[] => {
+    return locations.map((location, index) => (
+      <AdvancedMarker
+        key={index}
+        position={{ lat: location.latitude, lng: location.longitude }}>
+      </AdvancedMarker>
+    ));
+  }
+
   const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY!;
+
+  const locationMarkers: JSX.Element[] = getLocationMarkers();
 
   return (
     <APIProvider
@@ -60,8 +71,7 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
           gestureHandling="none"
           fullscreenControl={false}
           zoomControl={false}>
-          <AdvancedMarker position={{ lat: 37.3944829, lng: -122.0790619 }} />
-          <AdvancedMarker position={{ lat: 37.3974265, lng: -122.0611825 }} />
+          {locationMarkers}
           {currentLocation && (
             <AdvancedMarker position={currentLocation}>
               <CustomBlueDot />
