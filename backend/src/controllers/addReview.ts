@@ -3,7 +3,7 @@ import { openai } from '../index';
 import { ChatResponse, GoogleLocation, ParsedReviewProperties, ReviewEntity } from '../types/';
 import Review from "../models/Review";
 import { extractFieldFromResponse, extractListFromResponse, removeSquareBrackets } from '../utilities';
-import { getRestaurantLocation } from './googlePlaces';
+import { getRestaurantProperties } from './googlePlaces';
 import { Request, Response } from 'express';
 
 // Store conversations for each session
@@ -67,7 +67,7 @@ export const previewReviewHandler = async (req: Request, res: Response): Promise
     console.log('list of items ordered', extractListFromResponse(messageContent, 'List of items ordered'));
     console.log('comments about each item', extractCommentsFromItems(messageContent, 'Comments about each item'));
 
-    const googleLocation: GoogleLocation = await getRestaurantLocation(restaurantName, userLocation);
+    const googleLocation: GoogleLocation = await getRestaurantProperties(restaurantName, userLocation);
 
     // Extract structured information using adjusted parsing
     const parsedReviewProperties: ParsedReviewProperties = {
@@ -224,7 +224,7 @@ export const submitReviewHandler = async (req: Request, res: Response): Promise<
       googleLocation,
       reviewText
     });
-    
+
     await newReview.save();
 
     // Clear conversation history for the session after submission
