@@ -1,3 +1,17 @@
+import { AddressComponent } from "./GooglePlacesAPI";
+
+export interface PlaceProperties extends MemoRappPlaceProperties {
+  cityName: string | null;
+  latitude: number;
+  longitude: number;
+}
+
+export interface MemoRappPlaceProperties {
+  place_id: string;
+  formatted_address: string;
+  website: string;
+}
+
 export interface GoogleLocation {
   place_id?: string;
   name?: string;

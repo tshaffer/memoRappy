@@ -67,7 +67,8 @@ export const previewReviewHandler = async (req: Request, res: Response): Promise
     console.log('list of items ordered', extractListFromResponse(messageContent, 'List of items ordered'));
     console.log('comments about each item', extractCommentsFromItems(messageContent, 'Comments about each item'));
 
-    const googleLocation: GoogleLocation = await getRestaurantProperties(restaurantName, userLocation);
+    // const googleLocation: GoogleLocation = await getRestaurantProperties(restaurantName, userLocation);
+    const googleLocation: any = await getRestaurantProperties(restaurantName, userLocation);
 
     // Extract structured information using adjusted parsing
     const parsedReviewProperties: ParsedReviewProperties = {
