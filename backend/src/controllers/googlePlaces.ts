@@ -63,6 +63,8 @@ async function getCityName(placeId: string, apiKey: string): Promise<string | nu
       }
     );
 
+    console.log('getCityName response:', response.data);
+    
     const addressComponents = response.data.result.address_components;
     const cityComponent = addressComponents.find((component: any) =>
       component.types.includes("locality")
