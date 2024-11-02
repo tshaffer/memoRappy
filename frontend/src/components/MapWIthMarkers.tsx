@@ -42,14 +42,12 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
 
   return (
     <APIProvider
-      solutionChannel="GMP_visgl_rgmlibrary_v1_extendedcomponentlibraryexample"
       apiKey={googleMapsApiKey}
       version="beta">
-      <div className="SplitLayoutContainer" slot="main">
+      <div slot="main">
         <Map
           style={{ width: '100vw', height: '100vh' }}
           id="gmap"
-          mapId="8c732c82e4ec29d9"
           center={DEFAULT_CENTER}
           zoom={DEFAULT_ZOOM}
           gestureHandling="none"
