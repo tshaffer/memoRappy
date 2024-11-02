@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { GoogleLocation } from '../types';
-import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
+import { AdvancedMarker, APIProvider, Map, Marker, Pin } from '@vis.gl/react-google-maps';
 
 // Define the map container style and initial options
 const mapContainerStyle = { width: '100%', height: '500px' };
@@ -48,19 +48,24 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
         <Map
           style={{ width: '100vw', height: '100vh' }}
           id="gmap"
+          mapId="1ca0b6526e7d4819"
           center={DEFAULT_CENTER}
           zoom={DEFAULT_ZOOM}
           gestureHandling="none"
           disableDefaultUI
           fullscreenControl={false}
           zoomControl={false}>
-
-          {/* <ControlPanel /> */}
+          <AdvancedMarker position={{ lat: 37.3944829, lng: -122.0790619 }}>
+            <Pin
+              background={'#FBBC04'}
+              glyphColor={'#000'}
+              borderColor={'#000'}
+            />
+          </AdvancedMarker>
         </Map>
       </div>
 
     </APIProvider>
-
   );
   /*
       <Map
