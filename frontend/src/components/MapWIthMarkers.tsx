@@ -42,11 +42,12 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
       <Map
         style={{ width: '100vw', height: '100vh' }}
         zoom={12}
-        center={{ lat: currentLocation!.lat, lng: currentLocation!.lng }}
+        center={{ lat: 37.3944829, lng: -122.0790619 }}
+        // center={{ lat: currentLocation!.lat, lng: currentLocation!.lng }}
       >
         <Marker position={{ lat: 37.3944829, lng: -122.0790619 }} />
         <Marker position={{ lat: 37.3974265, lng: -122.0611825 }} />
-        <Marker position={{ lat: currentLocation!.lat, lng:currentLocation!.lng }} />
+        {/* <Marker position={{ lat: currentLocation!.lat, lng:currentLocation!.lng }} /> */}
       </Map>
     </APIProvider>);
   /*
