@@ -18,8 +18,10 @@ export const getRestaurantLocationHandler = async (req: Request, res: Response):
 };
 
 export const getRestaurantLocation = async (restaurantName: string, location: string): Promise<GoogleLocation> => {
+  
   const query = `${restaurantName} ${location}`;
   const url = `${GOOGLE_PLACES_URL}?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}`;
+  
   try {
     const place: google.maps.places.PlaceResult = await getGooglePlace(url);
 
@@ -44,6 +46,32 @@ export const getRestaurantLocation = async (restaurantName: string, location: st
     throw error;
   }
 };
+
+const getGooglePlace = async (url: string): Promise<google.maps.places.PlaceResult> => {
+
+  try {
+    const response = await axios.get<GooglePlacesResponse>(url);
+    const places: google.maps.places.PlaceResult[] = (response.data as { results: google.maps.places.PlaceResult[] }).results;
+    if (places.length === 0) {
+      throw new Error('No places found matching the query');
+    }
+    // Return the most relevant result
+    const place: google.maps.places.PlaceResult = places[0];
+
+    console.log('Place:', place);
+
+    return place;
+  }
+  catch (error) {
+    console.error('Error with Google Places API:', error);
+    throw error;
+  }
+}
+
+
+
+
+
 
 async function getPlaceResult(placeId: string, apiKey: string): Promise<string | null> {
   try {
@@ -71,23 +99,3 @@ async function getPlaceResult(placeId: string, apiKey: string): Promise<string |
   }
 }
 
-const getGooglePlace = async (url: string): Promise<google.maps.places.PlaceResult> => {
-
-  try {
-    const response = await axios.get<GooglePlacesResponse>(url);
-    const places: google.maps.places.PlaceResult[] = (response.data as { results: google.maps.places.PlaceResult[] }).results;
-    if (places.length === 0) {
-      throw new Error('No places found matching the query');
-    }
-    // Return the most relevant result
-    const place: google.maps.places.PlaceResult = places[0];
-
-    console.log('Place:', place);
-
-    return place;
-  }
-  catch (error) {
-    console.error('Error with Google Places API:', error);
-    throw error;
-  }
-}
