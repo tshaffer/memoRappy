@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleLocation } from '../types';
+import { PlaceProperties } from '../types';
 import { AdvancedMarker, APIProvider, Map, Marker, Pin } from '@vis.gl/react-google-maps';
 
 interface Coordinates {
@@ -8,7 +8,7 @@ interface Coordinates {
 }
 
 interface MapWithMarkersProps {
-  locations: GoogleLocation[];
+  locations: PlaceProperties[];
 }
 
 const DEFAULT_CENTER = { lat: 37.3944829, lng: -122.0790619 };

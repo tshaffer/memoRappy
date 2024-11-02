@@ -10,7 +10,7 @@ import {
   Box,
   Card,
 } from '@mui/material';
-import { AddReviewDisplayTabs, ChatResponse, GoogleLocation, ParsedReviewProperties, ReviewEntity } from '../types';
+import { AddReviewDisplayTabs, ChatResponse, PlaceProperties, ParsedReviewProperties, ReviewEntity } from '../types';
 
 const AddReview: React.FC = () => {
 
@@ -38,7 +38,7 @@ const AddReview: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | ParsedReviewProperties }[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
   const [placeVerified, setPlaceVerified] = useState<boolean | null>(null);
-  const [googleLocation, setGoogleLocation] = useState<GoogleLocation | null>(null);
+  const [placeProperties, setPlaceProperties] = useState<PlaceProperties | null>(null);
 
   useEffect(() => {
     setDateOfVisit(getFormattedDate());
@@ -59,9 +59,9 @@ const AddReview: React.FC = () => {
         body: JSON.stringify({ restaurantName, location: userLocation }),
       });
       if (response.ok) {
-        const data: GoogleLocation | null = await response.json();
+        const data: PlaceProperties | null = await response.json();
         if (data) {
-          setGoogleLocation(data);
+          setPlaceProperties(data);
           setPlaceVerified(true);
         } else {
           setPlaceVerified(false); // Couldn’t find location
@@ -91,7 +91,7 @@ const AddReview: React.FC = () => {
       });
       const data = await response.json();
       setParsedReviewProperties(data.parsedReviewProperties);
-      setGoogleLocation(data.parsedReviewProperties.googleLocation);
+      setPlaceProperties(data.parsedReviewProperties.placeProperties);
       setChatHistory([...chatHistory, { role: 'user', message: reviewText }, { role: 'ai', message: data.parsedReviewProperties }]);
       setDisplayTab(1);
     } catch (error) {
@@ -108,7 +108,7 @@ const AddReview: React.FC = () => {
         body: JSON.stringify({ userInput: chatInput, sessionId, reviewText }),
       });
       const chatResponse: ChatResponse = await response.json();
-      const  { parsedReviewProperties, updatedReviewText } = chatResponse;
+      const { parsedReviewProperties, updatedReviewText } = chatResponse;
 
       setParsedReviewProperties(parsedReviewProperties);
       setReviewText(updatedReviewText);
@@ -159,7 +159,7 @@ const AddReview: React.FC = () => {
   const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
   const renderFormattedAIResponse = (parsedReviewProperties: ParsedReviewProperties) => {
-    const googleLocation: GoogleLocation = parsedReviewProperties.googleLocation;
+    const placeProperties: PlaceProperties = parsedReviewProperties.placeProperties!;
     return (
       <Box sx={{ textAlign: 'left' }}>
         <Typography><strong>Reviewer:</strong> {parsedReviewProperties.reviewer || 'Not provided'}</Typography>
@@ -175,7 +175,7 @@ const AddReview: React.FC = () => {
             </li>
           ))}
         </ul>
-        <Typography><strong>Retrieved Location:</strong>{googleLocation?.address}</Typography>
+        <Typography><strong>Retrieved Location:</strong>{placeProperties?.formatted_address}</Typography>
       </Box>
     )
   };
@@ -242,10 +242,10 @@ const AddReview: React.FC = () => {
                 </Typography>
               </Box>
             )}
-            {placeVerified && googleLocation && (
+            {placeVerified && placeProperties && (
               <Box mt={2}>
-                <Typography>{googleLocation.name}</Typography>
-                <Typography>{googleLocation.address}</Typography>
+                <Typography>{placeProperties.name}</Typography>
+                <Typography>{placeProperties.formatted_address}</Typography>
               </Box>
             )}
           </Box>

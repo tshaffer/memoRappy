@@ -14,7 +14,7 @@ import {
   Checkbox,
   Button,
 } from '@mui/material';
-import { GoogleLocation, ReviewEntityWithFullText } from '../types';
+import { PlaceProperties, ReviewEntityWithFullText } from '../types';
 import MapWithMarkers from '../components/MapWithMarkers';
 
 const ViewReviews: React.FC = () => {
@@ -58,9 +58,9 @@ const ViewReviews: React.FC = () => {
       let aValue;
       let bValue;
 
-      if (sortBy === 'googleLocation') {
-        aValue = a.googleLocation.cityName || '';
-        bValue = b.googleLocation.cityName || '';
+      if (sortBy === 'placeProperties') {
+        aValue = a.placeProperties.cityName || '';
+        bValue = b.placeProperties.cityName || '';
       } else {
         aValue = a[sortBy];
         bValue = b[sortBy];
@@ -108,7 +108,7 @@ const ViewReviews: React.FC = () => {
         <Typography variant="h6" gutterBottom>
           {selectedReview.restaurantName}
         </Typography>
-        <Typography><strong>Location:</strong> {selectedReview.googleLocation.cityName || 'Not provided'}</Typography>
+        <Typography><strong>Location:</strong> {selectedReview.placeProperties.cityName || 'Not provided'}</Typography>
         <Typography><strong>Date of Visit:</strong> {selectedReview.dateOfVisit || 'Not provided'}</Typography>
         <Typography><strong>Reviewer:</strong> {selectedReview.reviewer || 'Anonymous'}</Typography>
         <Typography><strong>Overall Experience:</strong> {selectedReview.overallExperience || 'No rating'}</Typography>
@@ -132,10 +132,10 @@ const ViewReviews: React.FC = () => {
     );
   };
 
-  const locations: GoogleLocation[] = selectedReviews.map((review) => review.googleLocation);
+  const locations: PlaceProperties[] = selectedReviews.map((review) => review.placeProperties);
 
   const generateGoogleMapsUrl = () => {
-    const locations: GoogleLocation[] = selectedReviews.map((review) => review.googleLocation);
+    const locations: PlaceProperties[] = selectedReviews.map((review) => review.placeProperties);
     const destination = locations[locations.length - 1];
     const waypoints = locations.slice(0, -1).map(loc => `${loc.latitude},${loc.longitude}`).join('|');
 
@@ -175,9 +175,9 @@ const ViewReviews: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <TableSortLabel
-                      active={sortBy === 'googleLocation'}
-                      direction={sortBy === 'googleLocation' ? sortDirection : 'asc'}
-                      onClick={() => handleSort('googleLocation')}
+                      active={sortBy === 'placeProperties'}
+                      direction={sortBy === 'placeProperties' ? sortDirection : 'asc'}
+                      onClick={() => handleSort('placeProperties')}
                     >
                       Location
                     </TableSortLabel>
@@ -217,7 +217,7 @@ const ViewReviews: React.FC = () => {
                       />
                     </TableCell>
                     <TableCell>{review.restaurantName}</TableCell>
-                    <TableCell>{review.googleLocation.cityName}</TableCell>
+                    <TableCell>{review.placeProperties.cityName}</TableCell>
                     <TableCell>{review.overallExperience}</TableCell>
                     <TableCell>{review.dateOfVisit}</TableCell>
                   </TableRow>
