@@ -19,21 +19,21 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
   const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<PlaceProperties | null>(null);
 
-  useEffect(() => {
-    // Apply styles when the component mounts
-    document.documentElement.style.overflow = 'hidden';
-    document.documentElement.style.touchAction = 'none';
-    document.body.style.overflow = 'hidden';
-    document.body.style.touchAction = 'none';
+  // useEffect(() => {
+  //   // Apply styles when the component mounts
+  //   document.documentElement.style.overflow = 'hidden';
+  //   document.documentElement.style.touchAction = 'none';
+  //   document.body.style.overflow = 'hidden';
+  //   document.body.style.touchAction = 'none';
 
-    // Clean up styles when the component unmounts
-    return () => {
-      document.documentElement.style.overflow = '';
-      document.documentElement.style.touchAction = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
-  }, []);
+  //   // Clean up styles when the component unmounts
+  //   return () => {
+  //     document.documentElement.style.overflow = '';
+  //     document.documentElement.style.touchAction = '';
+  //     document.body.style.overflow = '';
+  //     document.body.style.touchAction = '';
+  //   };
+  // }, []);
   
   useEffect(() => {
     if (navigator.geolocation) {
