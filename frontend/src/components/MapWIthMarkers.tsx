@@ -114,7 +114,7 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
           style={{ width: '100%', height: '100%' }}
           id="gmap"
           mapId="1ca0b6526e7d4819"
-          center={mapCenter}
+          defaultCenter={mapCenter}
           zoom={DEFAULT_ZOOM}
           fullscreenControl={false}
           zoomControl={true}
