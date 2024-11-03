@@ -53,7 +53,17 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
     setSelectedLocation(null);
   };
 
-  const getLocationMarkers = (): JSX.Element[] => {
+  const getCenter = (): Coordinates => {
+    if (currentLocation) {
+      return currentLocation;
+    } else if (locations.length > 0) {
+      return { lat: locations[0].latitude, lng: locations[0].longitude };
+    } else {
+      return DEFAULT_CENTER;
+    }
+  }
+
+  const renderMarkers = (): JSX.Element[] => {
     return locations.map((location, index) => (
       <AdvancedMarker
         key={index}
@@ -65,8 +75,8 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
 
   const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY!;
 
-  const locationMarkers: JSX.Element[] = getLocationMarkers();
-  //           center={{ lat: locations[0].latitude, lng: locations[0].longitude }}
+  const mapCenter: Coordinates = getCenter();
+  const locationMarkers: JSX.Element[] = renderMarkers();
 
   return (
     <APIProvider
@@ -77,11 +87,12 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
           style={{ width: '100vw', height: '100vh' }}
           id="gmap"
           mapId="1ca0b6526e7d4819"
-          center={DEFAULT_CENTER}
+          center={mapCenter}
           zoom={DEFAULT_ZOOM}
-          gestureHandling="none"
           fullscreenControl={false}
-          zoomControl={false}>
+          zoomControl={true}
+          gestureHandling="auto"
+        >
           {locationMarkers}
           {currentLocation && (
             <AdvancedMarker position={currentLocation}>
