@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { APIProvider, Map } from '@vis.gl/react-google-maps';
+import { APIProvider } from '@vis.gl/react-google-maps';
 import { PlaceProperties } from '../types';
 
 interface DirectionsToRestaurantProps {
@@ -8,18 +8,29 @@ interface DirectionsToRestaurantProps {
 }
 
 const DirectionsToRestaurant: React.FC<DirectionsToRestaurantProps> = ({ origin, destination }) => {
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
   const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY!;
 
   useEffect(() => {
-    if (!mapRef.current || !origin || !destination) return;
+    if (!mapContainerRef.current) return;
 
+    // Initialize the map only once
+    if (!mapRef.current) {
+      mapRef.current = new google.maps.Map(mapContainerRef.current, {
+        center: origin,
+        zoom: 14,
+      });
+    }
+
+    // Set up DirectionsService and DirectionsRenderer
     const directionsService = new google.maps.DirectionsService();
     const directionsRenderer = new google.maps.DirectionsRenderer();
     directionsRenderer.setMap(mapRef.current);
     directionsRendererRef.current = directionsRenderer;
 
+    // Request directions
     directionsService.route(
       {
         origin,
@@ -43,15 +54,10 @@ const DirectionsToRestaurant: React.FC<DirectionsToRestaurantProps> = ({ origin,
 
   return (
     <APIProvider apiKey={googleMapsApiKey} version="beta">
-      <div style={{ position: 'relative', width: '100%', height: '400px' }}>
-        <Map
-          id="directions-map"
-          style={{ width: '100%', height: '100%' }}
-          center={origin}
-          zoom={14}
-          onLoad={(map: any) => (mapRef.current = map)} // Set the map instance
-        />
-      </div>
+      <div
+        ref={mapContainerRef}
+        style={{ position: 'relative', width: '100%', height: '400px' }}
+      />
     </APIProvider>
   );
 };
