@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PlaceProperties } from '../types';
-import { AdvancedMarker, APIProvider, InfoWindow, Map, MapCameraChangedEvent, Marker, Pin } from '@vis.gl/react-google-maps';
+import { AdvancedMarker, APIProvider, InfoWindow, Map, MapCameraChangedEvent } from '@vis.gl/react-google-maps';
 
 interface Coordinates {
   lat: number;
@@ -22,22 +22,13 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      console.log('handleKeyDown');
-      console.log('metaKey: ', event.metaKey);
-      console.log('ctrlKey: ', event.ctrlKey);
-      console.log('key: ', event.key);
       if ((event.metaKey || event.ctrlKey) && (event.key === '+' || event.key === '=' || event.key === '-')) {
         event.preventDefault();
-        console.log(`Blocked page zoom with ${event.metaKey ? 'Cmd' : 'Ctrl'} + ${event.key}`);
-        let newZoom;
         if (event.key === '+' || event.key === '=') {
-          newZoom = zoom + 1;
-          setZoom(newZoom);
+          setZoom(zoom + 1);
         } else if (event.key === '-') {
-          newZoom = zoom - 1;
-          setZoom(newZoom);
+          setZoom(zoom - 1);
         }
-        console.log('newZoom: ', newZoom);
       }
     };
 
