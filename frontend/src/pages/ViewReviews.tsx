@@ -18,6 +18,7 @@ import {
 import DirectionsIcon from '@mui/icons-material/Directions';
 import { PlaceProperties, ReviewEntityWithFullText } from '../types';
 import MapWithMarkers from '../components/MapWithMarkers';
+import DirectionsToRestaurant from '../components/DirectionsToRestaurant';
 
 const ViewReviews: React.FC = () => {
   const [reviews, setReviews] = useState<ReviewEntityWithFullText[]>([]);
@@ -27,6 +28,8 @@ const ViewReviews: React.FC = () => {
   const [selectedReview, setSelectedReview] = useState<ReviewEntityWithFullText | null>(null);
   const [selectedReviews, setSelectedReviews] = useState<ReviewEntityWithFullText[]>([]);
   const [showMap, setShowMap] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [selectedReviewForDirections, setSelectedReviewForDirections] = useState<ReviewEntityWithFullText | null>(null);
 
   useEffect(() => {
     // Fetch the reviews from the API
@@ -41,6 +44,16 @@ const ViewReviews: React.FC = () => {
     };
     fetchReviews();
 
+    // Get the user's current location
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCurrentLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      (error) => console.error('Error getting current location:', error)
+    );
   }, []);
 
   useEffect(() => {
@@ -125,8 +138,9 @@ const ViewReviews: React.FC = () => {
 
   const handleShowDirections = (reviewEntityWithFullText: ReviewEntityWithFullText) => {
     console.log('handleShowDirections', reviewEntityWithFullText);
+    setSelectedReviewForDirections(reviewEntityWithFullText);
   };
-  
+
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} md={6}>
@@ -141,7 +155,7 @@ const ViewReviews: React.FC = () => {
                   <TableCell padding="checkbox">
                     <Checkbox />
                   </TableCell>
-                  <TableCell padding="checkbox">
+                  <TableCell>
                   </TableCell>
                   <TableCell>
                     <TableSortLabel
@@ -195,7 +209,7 @@ const ViewReviews: React.FC = () => {
                         onChange={() => handleSelectReview(review)}
                       />
                     </TableCell>
-                    <TableCell padding="checkbox">
+                    <TableCell>
                       <IconButton onClick={() => handleShowDirections(review)}>
                         <DirectionsIcon />
                       </IconButton>
@@ -226,6 +240,12 @@ const ViewReviews: React.FC = () => {
       {showMap && (
         <MapWithMarkers
           locations={locations}
+        />
+      )}
+      {selectedReviewForDirections && currentLocation && (
+        <DirectionsToRestaurant
+          origin={currentLocation}
+          destination={selectedReviewForDirections.placeProperties}
         />
       )}
     </Grid>
