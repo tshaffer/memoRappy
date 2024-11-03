@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PlaceProperties } from '../types';
-import { AdvancedMarker, APIProvider, Map, Marker, Pin } from '@vis.gl/react-google-maps';
+import { AdvancedMarker, APIProvider, InfoWindow, Map, Marker, Pin } from '@vis.gl/react-google-maps';
 
 interface Coordinates {
   lat: number;
@@ -17,6 +17,7 @@ const DEFAULT_ZOOM = 14;
 const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
 
   const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<PlaceProperties | null>(null);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -44,18 +45,28 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
     }} />
   );
 
+  const handleMarkerClick = (location: PlaceProperties) => {
+    setSelectedLocation(location);
+  };
+
+  const handleCloseInfoWindow = () => {
+    setSelectedLocation(null);
+  };
+
   const getLocationMarkers = (): JSX.Element[] => {
     return locations.map((location, index) => (
       <AdvancedMarker
         key={index}
-        position={{ lat: location.latitude, lng: location.longitude }}>
-      </AdvancedMarker>
+        position={{ lat: location.latitude, lng: location.longitude }}
+        onClick={() => handleMarkerClick(location)}
+      />
     ));
   }
 
   const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY!;
 
   const locationMarkers: JSX.Element[] = getLocationMarkers();
+  //           center={{ lat: locations[0].latitude, lng: locations[0].longitude }}
 
   return (
     <APIProvider
@@ -76,6 +87,19 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
             <AdvancedMarker position={currentLocation}>
               <CustomBlueDot />
             </AdvancedMarker>
+          )}
+          {selectedLocation && (
+            <InfoWindow
+              position={{ lat: selectedLocation.latitude, lng: selectedLocation.longitude }}
+              onCloseClick={handleCloseInfoWindow}
+            >
+              <div>
+                <h4>{selectedLocation.name}</h4>
+                <a href={selectedLocation.website} target="_blank" rel="noopener noreferrer">
+                  {selectedLocation.website}
+                </a>
+              </div>
+            </InfoWindow>
           )}
         </Map>
       </div>
