@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PlaceProperties } from '../types';
-import { AdvancedMarker, APIProvider, InfoWindow, Map, Marker, Pin } from '@vis.gl/react-google-maps';
+import { AdvancedMarker, APIProvider, InfoWindow, Map, MapCameraChangedEvent, Marker, Pin } from '@vis.gl/react-google-maps';
 
 interface Coordinates {
   lat: number;
@@ -18,6 +18,7 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
 
   const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<PlaceProperties | null>(null);
+  const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -45,14 +46,6 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
     }} />
   );
 
-  const handleMarkerClick = (location: PlaceProperties) => {
-    setSelectedLocation(location);
-  };
-
-  const handleCloseInfoWindow = () => {
-    setSelectedLocation(null);
-  };
-
   const getInitialCenter = (): Coordinates => {
     if (currentLocation) {
       return currentLocation;
@@ -62,6 +55,20 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
       return DEFAULT_CENTER;
     }
   }
+
+  const handleMarkerClick = (location: PlaceProperties) => {
+    setSelectedLocation(location);
+  };
+
+  const handleCloseInfoWindow = () => {
+    setSelectedLocation(null);
+  };
+
+  const handleZoomChanged = (event: MapCameraChangedEvent) => {
+    console.log('handleZoomChanged event: ', event);
+    console.log('event.detail.zoom: ', event.detail.zoom);
+    setZoom(event.detail.zoom);
+  };
 
   const renderMarkers = (): JSX.Element[] => {
     return locations.map((location, index) => (
@@ -96,7 +103,8 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
           id="gmap"
           mapId="1ca0b6526e7d4819"
           defaultCenter={initialCenter}
-          zoom={DEFAULT_ZOOM}
+          zoom={zoom}
+          onZoomChanged={(event) => handleZoomChanged(event)}
           fullscreenControl={false}
           zoomControl={true}
           gestureHandling={'greedy'}
