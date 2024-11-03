@@ -13,7 +13,9 @@ import {
   Grid,
   Checkbox,
   Button,
+  IconButton,
 } from '@mui/material';
+import DirectionsIcon from '@mui/icons-material/Directions';
 import { PlaceProperties, ReviewEntityWithFullText } from '../types';
 import MapWithMarkers from '../components/MapWithMarkers';
 
@@ -25,7 +27,6 @@ const ViewReviews: React.FC = () => {
   const [selectedReview, setSelectedReview] = useState<ReviewEntityWithFullText | null>(null);
   const [selectedReviews, setSelectedReviews] = useState<ReviewEntityWithFullText[]>([]);
   const [showMap, setShowMap] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     // Fetch the reviews from the API
@@ -40,16 +41,6 @@ const ViewReviews: React.FC = () => {
     };
     fetchReviews();
 
-    // Get the user's current location
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setCurrentLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-      },
-      (error) => console.error('Error getting current location:', error)
-    );
   }, []);
 
   useEffect(() => {
@@ -105,9 +96,7 @@ const ViewReviews: React.FC = () => {
     }
     return (
       <Box p={3}>
-        <Typography variant="h6" gutterBottom>
-          {selectedReview.restaurantName}
-        </Typography>
+        <Typography variant="h6" gutterBottom>{selectedReview.restaurantName}</Typography>
         <Typography><strong>Location:</strong> {selectedReview.placeProperties.cityName || 'Not provided'}</Typography>
         <Typography><strong>Date of Visit:</strong> {selectedReview.dateOfVisit || 'Not provided'}</Typography>
         <Typography><strong>Reviewer:</strong> {selectedReview.reviewer || 'Anonymous'}</Typography>
@@ -134,22 +123,10 @@ const ViewReviews: React.FC = () => {
 
   const locations: PlaceProperties[] = selectedReviews.map((review) => review.placeProperties);
 
-  const generateGoogleMapsUrl = () => {
-    const locations: PlaceProperties[] = selectedReviews.map((review) => review.placeProperties);
-    const destination = locations[locations.length - 1];
-    const waypoints = locations.slice(0, -1).map(loc => `${loc.latitude},${loc.longitude}`).join('|');
-
-    return `https://www.google.com/maps/dir/?api=1` +
-      `&origin=${currentLocation ? `${currentLocation.lat},${currentLocation.lng}` : 'My+Location'}` +
-      `&destination=${destination.latitude},${destination.longitude}` +
-      (waypoints ? `&waypoints=${waypoints}` : '');
+  const handleShowDirections = (reviewEntityWithFullText: ReviewEntityWithFullText) => {
+    console.log('handleShowDirections', reviewEntityWithFullText);
   };
-
-  const handleShowMap = () => {
-    const googleMapsUrl = generateGoogleMapsUrl();
-    window.open(googleMapsUrl, '_blank');
-  };
-
+  
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} md={6}>
@@ -163,6 +140,8 @@ const ViewReviews: React.FC = () => {
                 <TableRow>
                   <TableCell padding="checkbox">
                     <Checkbox />
+                  </TableCell>
+                  <TableCell padding="checkbox">
                   </TableCell>
                   <TableCell>
                     <TableSortLabel
@@ -216,6 +195,11 @@ const ViewReviews: React.FC = () => {
                         onChange={() => handleSelectReview(review)}
                       />
                     </TableCell>
+                    <TableCell padding="checkbox">
+                      <IconButton onClick={() => handleShowDirections(review)}>
+                        <DirectionsIcon />
+                      </IconButton>
+                    </TableCell>
                     <TableCell>{review.restaurantName}</TableCell>
                     <TableCell>{review.placeProperties.cityName}</TableCell>
                     <TableCell>{review.overallExperience}</TableCell>
@@ -231,7 +215,7 @@ const ViewReviews: React.FC = () => {
           color="primary"
           fullWidth
           onClick={() => setShowMap(true)}
-          disabled={selectedReviews.length === 0 || !currentLocation}
+          disabled={selectedReviews.length === 0}
         >
           Show Map
         </Button>
