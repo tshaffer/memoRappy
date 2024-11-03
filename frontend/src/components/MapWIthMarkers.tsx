@@ -19,22 +19,6 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
   const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<PlaceProperties | null>(null);
 
-  // useEffect(() => {
-  //   // Apply styles when the component mounts
-  //   document.documentElement.style.overflow = 'hidden';
-  //   document.documentElement.style.touchAction = 'none';
-  //   document.body.style.overflow = 'hidden';
-  //   document.body.style.touchAction = 'none';
-
-  //   // Clean up styles when the component unmounts
-  //   return () => {
-  //     document.documentElement.style.overflow = '';
-  //     document.documentElement.style.touchAction = '';
-  //     document.body.style.overflow = '';
-  //     document.body.style.touchAction = '';
-  //   };
-  // }, []);
-  
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -69,7 +53,7 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
     setSelectedLocation(null);
   };
 
-  const getCenter = (): Coordinates => {
+  const getInitialCenter = (): Coordinates => {
     if (currentLocation) {
       return currentLocation;
     } else if (locations.length > 0) {
@@ -91,11 +75,8 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
 
   const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY!;
 
-  const mapCenter: Coordinates = getCenter();
+  const initialCenter: Coordinates = getInitialCenter();
   const locationMarkers: JSX.Element[] = renderMarkers();
-
-  //           style={{ width: '100vw', height: '100vh' }}
-  //          style={{ width: '100%', height: '100%' }}
 
   return (
     <APIProvider
@@ -114,11 +95,12 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
           style={{ width: '100%', height: '100%' }}
           id="gmap"
           mapId="1ca0b6526e7d4819"
-          defaultCenter={mapCenter}
+          defaultCenter={initialCenter}
           zoom={DEFAULT_ZOOM}
           fullscreenControl={false}
           zoomControl={true}
-          gestureHandling='greedy'
+          gestureHandling={'greedy'}
+          scrollwheel={true}
         >
           {locationMarkers}
           {currentLocation && (
