@@ -21,6 +21,25 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
   useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      console.log('handleKeyDown');
+      console.log('metaKey: ', event.metaKey);
+      console.log('ctrlKey: ', event.ctrlKey);
+      console.log('key: ', event.key);
+      if ((event.metaKey || event.ctrlKey) && (event.key === '+' || event.key === '=' || event.key === '-')) {
+        event.preventDefault();
+        console.log(`Blocked page zoom with ${event.metaKey ? 'Cmd' : 'Ctrl'} + ${event.key}`);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
