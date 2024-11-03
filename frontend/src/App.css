@@ -1,3 +1,8 @@
+/* html, body {
+  overflow: hidden;
+  touch-action: none;
+} */
+
 .App {
   text-align: center;
 }

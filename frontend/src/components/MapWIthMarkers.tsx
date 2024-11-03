@@ -20,6 +20,22 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
   const [selectedLocation, setSelectedLocation] = useState<PlaceProperties | null>(null);
 
   useEffect(() => {
+    // Apply styles when the component mounts
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.touchAction = 'none';
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+
+    // Clean up styles when the component unmounts
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.touchAction = '';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, []);
+  
+  useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -78,20 +94,31 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
   const mapCenter: Coordinates = getCenter();
   const locationMarkers: JSX.Element[] = renderMarkers();
 
+  //           style={{ width: '100vw', height: '100vh' }}
+  //          style={{ width: '100%', height: '100%' }}
+
   return (
     <APIProvider
       apiKey={googleMapsApiKey}
       version="beta">
-      <div slot="main">
+      <div
+        style={{
+          position: 'relative',
+          width: '100vw',
+          height: '100vh',
+          overflow: 'hidden', // Ensures that the map fills the entire viewport
+        }}
+        slot="main"
+      >
         <Map
-          style={{ width: '100vw', height: '100vh' }}
+          style={{ width: '100%', height: '100%' }}
           id="gmap"
           mapId="1ca0b6526e7d4819"
           center={mapCenter}
           zoom={DEFAULT_ZOOM}
           fullscreenControl={false}
           zoomControl={true}
-          gestureHandling="auto"
+          gestureHandling='greedy'
         >
           {locationMarkers}
           {currentLocation && (
