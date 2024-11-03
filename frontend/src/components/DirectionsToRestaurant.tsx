@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { APIProvider } from '@vis.gl/react-google-maps';
 import { PlaceProperties } from '../types';
 
@@ -9,25 +9,28 @@ interface DirectionsToRestaurantProps {
 
 const DirectionsToRestaurant: React.FC<DirectionsToRestaurantProps> = ({ origin, destination }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<google.maps.Map | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
   const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY!;
 
   useEffect(() => {
-    if (!mapContainerRef.current) return;
-
-    // Initialize the map only once
-    if (!mapRef.current) {
-      mapRef.current = new google.maps.Map(mapContainerRef.current, {
-        center: origin,
-        zoom: 14,
-      });
+    // Check if the Google Maps API is loaded
+    if (window.google && window.google.maps) {
+      setMapLoaded(true);
     }
+  }, []);
 
-    // Set up DirectionsService and DirectionsRenderer
+  useEffect(() => {
+    if (!mapLoaded || !mapContainerRef.current) return;
+
+    const map = new google.maps.Map(mapContainerRef.current, {
+      center: origin,
+      zoom: 14,
+    });
+
     const directionsService = new google.maps.DirectionsService();
     const directionsRenderer = new google.maps.DirectionsRenderer();
-    directionsRenderer.setMap(mapRef.current);
+    directionsRenderer.setMap(map);
     directionsRendererRef.current = directionsRenderer;
 
     // Request directions
@@ -46,11 +49,10 @@ const DirectionsToRestaurant: React.FC<DirectionsToRestaurantProps> = ({ origin,
       }
     );
 
-    // Clean up the directions renderer when the component unmounts
     return () => {
       directionsRendererRef.current?.setMap(null);
     };
-  }, [origin, destination]);
+  }, [mapLoaded, origin, destination]);
 
   return (
     <APIProvider apiKey={googleMapsApiKey} version="beta">
