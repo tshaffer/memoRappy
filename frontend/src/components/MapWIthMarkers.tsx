@@ -29,6 +29,15 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
       if ((event.metaKey || event.ctrlKey) && (event.key === '+' || event.key === '=' || event.key === '-')) {
         event.preventDefault();
         console.log(`Blocked page zoom with ${event.metaKey ? 'Cmd' : 'Ctrl'} + ${event.key}`);
+        let newZoom;
+        if (event.key === '+' || event.key === '=') {
+          newZoom = zoom + 1;
+          setZoom(newZoom);
+        } else if (event.key === '-') {
+          newZoom = zoom - 1;
+          setZoom(newZoom);
+        }
+        console.log('newZoom: ', newZoom);
       }
     };
 
@@ -37,7 +46,7 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [zoom]);
 
   useEffect(() => {
     if (navigator.geolocation) {
