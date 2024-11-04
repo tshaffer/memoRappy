@@ -13,13 +13,13 @@ import {
 import { LoadScript, Autocomplete } from '@react-google-maps/api';
 import { AddReviewDisplayTabs, ChatResponse, PlaceProperties, ParsedReviewProperties, ReviewEntity } from '../types';
 
-const AddReview: React.FC = () => {
+export const formatDateToMMDDYYYY = (dateString: string) => {
+  if (!dateString) return '';
+  const [year, month, day] = dateString.split('-');
+  return `${month}/${day}/${year}`;
+};
 
-  const formatDateToMMDDYYYY = (dateString: string) => {
-    if (!dateString) return '';
-    const [year, month, day] = dateString.split('-');
-    return `${month}/${day}/${year}`;
-  };
+const AddReview: React.FC = () => {
 
   const getFormattedDate = () => {
     const today = new Date();
@@ -311,4 +311,3 @@ const AddReview: React.FC = () => {
 };
 
 export default AddReview;
-
