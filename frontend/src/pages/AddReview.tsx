@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   TextField,
   Button,
@@ -10,6 +10,7 @@ import {
   Box,
   Card,
 } from '@mui/material';
+import { LoadScript, Autocomplete } from '@react-google-maps/api';
 import { AddReviewDisplayTabs, ChatResponse, PlaceProperties, ParsedReviewProperties, ReviewEntity } from '../types';
 
 const AddReview: React.FC = () => {
@@ -39,6 +40,7 @@ const AddReview: React.FC = () => {
   const [chatInput, setChatInput] = useState<string>('');
   const [placeVerified, setPlaceVerified] = useState<boolean | null>(null);
   const [placeProperties, setPlaceProperties] = useState<PlaceProperties | null>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   useEffect(() => {
     setDateOfVisit(getFormattedDate());
@@ -49,6 +51,26 @@ const AddReview: React.FC = () => {
 
   const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setDisplayTab(newValue);
+  };
+
+  const handlePlaceChanged = () => {
+    console.log('Place changed:', autocompleteRef.current?.getPlace());
+    if (autocompleteRef.current) {
+      const place = autocompleteRef.current.getPlace();
+      // if (place && place.geometry) {
+      //   setUserLocation(place.formatted_address || '');
+      //   setPlaceProperties({
+      //     place_id: place.place_id || '',
+      //     name: place.name || '',
+      //     address: place.formatted_address || '',
+      //     latitude: place.geometry.location?.lat() || 0,
+      //     longitude: place.geometry.location?.lng() || 0,
+      //   });
+      //   setPlaceVerified(true);
+      // } else {
+      //   setPlaceVerified(false);
+      // }
+    }
   };
 
   const handleVerifyLocation = async () => {
@@ -181,153 +203,160 @@ const AddReview: React.FC = () => {
   };
 
   return (
-    <Paper style={{ padding: 20 }}>
-      <Typography variant="h4" gutterBottom>
-        Add a Review
-      </Typography>
+    <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY!} libraries={['places']}>
+      <Paper style={{ padding: 20 }}>
+        <Typography variant="h4" gutterBottom>
+          Add a Review
+        </Typography>
 
-      {/* Display Toggle Tabs */}
-      <Tabs value={displayTab} onChange={handleTabChange} indicatorColor="primary" textColor="primary">
-        <Tab label="Review Text" />
-        <Tab label="Extracted Information" />
-        <Tab label="Chat History" />
-      </Tabs>
+        {/* Display Toggle Tabs */}
+        <Tabs value={displayTab} onChange={handleTabChange} indicatorColor="primary" textColor="primary">
+          <Tab label="Review Text" />
+          <Tab label="Extracted Information" />
+          <Tab label="Chat History" />
+        </Tabs>
 
-      <Box mt={2}>
-        {displayTab === AddReviewDisplayTabs.ReviewText && (
-          <Box>
-            <TextField
-              fullWidth
-              label="Restaurant Name"
-              value={restaurantName}
-              onChange={(e) => setRestaurantName(e.target.value)}
-              placeholder="Enter the restaurant name"
-              required
-              style={{ marginBottom: 20 }}
-            />
-            <TextField
-              fullWidth
-              label="Location"
-              value={userLocation}
-              onChange={(e) => setUserLocation(e.target.value)}
-              placeholder="Enter the location (e.g., City or Address)"
-              style={{ marginBottom: 20 }}
-            />
-            <TextField
-              fullWidth
-              type="date"
-              value={dateOfVisit}
-              onChange={(e) => setDateOfVisit(e.target.value)}
-              placeholder="mm/dd/yyyy"
-              label="Date of Visit"
-            />
-            <TextField
-              style={{ marginTop: 20 }}
-              fullWidth
-              multiline
-              rows={8}
-              label="Write Your Review"
-              value={reviewText}
-              onChange={(e) => setReviewText(e.target.value)}
-              placeholder="Describe your dining experience in detail..."
-              required
-            />
-            <Button variant="contained" color="primary" onClick={handleVerifyLocation} style={{ marginTop: 20 }}>
-              Retrieve Location
-            </Button>
-            {placeVerified === false && (
-              <Box mt={2}>
-                <Typography color="error">
-                  Location not found. Please edit the location and retry or proceed without verification.
-                </Typography>
-              </Box>
-            )}
-            {placeVerified && placeProperties && (
-              <Box mt={2}>
-                <Typography>{placeProperties.name}</Typography>
-                <Typography>{placeProperties.formatted_address}</Typography>
-              </Box>
-            )}
-          </Box>
-        )}
-        {displayTab === AddReviewDisplayTabs.ExtractedInformation && parsedReviewProperties && renderFormattedAIResponse(parsedReviewProperties)}
-        {displayTab === AddReviewDisplayTabs.ChatHistory && (
-          <Box>
-            {chatHistory.map((msg, idx) => (
-              <Box
-                key={idx}
-                sx={{
-                  display: 'flex',
-                  justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                  mb: 2,
-                }}
+        <Box mt={2}>
+          {displayTab === AddReviewDisplayTabs.ReviewText && (
+            <Box>
+              <TextField
+                fullWidth
+                label="Restaurant Name"
+                value={restaurantName}
+                onChange={(e) => setRestaurantName(e.target.value)}
+                placeholder="Enter the restaurant name"
+                required
+                style={{ marginBottom: 20 }}
+              />
+              <Autocomplete
+                onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+                onPlaceChanged={handlePlaceChanged}
               >
-                <Card
+                <TextField
+                  fullWidth
+                  label="Location"
+                  value={userLocation}
+                  onChange={(e) => setUserLocation(e.target.value)}
+                  placeholder="Enter the location (e.g., City or Address)"
+                  style={{ marginBottom: 20 }}
+                />
+              </Autocomplete>
+              <TextField
+                fullWidth
+                type="date"
+                value={dateOfVisit}
+                onChange={(e) => setDateOfVisit(e.target.value)}
+                placeholder="mm/dd/yyyy"
+                label="Date of Visit"
+              />
+              <TextField
+                style={{ marginTop: 20 }}
+                fullWidth
+                multiline
+                rows={8}
+                label="Write Your Review"
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                placeholder="Describe your dining experience in detail..."
+                required
+              />
+              <Button variant="contained" color="primary" onClick={handleVerifyLocation} style={{ marginTop: 20 }}>
+                Retrieve Location
+              </Button>
+              {placeVerified === false && (
+                <Box mt={2}>
+                  <Typography color="error">
+                    Location not found. Please edit the location and retry or proceed without verification.
+                  </Typography>
+                </Box>
+              )}
+              {placeVerified && placeProperties && (
+                <Box mt={2}>
+                  <Typography>{placeProperties.name}</Typography>
+                  <Typography>{placeProperties.formatted_address}</Typography>
+                </Box>
+              )}
+            </Box>
+          )}
+          {displayTab === AddReviewDisplayTabs.ExtractedInformation && parsedReviewProperties && renderFormattedAIResponse(parsedReviewProperties)}
+          {displayTab === AddReviewDisplayTabs.ChatHistory && (
+            <Box>
+              {chatHistory.map((msg, idx) => (
+                <Box
+                  key={idx}
                   sx={{
-                    backgroundColor: msg.role === 'user' ? 'lightgrey' : 'white',
-                    padding: 2,
-                    maxWidth: '80%',
-                    borderRadius: 2,
+                    display: 'flex',
+                    justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                    mb: 2,
                   }}
                 >
-                  {typeof msg.message === 'string' ? (
-                    <Typography variant="body1">{msg.message}</Typography>
-                  ) : (
-                    renderFormattedAIResponse(msg.message as ReviewEntity)
-                  )}
-                </Card>
-              </Box>
-            ))}
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Enter your message..."
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleChat()}
-              style={{ marginTop: 10 }}
-            />
-          </Box>
-        )}
-      </Box>
+                  <Card
+                    sx={{
+                      backgroundColor: msg.role === 'user' ? 'lightgrey' : 'white',
+                      padding: 2,
+                      maxWidth: '80%',
+                      borderRadius: 2,
+                    }}
+                  >
+                    {typeof msg.message === 'string' ? (
+                      <Typography variant="body1">{msg.message}</Typography>
+                    ) : (
+                      renderFormattedAIResponse(msg.message as ReviewEntity)
+                    )}
+                  </Card>
+                </Box>
+              ))}
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Enter your message..."
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleChat()}
+                style={{ marginTop: 10 }}
+              />
+            </Box>
+          )}
+        </Box>
 
-      {/* Action Buttons */}
-      <Grid container spacing={2} style={{ marginTop: 20 }}>
-        <Grid item xs={4}>
-          <Button
-            variant="contained"
-            color="primary"
-            fullWidth
-            onClick={handlePreview}
-            disabled={!restaurantName || !reviewText}
-          >
-            Preview
-          </Button>
+        {/* Action Buttons */}
+        <Grid container spacing={2} style={{ marginTop: 20 }}>
+          <Grid item xs={4}>
+            <Button
+              variant="contained"
+              color="primary"
+              fullWidth
+              onClick={handlePreview}
+              disabled={!restaurantName || !reviewText}
+            >
+              Preview
+            </Button>
+          </Grid>
+          <Grid item xs={4}>
+            <Button
+              variant="contained"
+              color="secondary"
+              fullWidth
+              onClick={handleChat}
+              disabled={!chatInput}
+            >
+              Chat
+            </Button>
+          </Grid>
+          <Grid item xs={4}>
+            <Button
+              variant="contained"
+              color="primary"
+              fullWidth
+              onClick={handleSubmit}
+              disabled={!parsedReviewProperties}
+            >
+              Submit
+            </Button>
+          </Grid>
         </Grid>
-        <Grid item xs={4}>
-          <Button
-            variant="contained"
-            color="secondary"
-            fullWidth
-            onClick={handleChat}
-            disabled={!chatInput}
-          >
-            Chat
-          </Button>
-        </Grid>
-        <Grid item xs={4}>
-          <Button
-            variant="contained"
-            color="primary"
-            fullWidth
-            onClick={handleSubmit}
-            disabled={!parsedReviewProperties}
-          >
-            Submit
-          </Button>
-        </Grid>
-      </Grid>
-    </Paper>
+      </Paper>
+    </LoadScript>
   );
 };
 
