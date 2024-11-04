@@ -56,20 +56,22 @@ const AddReview: React.FC = () => {
   const handlePlaceChanged = () => {
     console.log('Place changed:', autocompleteRef.current?.getPlace());
     if (autocompleteRef.current) {
-      const place = autocompleteRef.current.getPlace();
-      // if (place && place.geometry) {
-      //   setUserLocation(place.formatted_address || '');
-      //   setPlaceProperties({
-      //     place_id: place.place_id || '',
-      //     name: place.name || '',
-      //     address: place.formatted_address || '',
-      //     latitude: place.geometry.location?.lat() || 0,
-      //     longitude: place.geometry.location?.lng() || 0,
-      //   });
-      //   setPlaceVerified(true);
-      // } else {
-      //   setPlaceVerified(false);
-      // }
+      const place: google.maps.places.PlaceResult = autocompleteRef.current.getPlace();
+      if (place && place.geometry) {
+        const placeProperties: PlaceProperties = {
+          place_id: place.place_id || '',
+          name: place.name || '',
+          formatted_address: place.formatted_address || '',
+          website: place.website || '',
+          latitude: place.geometry.location!.lat(),
+          longitude: place.geometry.location!.lng(),
+          cityName: '',
+        };
+        setPlaceProperties(placeProperties);
+        setUserLocation(place.formatted_address || '');
+      } else {
+        setPlaceVerified(false);
+      }
     }
   };
 
