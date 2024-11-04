@@ -1,21 +1,9 @@
 import axios from 'axios';
-import { Request, Response } from 'express';
 import { GooglePlacesResponse, GooglePlaceDetailsResponse, GooglePlaceDetails, MemoRappPlaceProperties, PlaceProperties } from '../types';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
 const GOOGLE_PLACE_DETAILS_BASE_URL = 'https://maps.googleapis.com/maps/api/place/details/json';
-
-export const getRestaurantLocationHandler = async (req: Request, res: Response): Promise<void> => {
-  const { restaurantName, location } = req.body;
-
-  try {
-    const placeData: PlaceProperties = await getRestaurantProperties(restaurantName, location);
-    res.json(placeData);
-  } catch (error) {
-    res.status(500).json({ error: 'Could not find restaurant information' });
-  }
-};
 
 export const getRestaurantProperties = async (restaurantName: string, location: string): Promise<PlaceProperties> => {
 

@@ -1,6 +1,6 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import { openai } from '../index';
-import { ChatResponse, ParsedReviewProperties, PlaceProperties, ReviewEntity } from '../types/';
+import { ChatResponse, ParsedReviewProperties, PlaceProperties } from '../types/';
 import Review from "../models/Review";
 import { extractFieldFromResponse, extractListFromResponse, removeSquareBrackets } from '../utilities';
 import { getRestaurantProperties } from './googlePlaces';

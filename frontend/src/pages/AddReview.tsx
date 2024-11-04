@@ -38,8 +38,6 @@ const AddReview: React.FC = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | ParsedReviewProperties }[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
-  const [placeVerified, setPlaceVerified] = useState<boolean | null>(null);
-  const [placeProperties, setPlaceProperties] = useState<PlaceProperties | null>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   useEffect(() => {
@@ -58,20 +56,8 @@ const AddReview: React.FC = () => {
     if (autocompleteRef.current) {
       const place: google.maps.places.PlaceResult = autocompleteRef.current.getPlace();
       if (place && place.geometry) {
-        const placeProperties: PlaceProperties = {
-          place_id: place.place_id || '',
-          name: place.name || '',
-          formatted_address: place.formatted_address || '',
-          website: place.website || '',
-          latitude: place.geometry.location!.lat(),
-          longitude: place.geometry.location!.lng(),
-          cityName: '',
-        };
-        setPlaceProperties(placeProperties);
         setRestaurantName(place.name || '');
         setUserLocation(place.formatted_address || '');
-      } else {
-        setPlaceVerified(false);
       }
     }
   };
@@ -91,7 +77,6 @@ const AddReview: React.FC = () => {
       });
       const data = await response.json();
       setParsedReviewProperties(data.parsedReviewProperties);
-      setPlaceProperties(data.parsedReviewProperties.placeProperties);
       setChatHistory([...chatHistory, { role: 'user', message: reviewText }, { role: 'ai', message: data.parsedReviewProperties }]);
       setDisplayTab(1);
     } catch (error) {
@@ -187,7 +172,6 @@ const AddReview: React.FC = () => {
           Add a Review
         </Typography>
 
-        {/* Display Toggle Tabs */}
         <Tabs value={displayTab} onChange={handleTabChange} indicatorColor="primary" textColor="primary">
           <Tab label="Review Text" />
           <Tab label="Extracted Information" />
@@ -286,7 +270,6 @@ const AddReview: React.FC = () => {
           )}
         </Box>
 
-        {/* Action Buttons */}
         <Grid container spacing={2} style={{ marginTop: 20 }}>
           <Grid item xs={4}>
             <Button
