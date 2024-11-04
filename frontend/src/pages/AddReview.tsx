@@ -68,35 +68,11 @@ const AddReview: React.FC = () => {
           cityName: '',
         };
         setPlaceProperties(placeProperties);
+        setRestaurantName(place.name || '');
         setUserLocation(place.formatted_address || '');
       } else {
         setPlaceVerified(false);
       }
-    }
-  };
-
-  const handleVerifyLocation = async () => {
-    try {
-      const response = await fetch('/api/reviews/location', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ restaurantName, location: userLocation }),
-      });
-      if (response.ok) {
-        const data: PlaceProperties | null = await response.json();
-        if (data) {
-          setPlaceProperties(data);
-          setPlaceVerified(true);
-        } else {
-          setPlaceVerified(false); // Couldn’t find location
-        }
-      } else {
-        setPlaceVerified(false); // Couldn’t find location
-      }
-
-    } catch (error) {
-      console.error('Error verifying location:', error);
-      setPlaceVerified(false);
     }
   };
 
@@ -221,28 +197,33 @@ const AddReview: React.FC = () => {
         <Box mt={2}>
           {displayTab === AddReviewDisplayTabs.ReviewText && (
             <Box>
-              <TextField
-                fullWidth
-                label="Restaurant Name"
-                value={restaurantName}
-                onChange={(e) => setRestaurantName(e.target.value)}
-                placeholder="Enter the restaurant name"
-                required
-                style={{ marginBottom: 20 }}
-              />
               <Autocomplete
                 onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
                 onPlaceChanged={handlePlaceChanged}
               >
                 <TextField
                   fullWidth
-                  label="Location"
-                  value={userLocation}
-                  onChange={(e) => setUserLocation(e.target.value)}
-                  placeholder="Enter the location (e.g., City or Address)"
+                  label="Restaurant Name"
+                  value={restaurantName}
+                  onChange={(e) => setRestaurantName(e.target.value)}
+                  placeholder="Enter the restaurant name"
+                  required
                   style={{ marginBottom: 20 }}
                 />
               </Autocomplete>
+              <TextField
+                fullWidth
+                label="Location"
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                  },
+                }}
+                value={userLocation}
+                onChange={(e) => setUserLocation(e.target.value)}
+                placeholder="Enter the location (e.g., City or Address)"
+                style={{ marginBottom: 20 }}
+              />
               <TextField
                 fullWidth
                 type="date"
@@ -262,22 +243,6 @@ const AddReview: React.FC = () => {
                 placeholder="Describe your dining experience in detail..."
                 required
               />
-              <Button variant="contained" color="primary" onClick={handleVerifyLocation} style={{ marginTop: 20 }}>
-                Retrieve Location
-              </Button>
-              {placeVerified === false && (
-                <Box mt={2}>
-                  <Typography color="error">
-                    Location not found. Please edit the location and retry or proceed without verification.
-                  </Typography>
-                </Box>
-              )}
-              {placeVerified && placeProperties && (
-                <Box mt={2}>
-                  <Typography>{placeProperties.name}</Typography>
-                  <Typography>{placeProperties.formatted_address}</Typography>
-                </Box>
-              )}
             </Box>
           )}
           {displayTab === AddReviewDisplayTabs.ExtractedInformation && parsedReviewProperties && renderFormattedAIResponse(parsedReviewProperties)}
