@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import DirectionsIcon from '@mui/icons-material/Directions';
 import { PlaceProperties, ReviewEntityWithFullText } from '../types';
-import MapWithMarkers from '../components/MapWithMarkers';
+import MapWithMarkers from '../components/MapWIthMarkers';
 
 const ViewReviews: React.FC = () => {
   const [reviews, setReviews] = useState<ReviewEntityWithFullText[]>([]);
