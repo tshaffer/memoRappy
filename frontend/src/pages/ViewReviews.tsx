@@ -18,7 +18,6 @@ import {
 import DirectionsIcon from '@mui/icons-material/Directions';
 import { PlaceProperties, ReviewEntityWithFullText } from '../types';
 import MapWithMarkers from '../components/MapWithMarkers';
-import DirectionsToRestaurant from '../components/DirectionsToRestaurant';
 
 const ViewReviews: React.FC = () => {
   const [reviews, setReviews] = useState<ReviewEntityWithFullText[]>([]);
@@ -29,7 +28,6 @@ const ViewReviews: React.FC = () => {
   const [selectedReviews, setSelectedReviews] = useState<ReviewEntityWithFullText[]>([]);
   const [showMap, setShowMap] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [selectedReviewForDirections, setSelectedReviewForDirections] = useState<ReviewEntityWithFullText | null>(null);
 
   useEffect(() => {
     // Fetch the reviews from the API
@@ -136,12 +134,16 @@ const ViewReviews: React.FC = () => {
 
   const locations: PlaceProperties[] = selectedReviews.map((review) => review.placeProperties);
 
-  const handleShowDirections = (reviewEntityWithFullText: ReviewEntityWithFullText) => {
-    console.log('handleShowDirections', reviewEntityWithFullText);
-    setSelectedReviewForDirections(reviewEntityWithFullText);
+  const handleShowDirections = (review: ReviewEntityWithFullText) => {
+    if (currentLocation) {
+      const destination: PlaceProperties = review.placeProperties;
+      const url = `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.lat},${currentLocation.lng}&destination=${destination.latitude},${destination.longitude}&destination_place_id=${destination.name}`;
+      window.open(url, '_blank');
+    }
   };
 
   return (
+
     <Grid container spacing={2}>
       <Grid item xs={12} md={6}>
         <Paper>
@@ -240,12 +242,6 @@ const ViewReviews: React.FC = () => {
       {showMap && (
         <MapWithMarkers
           locations={locations}
-        />
-      )}
-      {selectedReviewForDirections && currentLocation && (
-        <DirectionsToRestaurant
-          origin={currentLocation}
-          destination={selectedReviewForDirections.placeProperties}
         />
       )}
     </Grid>
