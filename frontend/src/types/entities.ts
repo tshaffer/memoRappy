@@ -46,3 +46,10 @@ export interface ChatResponse {
   parsedReviewProperties: ParsedReviewProperties;
   updatedReviewText: string;
 }
+
+export interface SubmitReviewBody {
+  structuredReviewProperties: StructuredReviewProperties;
+  parsedReviewProperties: ParsedReviewProperties
+  reviewText: string;
+  sessionId: string;
+}

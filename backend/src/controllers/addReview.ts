@@ -1,52 +1,49 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import { openai } from '../index';
-import { ChatResponse, ParsedReviewProperties, MemoRappPlace } from '../types/';
+import { ChatResponse, ParsedReviewProperties, MemoRappPlace, SubmitReviewBody } from '../types/';
 import Review from "../models/Review";
-import { extractFieldFromResponse, extractListFromResponse, removeSquareBrackets } from '../utilities';
+import { extractCommentsFromItems, extractFieldFromResponse, extractListFromResponse, removeSquareBrackets } from '../utilities';
 import { getRestaurantProperties } from './googlePlaces';
 import { Request, Response } from 'express';
 
 // Store conversations for each session
-const reviewConversations: { [sessionId: string]: ChatCompletionMessageParam[] } = {};
+interface ReviewConversations {
+  [sessionId: string]: ChatCompletionMessageParam[];
+}
+const reviewConversations: ReviewConversations = {};
 
-// Preview endpoint to get structured data without saving
-export const previewReviewHandler = async (req: Request, res: Response): Promise<void> => {
-
-  const { structuredReviewProperties, reviewText, sessionId } = req.body;
-  const { restaurantName, userLocation, dateOfVisit } = structuredReviewProperties;
-
+export const parsePreview = async (sessionId: string, restaurantName: string, userLocation: string, reviewText: string): Promise<ParsedReviewProperties> => {
+  
   // Initialize conversation history if it doesn't exist
   if (!reviewConversations[sessionId]) {
     reviewConversations[sessionId] = [
       {
         role: "system",
         content: `
-          You are a helpful assistant aiding in extracting structured information from restaurant reviews.
-          Your task is to extract details such as:
-          - Reviewer name
-          - Date of visit (in YYYY-MM-DD format)
-          - List of items ordered
-          - Comments about each item (with the format: "item name (comments)")
-          - Overall experience
+        You are a helpful assistant aiding in extracting structured information from restaurant reviews.
+        Your task is to extract details such as:
+        - Reviewer name
+        - Date of visit (in YYYY-MM-DD format)
+        - List of items ordered
+        - Comments about each item (with the format: "item name (comments)")
+        - Overall experience
 
-          Also, look for keywords and phrases that you might typically find in a restaurant review.
+        Also, look for keywords and phrases that you might typically find in a restaurant review.
 
-           Review: "${reviewText}"
+         Review: "${reviewText}"
 
-          Format the response as follows:
-          - Reviewer name: [Name]
-          - Date of visit: [YYYY-MM-DD]
-          - List of items ordered: [Item 1, Item 2, etc.]
-          - Comments about each item: [Item 1 (Comment), Item 2 (Comment)]
-          - Overall experience: [Overall Experience]
-          - Keywords: [Keyword 1, Keyword 2, etc.]
-          - Phrases: [Phrase 1, Phrase 2, etc.]
-        `,
+        Format the response as follows:
+        - Reviewer name: [Name]
+        - Date of visit: [YYYY-MM-DD]
+        - List of items ordered: [Item 1, Item 2, etc.]
+        - Comments about each item: [Item 1 (Comment), Item 2 (Comment)]
+        - Overall experience: [Overall Experience]
+        - Keywords: [Keyword 1, Keyword 2, etc.]
+        - Phrases: [Phrase 1, Phrase 2, etc.]
+      `,
       },
     ];
   }
-
-  // Add user input as the latest message in the conversation history
   reviewConversations[sessionId].push({ role: "user", content: reviewText });
 
   try {
@@ -59,8 +56,7 @@ export const previewReviewHandler = async (req: Request, res: Response): Promise
 
     const messageContent = response.choices[0].message?.content;
     if (!messageContent) {
-      res.status(500).json({ error: 'Failed to extract data from the response.' });
-      return;
+      throw new Error('Failed to extract data from the response.');
     }
 
     console.log('previewReviewHandler response:', messageContent); // Debugging log
@@ -80,35 +76,26 @@ export const previewReviewHandler = async (req: Request, res: Response): Promise
       place,
     };
 
-    res.json({ parsedReviewProperties });
+    return parsedReviewProperties;
   } catch (error) {
     console.error('Error processing review preview:', error);
-    res.status(500).json({ error: 'An error occurred while processing the review preview.' });
+    throw new Error('Error processing review preview.');
+  }
+}
+
+export const previewReviewHandler = async (req: Request, res: Response): Promise<any> => {
+
+  const { structuredReviewProperties, reviewText, sessionId } = req.body;
+  const { restaurantName, userLocation } = structuredReviewProperties;
+
+  try {
+    const parsedReviewProperties: ParsedReviewProperties = await parsePreview(sessionId, restaurantName, userLocation, reviewText);
+    return res.json({ parsedReviewProperties });
+  } catch (error) {
+    console.error('Error processing review preview:', error);
+    return res.status(500).json({ error: 'An error occurred while processing the review preview.' });
   }
 };
-
-// New function to accurately parse comments about each item
-function extractCommentsFromItems(responseText: string, fieldName: string): { item: string; rating: string }[] {
-  // Capture the whole field section for comments about each item
-  const fieldRegex = new RegExp(`${fieldName}:\\s*([\\s\\S]*?)\\n`, 'i');
-  const fieldMatch = responseText.match(fieldRegex);
-
-  if (!fieldMatch || !fieldMatch[1]) return [];
-
-  // Separate each item with comments, using commas outside parentheses as separators
-  const itemsWithComments = fieldMatch[1].match(/[^,]+?\(.+?\)/g);
-
-  if (!itemsWithComments) return [];
-
-  // Extract item name and comment from each match
-  return itemsWithComments.map((itemText: string) => {
-    const itemMatch = itemText.match(/(.+?)\s*\((.+?)\)/);
-    return {
-      item: itemMatch ? itemMatch[1].trim() : itemText,
-      rating: itemMatch ? itemMatch[2].trim() : '',
-    };
-  });
-}
 
 export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
   const { userInput, sessionId, reviewText } = req.body;
@@ -191,20 +178,17 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
   }
 };
 
-// Submit endpoint to save structured review in the database
-export const submitReviewHandler = async (req: Request, res: Response): Promise<void> => {
+export const submitReview = async (body: SubmitReviewBody) => {
 
-  const { structuredReviewProperties, parsedReviewProperties, reviewText, sessionId } = req.body;
+  const { structuredReviewProperties, parsedReviewProperties, reviewText, sessionId } = body;
   if (!structuredReviewProperties || !parsedReviewProperties || !reviewText || !sessionId) {
-    res.status(400).json({ error: 'Incomplete review data.' });
-    return;
+    throw new Error('Incomplete review data.');
   }
 
   const { restaurantName, userLocation, dateOfVisit } = structuredReviewProperties;
   const { itemsOrdered, ratings, overallExperience, reviewer, keywords, phrases, place } = parsedReviewProperties;
   if (!restaurantName) {
-    res.status(400).json({ error: 'Incomplete review data.' });
-    return;
+    throw new Error('Incomplete review data.');
   }
 
   try {
@@ -225,13 +209,24 @@ export const submitReviewHandler = async (req: Request, res: Response): Promise<
     await newReview.save();
 
     // Clear conversation history for the session after submission
-    delete reviewConversations[req.body.sessionId];
+    delete reviewConversations[sessionId];
 
-    res.status(201).json({ message: 'Review saved successfully!', review: newReview });
-    return;
+    return newReview;
   } catch (error) {
     console.error('Error saving review:', error);
-    res.status(500).json({ error: 'An error occurred while saving the review.' });
-    return;
+    throw new Error('An error occurred while saving the review.');
+  }
+}
+
+export const submitReviewHandler = async (req: Request, res: Response): Promise<any> => {
+
+  const body = req.body;
+
+  try {
+    const newReview = await submitReview(body);
+    return res.status(201).json({ message: 'Review saved successfully!', review: newReview });
+  } catch (error) {
+    console.error('Error saving review:', error);
+    return res.status(500).json({ error: 'An error occurred while saving the review.' });
   }
 };

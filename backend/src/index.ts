@@ -3,10 +3,9 @@ import cors from 'cors';
 import * as dotenv from 'dotenv';
 import OpenAI from 'openai';
 import mongoose from 'mongoose';
-import Review from './models/Review';
 import express from 'express';
 
-import { chatReviewHandler, previewReviewHandler, queryReviewsHandler, reviewsRouter, submitReviewHandler } from './controllers';
+import { chatReviewHandler, addReviewsHandler, previewReviewHandler, queryReviewsHandler, reviewsRouter, submitReviewHandler } from './controllers';
 
 export let openai: OpenAI;
 
@@ -15,9 +14,9 @@ dotenv.config();
 console.log('environment variables:');
 console.log(process.env.OPENAI_API_KEY);
 console.log(process.env.MONGODB_URI);
-console.log(process.env.PORT);
+console.log(process.env.PORT);  
 
-const app = express();
+const app: express.Application = express();
 
 app.use(cors());
 app.use(express.json());
@@ -27,6 +26,7 @@ app.post('/api/query', queryReviewsHandler);
 app.post('/api/reviews/preview', previewReviewHandler);
 app.post('/api/reviews/chat', chatReviewHandler);
 app.post('/api/reviews/submit', submitReviewHandler);
+app.post('/api/reviews/addReviewsFromFile', addReviewsHandler);
 app.use('/api/reviews', reviewsRouter);
 
 // Serve static files from the frontend build directory, adjusted for production

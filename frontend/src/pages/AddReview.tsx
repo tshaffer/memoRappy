@@ -11,7 +11,7 @@ import {
   Card,
 } from '@mui/material';
 import { LoadScript, Autocomplete } from '@react-google-maps/api';
-import { AddReviewDisplayTabs, ChatResponse, MemoRappPlace, ParsedReviewProperties, ReviewEntity } from '../types';
+import { AddReviewDisplayTabs, ChatResponse, MemoRappPlace, ParsedReviewProperties, ReviewEntity, SubmitReviewBody } from '../types';
 
 const AddReview: React.FC = () => {
 
@@ -108,11 +108,11 @@ const AddReview: React.FC = () => {
   const handleSubmit = async () => {
     if (!parsedReviewProperties) return;
     try {
-      const submitBody: any = {
+      const submitBody: SubmitReviewBody = {
         structuredReviewProperties: { restaurantName, userLocation, dateOfVisit },
         parsedReviewProperties,
         reviewText,
-        sessionId,
+        sessionId: sessionId!,
       };
 
       const response = await fetch('/api/reviews/submit', {
