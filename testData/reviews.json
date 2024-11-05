@@ -1,0 +1,12 @@
+[
+  {
+    "restaurantName": "Doppio Zero Mountain View",
+    "dateOfVisit": "2024-10-31",
+    "reviewText": "We ordered a Doppio Zero pizza. The toppings for this pizza are burrata, prosciutto, and arugula. It was my favorite. I enjoy it more than the comparable one from Terun. We also ordered a Mortadella pizza. Its toppings included both mortadella and crumbled pistachio. It was good but not as good as the equivalent we had in Italy. The pistachio was too crunchy."
+  },
+  {
+    "restaurantName": "Terun",
+    "dateOfVisit": "2024-8-30",
+    "reviewText": "We ordered a Margherita pizza. It was good but not as good as the one from Doppio Zero. We also ordered a Diavola pizza. It was very good - nice and spicy."
+  }
+]
