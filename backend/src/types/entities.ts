@@ -1,6 +1,6 @@
 import { AddressComponent, Geometry } from "./GooglePlacesAPI";
 
-export interface MemoRappPlaceProperties {
+export interface MemoRappPlace {
   place_id: string;
   name: string;
   address_components?: AddressComponent[];
@@ -22,7 +22,7 @@ export interface ParsedReviewProperties {
   reviewer: string;
   keywords: string[];
   phrases: string[];
-  placeProperties?: MemoRappPlaceProperties;
+  place?: MemoRappPlace;
 }
 
 export interface ReviewEntity {
@@ -35,7 +35,7 @@ export interface ReviewEntity {
   reviewer: string;
   keywords: string[];
   phrases: string[];
-  placeProperties: MemoRappPlaceProperties;
+  place: MemoRappPlace;
 }
 
 export interface ReviewEntityWithFullText extends ReviewEntity {

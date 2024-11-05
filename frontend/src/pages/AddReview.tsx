@@ -11,7 +11,7 @@ import {
   Card,
 } from '@mui/material';
 import { LoadScript, Autocomplete } from '@react-google-maps/api';
-import { AddReviewDisplayTabs, ChatResponse, MemoRappPlaceProperties, ParsedReviewProperties, ReviewEntity } from '../types';
+import { AddReviewDisplayTabs, ChatResponse, MemoRappPlace, ParsedReviewProperties, ReviewEntity } from '../types';
 
 const AddReview: React.FC = () => {
 
@@ -144,7 +144,7 @@ const AddReview: React.FC = () => {
   const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
   const renderFormattedAIResponse = (parsedReviewProperties: ParsedReviewProperties) => {
-    const placeProperties: MemoRappPlaceProperties = parsedReviewProperties.placeProperties!;
+    const place: MemoRappPlace = parsedReviewProperties.place!;
     return (
       <Box sx={{ textAlign: 'left' }}>
         <Typography><strong>Reviewer:</strong> {parsedReviewProperties.reviewer || 'Not provided'}</Typography>
@@ -160,7 +160,7 @@ const AddReview: React.FC = () => {
             </li>
           ))}
         </ul>
-        <Typography><strong>Retrieved Location:</strong>{placeProperties?.formatted_address}</Typography>
+        <Typography><strong>Retrieved Location:</strong>{place?.formatted_address}</Typography>
       </Box>
     )
   };

@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { GooglePlacesResponse, GooglePlaceDetailsResponse, GooglePlaceDetails, MemoRappPlaceProperties } from '../types';
+import { GooglePlacesResponse, GooglePlaceDetailsResponse, GooglePlaceDetails, MemoRappPlace } from '../types';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
 const GOOGLE_PLACE_DETAILS_BASE_URL = 'https://maps.googleapis.com/maps/api/place/details/json';
 
-export const getRestaurantProperties = async (restaurantName: string, location: string): Promise<MemoRappPlaceProperties> => {
+export const getRestaurantProperties = async (restaurantName: string, location: string): Promise<MemoRappPlace> => {
 
   const query = `${restaurantName} ${location}`;
   const url = `${GOOGLE_PLACES_URL}?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}`;
@@ -17,7 +17,7 @@ export const getRestaurantProperties = async (restaurantName: string, location: 
     const placeDetails: GooglePlaceDetails | null = await getGooglePlaceDetails(place!.place_id!);
     console.log('Place Details:', placeDetails);
 
-    const restaurantProperties: MemoRappPlaceProperties = pickMemoRappPlaceDetails(placeDetails!)
+    const restaurantProperties: MemoRappPlace = pickMemoRappPlaceDetails(placeDetails!)
     return restaurantProperties;
 
   } catch (error) {
@@ -70,8 +70,8 @@ const getGooglePlaceDetails = async (placeId: string): Promise<GooglePlaceDetail
   }
 }
 
-// Dummy object to define the shape of MemoRappPlaceProperties at runtime
-const memoRappPropertiesTemplate: MemoRappPlaceProperties = {
+// Dummy object to define the shape of MemoRappPlace at runtime
+const memoRappPlaceTemplate: MemoRappPlace = {
   place_id: '',
   name: '',
   address_components: [],
@@ -80,14 +80,14 @@ const memoRappPropertiesTemplate: MemoRappPlaceProperties = {
   website: '',
 };
 
-function pickMemoRappPlaceDetails(details: GooglePlaceDetails): MemoRappPlaceProperties {
-  const keys = Object.keys(memoRappPropertiesTemplate) as (keyof MemoRappPlaceProperties)[];
-  
+function pickMemoRappPlaceDetails(details: GooglePlaceDetails): MemoRappPlace {
+  const keys = Object.keys(memoRappPlaceTemplate) as (keyof MemoRappPlace)[];
+
   const result = Object.fromEntries(
     keys
       .filter(key => key in details)
       .map(key => [key, details[key]])
-  ) as unknown as MemoRappPlaceProperties;
+  ) as unknown as MemoRappPlace;
 
   return result;
 }

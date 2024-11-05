@@ -16,7 +16,7 @@ import {
   IconButton,
 } from '@mui/material';
 import DirectionsIcon from '@mui/icons-material/Directions';
-import { LatLngLiteral, MemoRappPlaceProperties, ReviewEntityWithFullText } from '../types';
+import { LatLngLiteral, MemoRappPlace, ReviewEntityWithFullText } from '../types';
 import MapWithMarkers from '../components/MapWIthMarkers';
 import { getCityNameFromPlace, getLatLngFromPlace } from '../utilities';
 
@@ -61,9 +61,9 @@ const ViewReviews: React.FC = () => {
       let aValue;
       let bValue;
 
-      if (sortBy === 'placeProperties') {
-        aValue = getCityNameFromPlace(a.placeProperties) || '';
-        bValue = getCityNameFromPlace(b.placeProperties) || '';
+      if (sortBy === 'place') {
+        aValue = getCityNameFromPlace(a.place) || '';
+        bValue = getCityNameFromPlace(b.place) || '';
       } else {
         aValue = a[sortBy];
         bValue = b[sortBy];
@@ -109,7 +109,7 @@ const ViewReviews: React.FC = () => {
     return (
       <Box p={3}>
         <Typography variant="h6" gutterBottom>{selectedReview.restaurantName}</Typography>
-        <Typography><strong>Location:</strong> {getCityNameFromPlace(selectedReview.placeProperties) || 'Not provided'}</Typography>
+        <Typography><strong>Location:</strong> {getCityNameFromPlace(selectedReview.place) || 'Not provided'}</Typography>
         <Typography><strong>Date of Visit:</strong> {selectedReview.dateOfVisit || 'Not provided'}</Typography>
         <Typography><strong>Reviewer:</strong> {selectedReview.reviewer || 'Anonymous'}</Typography>
         <Typography><strong>Overall Experience:</strong> {selectedReview.overallExperience || 'No rating'}</Typography>
@@ -133,11 +133,11 @@ const ViewReviews: React.FC = () => {
     );
   };
 
-  const locations: MemoRappPlaceProperties[] = selectedReviews.map((review) => review.placeProperties);
+  const locations: MemoRappPlace[] = selectedReviews.map((review) => review.place);
 
   const handleShowDirections = (review: ReviewEntityWithFullText) => {
     if (currentLocation) {
-      const destination: MemoRappPlaceProperties = review.placeProperties;
+      const destination: MemoRappPlace = review.place;
       const destinationLatLng: LatLngLiteral = getLatLngFromPlace(destination);
       const url = `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.lat},${currentLocation.lng}&destination=${destinationLatLng.lat},${destinationLatLng.lng}&destination_place_id=${destination.name}`;
       window.open(url, '_blank');
@@ -172,9 +172,9 @@ const ViewReviews: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <TableSortLabel
-                      active={sortBy === 'placeProperties'}
-                      direction={sortBy === 'placeProperties' ? sortDirection : 'asc'}
-                      onClick={() => handleSort('placeProperties')}
+                      active={sortBy === 'place'}
+                      direction={sortBy === 'place' ? sortDirection : 'asc'}
+                      onClick={() => handleSort('place')}
                     >
                       Location
                     </TableSortLabel>
@@ -219,7 +219,7 @@ const ViewReviews: React.FC = () => {
                       </IconButton>
                     </TableCell>
                     <TableCell>{review.restaurantName}</TableCell>
-                    <TableCell>{getCityNameFromPlace(review.placeProperties)}</TableCell>
+                    <TableCell>{getCityNameFromPlace(review.place)}</TableCell>
                     <TableCell>{review.overallExperience}</TableCell>
                     <TableCell>{review.dateOfVisit}</TableCell>
                   </TableRow>

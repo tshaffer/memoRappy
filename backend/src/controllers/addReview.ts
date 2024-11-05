@@ -1,6 +1,6 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import { openai } from '../index';
-import { ChatResponse, ParsedReviewProperties, MemoRappPlaceProperties } from '../types/';
+import { ChatResponse, ParsedReviewProperties, MemoRappPlace } from '../types/';
 import Review from "../models/Review";
 import { extractFieldFromResponse, extractListFromResponse, removeSquareBrackets } from '../utilities';
 import { getRestaurantProperties } from './googlePlaces';
@@ -67,7 +67,7 @@ export const previewReviewHandler = async (req: Request, res: Response): Promise
     console.log('list of items ordered', extractListFromResponse(messageContent, 'List of items ordered'));
     console.log('comments about each item', extractCommentsFromItems(messageContent, 'Comments about each item'));
 
-    const placeProperties: MemoRappPlaceProperties = await getRestaurantProperties(restaurantName, userLocation);
+    const place: MemoRappPlace = await getRestaurantProperties(restaurantName, userLocation);
 
     // Extract structured information using adjusted parsing
     const parsedReviewProperties: ParsedReviewProperties = {
@@ -77,7 +77,7 @@ export const previewReviewHandler = async (req: Request, res: Response): Promise
       reviewer: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Reviewer name')),
       keywords: extractListFromResponse(messageContent, 'Keywords').map(removeSquareBrackets),
       phrases: extractListFromResponse(messageContent, 'Phrases').map(removeSquareBrackets),
-      placeProperties,
+      place,
     };
 
     res.json({ parsedReviewProperties });
@@ -201,7 +201,7 @@ export const submitReviewHandler = async (req: Request, res: Response): Promise<
   }
 
   const { restaurantName, userLocation, dateOfVisit } = structuredReviewProperties;
-  const { itemsOrdered, ratings, overallExperience, reviewer, keywords, phrases, placeProperties } = parsedReviewProperties;
+  const { itemsOrdered, ratings, overallExperience, reviewer, keywords, phrases, place } = parsedReviewProperties;
   if (!restaurantName) {
     res.status(400).json({ error: 'Incomplete review data.' });
     return;
@@ -218,7 +218,7 @@ export const submitReviewHandler = async (req: Request, res: Response): Promise<
       reviewer,
       keywords,
       phrases,
-      placeProperties,
+      place,
       reviewText
     });
 

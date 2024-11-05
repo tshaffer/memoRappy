@@ -1,6 +1,6 @@
-import { LatLngLiteral, MemoRappPlaceProperties } from "../types";
+import { LatLngLiteral, MemoRappPlace } from "../types";
 
-export const getCityNameFromPlace = (place: MemoRappPlaceProperties): string => {
+export const getCityNameFromPlace = (place: MemoRappPlace): string => {
 
   const addressComponents = place.address_components;
   const cityComponent = addressComponents?.find((component: any) =>
@@ -10,7 +10,7 @@ export const getCityNameFromPlace = (place: MemoRappPlaceProperties): string => 
   return cityName;
 }
 
-export const getLatLngFromPlace = (place: MemoRappPlaceProperties): LatLngLiteral => {
+export const getLatLngFromPlace = (place: MemoRappPlace): LatLngLiteral => {
   const lat = place.geometry!.location.lat;
   const lng = place.geometry!.location.lng;
   return { lat, lng };

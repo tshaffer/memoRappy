@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LatLngLiteral, MemoRappPlaceProperties } from '../types';
+import { MemoRappPlace } from '../types';
 import { AdvancedMarker, APIProvider, InfoWindow, Map, MapCameraChangedEvent } from '@vis.gl/react-google-maps';
 import { getLatLngFromPlace } from '../utilities';
 
@@ -9,7 +9,7 @@ interface Coordinates {
 }
 
 interface MapWithMarkersProps {
-  locations: MemoRappPlaceProperties[];
+  locations: MemoRappPlace[];
 }
 
 const DEFAULT_CENTER = { lat: 37.3944829, lng: -122.0790619 };
@@ -18,7 +18,7 @@ const DEFAULT_ZOOM = 14;
 const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
 
   const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<MemoRappPlaceProperties | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<MemoRappPlace | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
   useEffect(() => {
@@ -76,7 +76,7 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
     }
   }
 
-  const handleMarkerClick = (location: MemoRappPlaceProperties) => {
+  const handleMarkerClick = (location: MemoRappPlace) => {
     setSelectedLocation(location);
   };
 

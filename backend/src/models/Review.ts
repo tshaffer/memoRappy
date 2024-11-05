@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import { MemoRappPlaceProperties, ReviewEntityWithFullText } from '../types';
+import { MemoRappPlace, ReviewEntityWithFullText } from '../types';
 
 interface IReview extends ReviewEntityWithFullText, Document { }
 
@@ -26,7 +26,7 @@ const GeometrySchema: Schema = new Schema({
   },
 });
 
-const PlacePropertiesSchema: Schema<MemoRappPlaceProperties> = new Schema({
+const PlaceSchema: Schema<MemoRappPlace> = new Schema({
   place_id: { type: String, required: true },
   name: { type: String, required: true },
   address_components: [{ type: AddressComponentSchema, required: true }], // Make this an array
@@ -45,7 +45,7 @@ const ReviewSchema: Schema<IReview> = new Schema({
   reviewer: { type: String },
   keywords: [{ type: String }],
   phrases: [{ type: String }],
-  placeProperties: { type: PlacePropertiesSchema },
+  place: { type: PlaceSchema },
   reviewText: { type: String, required: true },
 });
 
