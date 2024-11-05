@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { PlaceProperties } from '../types';
+import { LatLngLiteral, MemoRappPlaceProperties } from '../types';
 import { AdvancedMarker, APIProvider, InfoWindow, Map, MapCameraChangedEvent } from '@vis.gl/react-google-maps';
+import { getLatLngFromPlace } from '../utilities';
 
 interface Coordinates {
   lat: number;
@@ -8,7 +9,7 @@ interface Coordinates {
 }
 
 interface MapWithMarkersProps {
-  locations: PlaceProperties[];
+  locations: MemoRappPlaceProperties[];
 }
 
 const DEFAULT_CENTER = { lat: 37.3944829, lng: -122.0790619 };
@@ -17,7 +18,7 @@ const DEFAULT_ZOOM = 14;
 const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
 
   const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<PlaceProperties | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<MemoRappPlaceProperties | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
   useEffect(() => {
@@ -69,13 +70,13 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
     if (currentLocation) {
       return currentLocation;
     } else if (locations.length > 0) {
-      return { lat: locations[0].latitude, lng: locations[0].longitude };
+      return getLatLngFromPlace(locations[0]);
     } else {
       return DEFAULT_CENTER;
     }
   }
 
-  const handleMarkerClick = (location: PlaceProperties) => {
+  const handleMarkerClick = (location: MemoRappPlaceProperties) => {
     setSelectedLocation(location);
   };
 
@@ -93,7 +94,7 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
     return locations.map((location, index) => (
       <AdvancedMarker
         key={index}
-        position={{ lat: location.latitude, lng: location.longitude }}
+        position={getLatLngFromPlace(location)}
         onClick={() => handleMarkerClick(location)}
       />
     ));
@@ -107,7 +108,8 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
   return (
     <APIProvider
       apiKey={googleMapsApiKey}
-      version="beta">
+      version="beta"
+    >
       <div
         style={{
           position: 'relative',
@@ -137,7 +139,7 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
           )}
           {selectedLocation && (
             <InfoWindow
-              position={{ lat: selectedLocation.latitude, lng: selectedLocation.longitude }}
+              position={getLatLngFromPlace(selectedLocation)}
               onCloseClick={handleCloseInfoWindow}
             >
               <div>

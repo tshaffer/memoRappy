@@ -1,6 +1,6 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import { openai } from '../index';
-import { ChatResponse, ParsedReviewProperties, PlaceProperties } from '../types/';
+import { ChatResponse, ParsedReviewProperties, MemoRappPlaceProperties } from '../types/';
 import Review from "../models/Review";
 import { extractFieldFromResponse, extractListFromResponse, removeSquareBrackets } from '../utilities';
 import { getRestaurantProperties } from './googlePlaces';
@@ -67,7 +67,7 @@ export const previewReviewHandler = async (req: Request, res: Response): Promise
     console.log('list of items ordered', extractListFromResponse(messageContent, 'List of items ordered'));
     console.log('comments about each item', extractCommentsFromItems(messageContent, 'Comments about each item'));
 
-    const placeProperties: PlaceProperties = await getRestaurantProperties(restaurantName, userLocation);
+    const placeProperties: MemoRappPlaceProperties = await getRestaurantProperties(restaurantName, userLocation);
 
     // Extract structured information using adjusted parsing
     const parsedReviewProperties: ParsedReviewProperties = {

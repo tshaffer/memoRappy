@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { GooglePlacesResponse, GooglePlaceDetailsResponse, GooglePlaceDetails, MemoRappPlaceProperties, PlaceProperties } from '../types';
+import { GooglePlacesResponse, GooglePlaceDetailsResponse, GooglePlaceDetails, MemoRappPlaceProperties } from '../types';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
 const GOOGLE_PLACE_DETAILS_BASE_URL = 'https://maps.googleapis.com/maps/api/place/details/json';
 
-export const getRestaurantProperties = async (restaurantName: string, location: string): Promise<PlaceProperties> => {
+export const getRestaurantProperties = async (restaurantName: string, location: string): Promise<MemoRappPlaceProperties> => {
 
   const query = `${restaurantName} ${location}`;
   const url = `${GOOGLE_PLACES_URL}?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}`;
@@ -17,7 +17,7 @@ export const getRestaurantProperties = async (restaurantName: string, location: 
     const placeDetails: GooglePlaceDetails | null = await getGooglePlaceDetails(place!.place_id!);
     console.log('Place Details:', placeDetails);
 
-    const restaurantProperties: PlaceProperties = getRestaurantPropertiesFromGoogleProperties(place, placeDetails!);
+    const restaurantProperties: MemoRappPlaceProperties = pickMemoRappPlaceDetails(placeDetails!)
     return restaurantProperties;
 
   } catch (error) {
@@ -70,31 +70,13 @@ const getGooglePlaceDetails = async (placeId: string): Promise<GooglePlaceDetail
   }
 }
 
-const getRestaurantPropertiesFromGoogleProperties = (place: google.maps.places.PlaceResult, googlePlaceDetails: GooglePlaceDetails): PlaceProperties => {
-
-  const placeDetails: MemoRappPlaceProperties = pickMemoRappPlaceDetails(googlePlaceDetails);
-
-  const addressComponents = googlePlaceDetails.address_components;
-  const cityComponent = addressComponents?.find((component: any) =>
-    component.types.includes("locality")
-  );
-  const cityName: string | null = cityComponent ? cityComponent.long_name : null
-
-  const placeProperties: PlaceProperties = {
-    ...placeDetails,
-    cityName,
-    latitude: place.geometry!.location!.lat as unknown as number,
-    longitude: place.geometry!.location!.lng as unknown as number,
-  };
-  
-  return placeProperties;
-}
-
 // Dummy object to define the shape of MemoRappPlaceProperties at runtime
 const memoRappPropertiesTemplate: MemoRappPlaceProperties = {
   place_id: '',
-  formatted_address: '',
   name: '',
+  address_components: [],
+  formatted_address: '',
+  geometry: { location: { lat: 0, lng: 0 }, viewport: { northeast: { lat: 0, lng: 0 }, southwest: { lat: 0, lng: 0 } } },
   website: '',
 };
 

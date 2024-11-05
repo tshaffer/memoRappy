@@ -1,15 +1,37 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import { PlaceProperties, ReviewEntityWithFullText } from '../types';
+import { MemoRappPlaceProperties, ReviewEntityWithFullText } from '../types';
 
 interface IReview extends ReviewEntityWithFullText, Document { }
 
-const PlacePropertiesSchema: Schema<PlaceProperties> = new Schema({
+// Define AddressComponent Schema
+const AddressComponentSchema: Schema = new Schema({
+  long_name: { type: String, required: true },
+  short_name: { type: String, required: true },
+  types: [{ type: String, required: true }],
+});
+
+// Define Location Schema for Geometry
+const LocationSchema: Schema = new Schema({
+  lat: { type: Number, required: true },
+  lng: { type: Number, required: true },
+});
+
+// Define Geometry Schema
+const GeometrySchema: Schema = new Schema({
+  location: { type: LocationSchema, required: true },
+  location_type: { type: String },
+  viewport: {
+    northeast: { type: LocationSchema, required: true },
+    southwest: { type: LocationSchema, required: true },
+  },
+});
+
+const PlacePropertiesSchema: Schema<MemoRappPlaceProperties> = new Schema({
   place_id: { type: String, required: true },
   name: { type: String, required: true },
+  address_components: [{ type: AddressComponentSchema, required: true }], // Make this an array
   formatted_address: { type: String, required: true },
-  cityName: { type: String, required: true },
-  latitude: { type: Number, required: true },
-  longitude: { type: Number, required: true },
+  geometry: { type: GeometrySchema, required: true },
   website: { type: String },
 });
 

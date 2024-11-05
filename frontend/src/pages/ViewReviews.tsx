@@ -16,8 +16,9 @@ import {
   IconButton,
 } from '@mui/material';
 import DirectionsIcon from '@mui/icons-material/Directions';
-import { PlaceProperties, ReviewEntityWithFullText } from '../types';
+import { LatLngLiteral, MemoRappPlaceProperties, ReviewEntityWithFullText } from '../types';
 import MapWithMarkers from '../components/MapWIthMarkers';
+import { getCityNameFromPlace, getLatLngFromPlace } from '../utilities';
 
 const ViewReviews: React.FC = () => {
   const [reviews, setReviews] = useState<ReviewEntityWithFullText[]>([]);
@@ -61,8 +62,8 @@ const ViewReviews: React.FC = () => {
       let bValue;
 
       if (sortBy === 'placeProperties') {
-        aValue = a.placeProperties.cityName || '';
-        bValue = b.placeProperties.cityName || '';
+        aValue = getCityNameFromPlace(a.placeProperties) || '';
+        bValue = getCityNameFromPlace(b.placeProperties) || '';
       } else {
         aValue = a[sortBy];
         bValue = b[sortBy];
@@ -108,7 +109,7 @@ const ViewReviews: React.FC = () => {
     return (
       <Box p={3}>
         <Typography variant="h6" gutterBottom>{selectedReview.restaurantName}</Typography>
-        <Typography><strong>Location:</strong> {selectedReview.placeProperties.cityName || 'Not provided'}</Typography>
+        <Typography><strong>Location:</strong> {getCityNameFromPlace(selectedReview.placeProperties) || 'Not provided'}</Typography>
         <Typography><strong>Date of Visit:</strong> {selectedReview.dateOfVisit || 'Not provided'}</Typography>
         <Typography><strong>Reviewer:</strong> {selectedReview.reviewer || 'Anonymous'}</Typography>
         <Typography><strong>Overall Experience:</strong> {selectedReview.overallExperience || 'No rating'}</Typography>
@@ -132,12 +133,13 @@ const ViewReviews: React.FC = () => {
     );
   };
 
-  const locations: PlaceProperties[] = selectedReviews.map((review) => review.placeProperties);
+  const locations: MemoRappPlaceProperties[] = selectedReviews.map((review) => review.placeProperties);
 
   const handleShowDirections = (review: ReviewEntityWithFullText) => {
     if (currentLocation) {
-      const destination: PlaceProperties = review.placeProperties;
-      const url = `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.lat},${currentLocation.lng}&destination=${destination.latitude},${destination.longitude}&destination_place_id=${destination.name}`;
+      const destination: MemoRappPlaceProperties = review.placeProperties;
+      const destinationLatLng: LatLngLiteral = getLatLngFromPlace(destination);
+      const url = `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.lat},${currentLocation.lng}&destination=${destinationLatLng.lat},${destinationLatLng.lng}&destination_place_id=${destination.name}`;
       window.open(url, '_blank');
     }
   };
@@ -217,7 +219,7 @@ const ViewReviews: React.FC = () => {
                       </IconButton>
                     </TableCell>
                     <TableCell>{review.restaurantName}</TableCell>
-                    <TableCell>{review.placeProperties.cityName}</TableCell>
+                    <TableCell>{getCityNameFromPlace(review.placeProperties)}</TableCell>
                     <TableCell>{review.overallExperience}</TableCell>
                     <TableCell>{review.dateOfVisit}</TableCell>
                   </TableRow>
