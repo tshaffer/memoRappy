@@ -16,6 +16,10 @@ const generateSessionId = () => Math.random().toString(36).substring(2) + Date.n
 const addReview = async (restaurantName: string, userLocation: string, dateOfVisit: string, reviewText: string): Promise<void> => {
   const sessionId: string = generateSessionId();
   const parsedReviewProperties: ParsedReviewProperties = await parsePreview(sessionId, restaurantName, userLocation ? userLocation : '', reviewText);
+
+  console.log('Parsed review properties for ' + restaurantName + ':', parsedReviewProperties);
+  console.log('Location of ' + restaurantName + ':', parsedReviewProperties.place);
+
   const body: SubmitReviewBody = {
     structuredReviewProperties: {
       restaurantName,
@@ -43,7 +47,7 @@ export const addReviewsHandler = async (request: Request, response: Response, ne
     for (const review of reviews) {
       const { restaurantName, userLocation, reviewText, dateOfVisit } = review;
       await addReview(restaurantName, userLocation, dateOfVisit, reviewText);
-      console.log('Review loaded:');
+      // console.log('Review loaded:');
     }
     return response.status(200).json({ message: "Reviews loaded successfully!" });
   } catch (error) {

@@ -1,9 +1,34 @@
 import axios from 'axios';
-import { GooglePlacesResponse, GooglePlaceDetailsResponse, GooglePlaceDetails, MemoRappPlace } from '../types';
+import { GooglePlacesResponse, GooglePlaceDetailsResponse, GooglePlaceDetails, MemoRappPlace, GeoJSONPoint, MemoRappPlaceDetails, MemoRappGeometry, LatLngLiteral } from '../types';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
 const GOOGLE_PLACE_DETAILS_BASE_URL = 'https://maps.googleapis.com/maps/api/place/details/json';
+
+export const getCoordinates = async (location: string): Promise<LatLngLiteral | null> => {
+  try {
+    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json`;
+    const response = await axios.get(url, {
+      params: {
+        query: location,
+        key: GOOGLE_PLACES_API_KEY,
+      },
+    });
+
+    const data: any = response.data;
+
+    if (data.status === 'OK' && data.results.length > 0) {
+      const { lat, lng } = data.results[0].geometry.location;
+      return { lat, lng };
+    } else {
+      console.warn('No results found for the specified location:', location);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error retrieving coordinates:', error);
+    return null;
+  }
+};
 
 export const getRestaurantProperties = async (restaurantName: string, location: string): Promise<MemoRappPlace> => {
 
@@ -12,9 +37,9 @@ export const getRestaurantProperties = async (restaurantName: string, location: 
 
   try {
     const place: google.maps.places.PlaceResult = await getGooglePlace(url);
-    console.log('Place:', place);
+    console.log('google.maps.places.PlaceResult for ' + restaurantName + ':', place);
 
-    const placeDetails: GooglePlaceDetails | null = await getGooglePlaceDetails(place!.place_id!);
+    const placeDetails: MemoRappPlaceDetails | null = await getMemoRappPlaceDetails(place!.place_id!);
     console.log('Place Details:', placeDetails);
 
     const restaurantProperties: MemoRappPlace = pickMemoRappPlaceDetails(placeDetails!)
@@ -47,7 +72,20 @@ const getGooglePlace = async (url: string): Promise<google.maps.places.PlaceResu
   }
 }
 
-const getGooglePlaceDetails = async (placeId: string): Promise<GooglePlaceDetails | null> => {
+function convertToGeoJSON(placeDetails: GooglePlaceDetails): GeoJSONPoint | null {
+  if (!placeDetails.geometry || !placeDetails.geometry.location) {
+    console.error('No location data available in place details');
+    return null;
+  }
+
+  const { lat, lng } = placeDetails.geometry.location;
+  return {
+    type: 'Point',
+    coordinates: [lng, lat] // Note: GeoJSON uses [longitude, latitude] order
+  };
+}
+
+const getMemoRappPlaceDetails = async (placeId: string): Promise<MemoRappPlaceDetails | null> => {
   try {
     const response: any = await axios.get(
       GOOGLE_PLACE_DETAILS_BASE_URL,
@@ -63,7 +101,18 @@ const getGooglePlaceDetails = async (placeId: string): Promise<GooglePlaceDetail
 
     const placeDetailsResponse: GooglePlaceDetailsResponse = response.data;
     const googlePlaceDetails: GooglePlaceDetails = placeDetailsResponse.result;
-    return googlePlaceDetails;
+
+    const geoJSONLocation: GeoJSONPoint = convertToGeoJSON(googlePlaceDetails)!;
+    console.log(geoJSONLocation); // { type: 'Point', coordinates: [-122.4194, 37.7749] }
+    const memoRappGeometry: MemoRappGeometry = {
+      location: geoJSONLocation,
+      viewport: googlePlaceDetails.geometry!.viewport
+    };
+    const memoRappPlaceDetails: MemoRappPlaceDetails = {
+      ...googlePlaceDetails,
+      geometry: memoRappGeometry,
+    };
+    return memoRappPlaceDetails;
   } catch (error) {
     console.error("Error fetching city name:", error);
     return null;
@@ -76,11 +125,26 @@ const memoRappPlaceTemplate: MemoRappPlace = {
   name: '',
   address_components: [],
   formatted_address: '',
-  geometry: { location: { lat: 0, lng: 0 }, viewport: { northeast: { lat: 0, lng: 0 }, southwest: { lat: 0, lng: 0 } } },
+  geometry: {
+    location: {
+      type: 'Point',
+      coordinates: [0, 0]
+    },
+    viewport: {
+      northeast: {
+        type: 'Point',
+        coordinates: [0, 0]
+      },
+      southwest: {
+        type: 'Point',
+        coordinates: [0, 0]
+      }
+    }
+  },
   website: '',
 };
 
-function pickMemoRappPlaceDetails(details: GooglePlaceDetails): MemoRappPlace {
+function pickMemoRappPlaceDetails(details: MemoRappPlaceDetails): MemoRappPlace {
   const keys = Object.keys(memoRappPlaceTemplate) as (keyof MemoRappPlace)[];
 
   const result = Object.fromEntries(

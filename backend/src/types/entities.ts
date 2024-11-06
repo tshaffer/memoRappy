@@ -1,11 +1,11 @@
-import { AddressComponent, Geometry } from "./GooglePlacesAPI";
+import { AddressComponent, MemoRappGeometry } from "./GooglePlacesAPI";
 
 export interface MemoRappPlace {
   place_id: string;
   name: string;
   address_components?: AddressComponent[];
   formatted_address: string;
-  geometry?: Geometry;
+  geometry?: MemoRappGeometry;
   website: string;
 }
 

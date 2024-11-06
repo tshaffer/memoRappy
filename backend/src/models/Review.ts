@@ -1,7 +1,9 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import { MemoRappPlace, ReviewEntityWithFullText } from '../types';
+import { GeoJSONPoint, MemoRappGeometry, MemoRappPlace, ReviewEntityWithFullText } from '../types';
 
-interface IReview extends ReviewEntityWithFullText, Document { }
+export interface IReview extends ReviewEntityWithFullText, Document { }
+
+export type ReviewModel = Model<IReview>;
 
 // Define AddressComponent Schema
 const AddressComponentSchema: Schema = new Schema({
@@ -10,14 +12,17 @@ const AddressComponentSchema: Schema = new Schema({
   types: [{ type: String, required: true }],
 });
 
-// Define Location Schema for Geometry
-const LocationSchema: Schema = new Schema({
-  lat: { type: Number, required: true },
-  lng: { type: Number, required: true },
+// Define Location Schema for GeoJSON Point
+const LocationSchema: Schema = new Schema<GeoJSONPoint>({
+  type: { type: String, enum: ['Point'], required: true, default: 'Point' },
+  coordinates: {
+    type: [Number], // [longitude, latitude]
+    required: true,
+  },
 });
 
-// Define Geometry Schema
-const GeometrySchema: Schema = new Schema({
+// Define Geometry Schema, including GeoJSON `location` as `LocationSchema`
+const GeometrySchema: Schema<MemoRappGeometry> = new Schema({
   location: { type: LocationSchema, required: true },
   location_type: { type: String },
   viewport: {
@@ -25,6 +30,8 @@ const GeometrySchema: Schema = new Schema({
     southwest: { type: LocationSchema, required: true },
   },
 });
+
+GeometrySchema.index({ location: '2dsphere' }); // Enable 2dsphere index for geospatial queries
 
 const PlaceSchema: Schema<MemoRappPlace> = new Schema({
   place_id: { type: String, required: true },
@@ -49,6 +56,6 @@ const ReviewSchema: Schema<IReview> = new Schema({
   reviewText: { type: String, required: true },
 });
 
-const Review: Model<IReview> = mongoose.model<IReview>('Review', ReviewSchema);
+const Review: ReviewModel = mongoose.model<IReview>('Review', ReviewSchema);
 
 export default Review;

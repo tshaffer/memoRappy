@@ -59,9 +59,9 @@ export const parsePreview = async (sessionId: string, restaurantName: string, us
       throw new Error('Failed to extract data from the response.');
     }
 
-    console.log('previewReviewHandler response:', messageContent); // Debugging log
-    console.log('list of items ordered', extractListFromResponse(messageContent, 'List of items ordered'));
-    console.log('comments about each item', extractCommentsFromItems(messageContent, 'Comments about each item'));
+    // console.log('previewReviewHandler response:', messageContent); // Debugging log
+    // console.log('list of items ordered', extractListFromResponse(messageContent, 'List of items ordered'));
+    // console.log('comments about each item', extractCommentsFromItems(messageContent, 'Comments about each item'));
 
     const place: MemoRappPlace = await getRestaurantProperties(restaurantName, userLocation);
 
