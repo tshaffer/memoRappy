@@ -36,9 +36,9 @@ export const queryReviewsHandler: any = async (
   }
 };
 
-const handleNaturalLanguageQuery = async (query: string): Promise<IReview[]> => {
+const old_handleNaturalLanguageQuery = async (query: string): Promise<IReview[]> => {
   try {
-    const parsedQuery: ParsedQuery = await parseQueryWithChatGPT(query);
+    const parsedQuery: ParsedQuery = await old_parseQueryWithChatGPT(query);
     const { queryType, queryParameters } = parsedQuery;
 
     let reviews: IReview[] = [];
@@ -61,7 +61,131 @@ const handleNaturalLanguageQuery = async (query: string): Promise<IReview[]> => 
   }
 };
 
-const parseQueryWithChatGPT = async (query: string): Promise<ParsedQuery> => {
+const handleNaturalLanguageQuery = async (query: string): Promise<any> => {
+  try {
+    // Step 1: Parse the query to identify the query type and parameters
+    const parsedResponse = await parseQueryWithChatGPT(query);
+    const { queryType, parameters } = JSON.parse(parsedResponse || "{}");
+
+    // Step 2: Handle the return intent query type
+    if (queryType === "return_intent") {
+      const reviews = await Review.find();  // Fetch all reviews or relevant ones if needed
+
+      // Step 3: Analyze each review for return intent and collect results
+      const results = await Promise.all(
+        reviews.map(async (review) => {
+          const { explicitReturnIntent, inferredReturnIntent } = await analyzeReturnIntent(review.reviewText);
+
+          return {
+            reviewId: review._id,
+            restaurantName: review.restaurantName,
+            explicitReturnIntent,
+            inferredReturnIntent,
+            message: explicitReturnIntent !== "unknown"
+              ? `The reviewer explicitly mentioned they ${explicitReturnIntent === 'yes' ? 'would' : 'would not'} return.`
+              : inferredReturnIntent !== "unknown"
+                ? `The reviewer did not state explicitly, but it can be inferred that they ${inferredReturnIntent === 'yes' ? 'would' : 'would not'} return.`
+                : "The review did not provide enough information to determine if the reviewer would return.",
+          };
+        })
+      );
+
+      // Step 4: Return the formatted results
+      return results;
+    }
+
+    // Step 5: Handle other types of queries if needed
+    // e.g., location-based, item searches, etc.
+    return handleOtherQueryTypes(queryType, parameters);
+  } catch (error) {
+    console.error("Error handling natural language query:", error);
+    return [];
+  }
+};
+
+const handleOtherQueryTypes = async (queryType: string, parameters: QueryParameters) => {
+
+  console.log('handleOtherQueryTypes:', queryType, parameters);
+  return [];
+
+  // if (queryType === "structured") {
+  //   return performStructuredQuery(parameters);
+  // } else if (queryType === "full-text") {
+  //   return performFullTextSearch("query", await Review.find());
+  // } else if (queryType === "hybrid") {
+  //   const structuredResults = await performStructuredQuery(parameters);
+  //   const fullTextResults = await performFullTextSearch("query", await Review.find());
+
+  //   return [...new Set([...structuredResults, ...fullTextResults])];
+  // }
+
+  // return [];
+}
+
+const parseQueryWithChatGPT = async (query: string) => {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4",
+    messages: [
+      {
+        role: "system",
+        content: `
+          You are an assistant that analyzes restaurant reviews for questions related to whether the reviewer would return or recommend returning.
+          For each query, extract structured parameters such as:
+          - "queryType": "return_intent" if the query is about returning or recommending.
+          - "explicit_return_intent" if explicitly stated (yes, no, or unknown).
+          - "inferred_return_intent" if an inference can be made (yes, no, or unknown).
+
+          Only return structured JSON, like this:
+          { "queryType": "return_intent", "explicit_return_intent": "yes", "inferred_return_intent": "unknown" }
+          
+          If the question is not related to returning or recommending, indicate by using:
+          { "queryType": "other" }
+        `,
+      },
+      { role: "user", content: query },
+    ],
+  });
+
+  return response.choices[0].message?.content;
+};
+
+const analyzeReturnIntent = async (reviewText: string): Promise<{ explicitReturnIntent: 'yes' | 'no' | 'unknown'; inferredReturnIntent: 'yes' | 'no' | 'unknown'; message: string }> => {
+  
+  console.log('analyzeReturnIntent:', reviewText);
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4",
+    messages: [
+      {
+        role: "system",
+        content: `You are an assistant analyzing restaurant reviews to determine if the reviewer would return. Carefully detect explicit positive or negative intent. For instance:
+        - Positive examples: "I would return," "we’ll definitely go back."
+        - Negative examples: "I don’t think we’ll return," "we won’t be coming back."
+        Respond in JSON format with:
+        - "explicitReturnIntent": "yes", "no", or "unknown" based on clear positive or negative statements about returning.
+        - "inferredReturnIntent": "yes", "no", or "unknown" if there’s no explicit statement but sentiment can be inferred.
+        - "message": A concise message explaining why the decision was made, referencing specific statements.`,
+      },
+      {
+        role: "user",
+        content: `Analyze the following review for return intent: "${reviewText}"`,
+      },
+    ],
+  });
+
+  const { content } = response.choices[0].message!;
+  console.log('analyzeReturnIntent response:', content);
+  const result = JSON.parse(content || "{}");
+  console.log('analyzeReturnIntent result:', result);
+  
+  return {
+    explicitReturnIntent: result.explicitReturnIntent || 'unknown',
+    inferredReturnIntent: result.inferredReturnIntent || 'unknown',
+    message: result.message || 'No clear return intent detected.',
+  };
+};
+
+const old_parseQueryWithChatGPT = async (query: string): Promise<ParsedQuery> => {
   const response = await openai.chat.completions.create({
     model: "gpt-4",
     messages: [
