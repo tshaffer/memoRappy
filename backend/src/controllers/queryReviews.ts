@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { openai } from '../index';
-import Review, { IReview, ReviewModel } from '../models/Review';
+import Review, { IReview } from '../models/Review';
 import { getCoordinates } from './googlePlaces';
 
 interface QueryParameters {
@@ -9,8 +9,6 @@ interface QueryParameters {
   restaurantName?: string;
   dateRange: any;
   itemsOrdered: any;
-  overallExperience: string;
-  keywords?: string[];
 }
 
 interface ParsedQuery {
@@ -45,8 +43,6 @@ const handleNaturalLanguageQuery = async (query: string): Promise<IReview[]> => 
 
     let reviews: IReview[] = [];
 
-    // reviews = await performFullTextSearch(query, await Review.find());
-
     if (queryType === "structured") {
       reviews = await performStructuredQuery(queryParameters);
     } else if (queryType === "full-text") {
@@ -64,11 +60,6 @@ const handleNaturalLanguageQuery = async (query: string): Promise<IReview[]> => 
     return [];
   }
 };
-
-// - overallExperience: a qualitative phrase about the overall experience (e.g., "positive", "negative", "excellent")
-// "overallExperience": "Experience description",
-//         - keywords: relevant keywords for matching phrases (e.g., "pizza", "good service")
-// "keywords": ["Keyword1", "Keyword2", ...]
 
 const parseQueryWithChatGPT = async (query: string): Promise<ParsedQuery> => {
   const response = await openai.chat.completions.create({
@@ -108,10 +99,10 @@ const parseQueryWithChatGPT = async (query: string): Promise<ParsedQuery> => {
         
         Example inputs and outputs:
         Input: "Show me reviews for restaurants in Mountain View within the past month"
-        Output: { "queryType": "structured", "parameters": { "location": "Mountain View", "radius": null, "dateRange": { "start": "YYYY-MM-01", "end": "YYYY-MM-DD" }, "restaurantName": null, "itemsOrdered": null, "overallExperience": null, "keywords": ["restaurants", "reviews"] } }
+        Output: { "queryType": "structured", "parameters": { "location": "Mountain View", "radius": null, "dateRange": { "start": "YYYY-MM-01", "end": "YYYY-MM-DD" }, "restaurantName": null, "itemsOrdered": null } }
         
         Input: "What did I say about the Caesar Salad at Doppio Zero?"
-        Output: { "queryType": "structured", "parameters": { "location": null, "radius": null, "dateRange": null, "restaurantName": "Doppio Zero", "itemsOrdered": ["Caesar Salad"], "overallExperience": null, "keywords": null } }
+        Output: { "queryType": "structured", "parameters": { "location": null, "radius": null, "dateRange": null, "restaurantName": "Doppio Zero", "itemsOrdered": ["Caesar Salad"] } }
         `
       },
       { role: "user", content: query },
@@ -129,8 +120,6 @@ const performStructuredQuery = async (parameters: QueryParameters): Promise<IRev
     restaurantName,
     dateRange,
     itemsOrdered,
-    overallExperience,
-    keywords,
   } = parameters;
 
   console.log('Query parameters:', parameters);
@@ -163,8 +152,6 @@ const performStructuredQuery = async (parameters: QueryParameters): Promise<IRev
     };
   }
 
-  if (overallExperience) query.overallExperience = { $regex: new RegExp(overallExperience, 'i') };
-
   if (dateRange) {
     const { start, end } = dateRange;
 
@@ -177,15 +164,6 @@ const performStructuredQuery = async (parameters: QueryParameters): Promise<IRev
     }
   }
 
-  // // Additional keywords
-  // if (keywords) {
-  //   query.$or = [
-  //     { itemsOrdered: { $in: keywords } },
-  //     { keywords: { $in: keywords } },
-  //     { phrases: { $in: keywords } },
-  //   ];
-  // }
-
   console.log('Structured query:', query);
   const results: IReview[] = await Review.find(query);
   console.log('Structured results:', results);
@@ -196,13 +174,11 @@ const performFullTextSearch = async (query: string, reviews: IReview[]): Promise
 
   console.log('performFullTextSearch:', query, reviews);
 
-  // Extract only the required fields (id and reviewText)
   const reviewData = reviews.map(review => ({
-    id: review._id,           // Assuming each review has an `_id` field
-    text: review.reviewText    // Assuming `reviewText` contains the review's full text
+    id: review._id,
+    text: review.reviewText
   }));
 
-  // Refactor the ChatGPT call to only include the essential data
   const response = await openai.chat.completions.create({
     model: "gpt-4",
     messages: [
@@ -224,12 +200,12 @@ const performFullTextSearch = async (query: string, reviews: IReview[]): Promise
       },
     ],
   });
-  
-// Parse the JSON response as an array of objects
-const relevantReviews = JSON.parse(response.choices[0].message?.content || "[]");
 
-// Extract only the IDs if you need them in a separate array
-const relevantReviewIds: string[] = relevantReviews.map((review: { _id: string; text: string }) => review._id);
+  // Parse the JSON response as an array of objects
+  const relevantReviews = JSON.parse(response.choices[0].message?.content || "[]");
+
+  // Extract only the IDs if you need them in a separate array
+  const relevantReviewIds: string[] = relevantReviews.map((review: { _id: string; text: string }) => review._id);
 
   // Filter out the relevant reviews based on IDs provided by ChatGPT
   return reviews.filter(review => review._id && relevantReviewIds.includes(review._id.toString()));
@@ -262,28 +238,3 @@ const mergeResults = (structuredResults: any[], fullTextResults: any) => {
 
   return combinedResults;
 };
-
-/*
-import mongoose from 'mongoose';
-
-const performStructuredQuery = async (parameters: QueryParameters, Review: ReviewModel): Promise<IReview[]> => {
-  const { location, radius, restaurant, keywords } = parameters;
-  const query: any = {};
-
-  if (location && radius) {
-    const coordinates = await getCoordinates(location); // Assume getCoordinates returns { lat: number; lng: number }
-    if (coordinates) {
-      query['place.geometry.location'] = {
-        $near: {
-          $geometry: { type: 'Point', coordinates: [coordinates.lng, coordinates.lat] },
-          $maxDistance: radius,
-        },
-      };
-    }
-  }
-  if (restaurant) query.restaurantName = restaurant;
-  if (keywords) query.itemsOrdered = { $in: keywords };
-
-  return await Review.find(query);
-};
-*/

@@ -26,9 +26,6 @@ export const parsePreview = async (sessionId: string, restaurantName: string, us
         - Date of visit (in YYYY-MM-DD format)
         - List of items ordered
         - Comments about each item (with the format: "item name (comments)")
-        - Overall experience
-
-        Also, look for keywords and phrases that you might typically find in a restaurant review.
 
          Review: "${reviewText}"
 
@@ -37,9 +34,6 @@ export const parsePreview = async (sessionId: string, restaurantName: string, us
         - Date of visit: [YYYY-MM-DD]
         - List of items ordered: [Item 1, Item 2, etc.]
         - Comments about each item: [Item 1 (Comment), Item 2 (Comment)]
-        - Overall experience: [Overall Experience]
-        - Keywords: [Keyword 1, Keyword 2, etc.]
-        - Phrases: [Phrase 1, Phrase 2, etc.]
       `,
       },
     ];
@@ -69,10 +63,7 @@ export const parsePreview = async (sessionId: string, restaurantName: string, us
     const parsedReviewProperties: ParsedReviewProperties = {
       itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered').map(removeSquareBrackets),
       ratings: extractCommentsFromItems(messageContent, 'Comments about each item'), // Use the adjusted function
-      overallExperience: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Overall experience')),
       reviewer: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Reviewer name')),
-      keywords: extractListFromResponse(messageContent, 'Keywords').map(removeSquareBrackets),
-      phrases: extractListFromResponse(messageContent, 'Phrases').map(removeSquareBrackets),
       place,
     };
 
@@ -160,10 +151,7 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
           rating: parts ? parts[2].trim() : '',
         };
       }),
-      overallExperience: removeSquareBrackets(extractFieldFromResponse(structuredDataText, 'Overall experience')),
       reviewer: removeSquareBrackets(extractFieldFromResponse(structuredDataText, 'Reviewer name')),
-      keywords: extractListFromResponse(structuredDataText, 'Keywords').map(removeSquareBrackets),
-      phrases: extractListFromResponse(structuredDataText, 'Phrases').map(removeSquareBrackets),
     };
 
     const chatResponse: ChatResponse = {
@@ -186,7 +174,7 @@ export const submitReview = async (body: SubmitReviewBody) => {
   }
 
   const { restaurantName, userLocation, dateOfVisit } = structuredReviewProperties;
-  const { itemsOrdered, ratings, overallExperience, reviewer, keywords, phrases, place } = parsedReviewProperties;
+  const { itemsOrdered, ratings, reviewer, place } = parsedReviewProperties;
   if (!restaurantName) {
     throw new Error('Incomplete review data.');
   }
@@ -198,10 +186,7 @@ export const submitReview = async (body: SubmitReviewBody) => {
       dateOfVisit,
       itemsOrdered,
       ratings,
-      overallExperience,
       reviewer,
-      keywords,
-      phrases,
       place,
       reviewText
     });

@@ -18,10 +18,7 @@ export interface StructuredReviewProperties {
 export interface ParsedReviewProperties {
   itemsOrdered: string[];
   ratings: { item: string; rating: string }[];
-  overallExperience: string;
   reviewer: string;
-  keywords: string[];
-  phrases: string[];
   place?: MemoRappPlace;
 }
 
@@ -31,10 +28,7 @@ export interface ReviewEntity {
   dateOfVisit: string;
   itemsOrdered: string[];
   ratings: { item: string; rating: string }[];
-  overallExperience: string;
   reviewer: string;
-  keywords: string[];
-  phrases: string[];
   place: MemoRappPlace;
 }
 

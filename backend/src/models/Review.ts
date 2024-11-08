@@ -48,10 +48,7 @@ const ReviewSchema: Schema<IReview> = new Schema({
   dateOfVisit: { type: String },
   itemsOrdered: [{ type: String }],
   ratings: [{ item: String, rating: String }],
-  overallExperience: { type: String },
   reviewer: { type: String },
-  keywords: [{ type: String }],
-  phrases: [{ type: String }],
   place: { type: PlaceSchema },
   reviewText: { type: String, required: true },
 });
