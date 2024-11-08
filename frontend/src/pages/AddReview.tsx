@@ -151,12 +151,11 @@ const AddReview: React.FC = () => {
         <Typography><strong>Restaurant:</strong> {restaurantName || 'Not provided'}</Typography>
         <Typography><strong>Location:</strong> {userLocation || 'Not provided'}</Typography>
         <Typography><strong>Date of Visit:</strong> {formatDateToMMDDYYYY(dateOfVisit) || 'Not provided'}</Typography>
-        <Typography><strong>Overall Experience:</strong> {parsedReviewProperties.overallExperience || 'Not provided'}</Typography>
         <Typography><strong>Items Ordered:</strong></Typography>
         <ul>
-          {parsedReviewProperties.itemsOrdered.map((item, idx) => (
+          {parsedReviewProperties.itemReviews.map((itemReview, idx) => (
             <li key={idx}>
-              {item} - {parsedReviewProperties.ratings[idx]?.rating || 'No rating provided'}
+              {itemReview.item} - {itemReview.review || 'No rating provided'}
             </li>
           ))}
         </ul>

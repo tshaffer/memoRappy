@@ -19,7 +19,7 @@ export interface GooglePlaceDetails {
   adr_address?: string;
   formatted_address?: string;
   formatted_phone_number?: string;
-  geometry?: Geometry;
+  geometry?: GoogleGeometry;
   icon?: string;
   name?: string;
   photos?: PlacePhoto[];
@@ -33,6 +33,25 @@ export interface GooglePlaceDetails {
   // Additional fields can be added as needed
 }
 
+export interface MemoRappPlaceDetails {
+  address_components?: AddressComponent[];
+  adr_address?: string;
+  formatted_address?: string;
+  formatted_phone_number?: string;
+  geometry?: MemoRappGeometry;
+  icon?: string;
+  name?: string;
+  photos?: PlacePhoto[];
+  place_id?: string;
+  rating?: number;
+  reviews?: PlaceReview[];
+  types?: string[];
+  url?: string;
+  user_ratings_total?: number;
+  website?: string;
+  // Additional fields can be added as needed
+
+}
 // Types for nested properties
 export interface AddressComponent {
   long_name: string;
@@ -40,19 +59,34 @@ export interface AddressComponent {
   types: string[];
 }
 
-export interface Geometry {
+export interface GoogleGeometry {
   location: LatLngLiteral;
   viewport: Viewport;
+}
+
+// Interface for Geometry, including the location and viewport
+export interface MemoRappGeometry {
+  location: GeoJSONPoint;
+  location_type?: string;
+  viewport: Viewport;
+}
+
+
+// Interface for a GeoJSON point, with type and coordinates
+export interface GeoJSONPoint {
+  type: 'Point';
+  coordinates: [number, number]; // [longitude, latitude]
+}
+
+// Interface for Viewport, with northeast and southwest bounds
+export interface Viewport {
+  northeast: GeoJSONPoint;
+  southwest: GeoJSONPoint;
 }
 
 export interface LatLngLiteral {
   lat: number;
   lng: number;
-}
-
-export interface Viewport {
-  northeast: LatLngLiteral;
-  southwest: LatLngLiteral;
 }
 
 export interface PlacePhoto {
@@ -71,4 +105,9 @@ export interface PlaceReview {
   relative_time_description: string;
   text: string;
   time: number;
+}
+
+export interface GeoJSONPoint {
+  type: 'Point';
+  coordinates: [number, number]; // [longitude, latitude]
 }

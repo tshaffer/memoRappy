@@ -112,15 +112,14 @@ const ViewReviews: React.FC = () => {
         <Typography><strong>Location:</strong> {getCityNameFromPlace(selectedReview.place) || 'Not provided'}</Typography>
         <Typography><strong>Date of Visit:</strong> {selectedReview.dateOfVisit || 'Not provided'}</Typography>
         <Typography><strong>Reviewer:</strong> {selectedReview.reviewer || 'Anonymous'}</Typography>
-        <Typography><strong>Overall Experience:</strong> {selectedReview.overallExperience || 'No rating'}</Typography>
 
         <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
           Items Ordered
         </Typography>
         <ul>
-          {selectedReview.itemsOrdered.map((item, idx) => (
+          {selectedReview.itemReviews.map((itemReview, idx) => (
             <li key={idx}>
-              {item} - {selectedReview.ratings[idx]?.rating || 'No rating provided'}
+              {itemReview.item} - {itemReview.review || 'No rating provided'}
             </li>
           ))}
         </ul>
@@ -181,15 +180,6 @@ const ViewReviews: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <TableSortLabel
-                      active={sortBy === 'overallExperience'}
-                      direction={sortBy === 'overallExperience' ? sortDirection : 'asc'}
-                      onClick={() => handleSort('overallExperience')}
-                    >
-                      Overall Experience
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell>
-                    <TableSortLabel
                       active={sortBy === 'dateOfVisit'}
                       direction={sortBy === 'dateOfVisit' ? sortDirection : 'asc'}
                       onClick={() => handleSort('dateOfVisit')}
@@ -220,7 +210,6 @@ const ViewReviews: React.FC = () => {
                     </TableCell>
                     <TableCell>{review.restaurantName}</TableCell>
                     <TableCell>{getCityNameFromPlace(review.place)}</TableCell>
-                    <TableCell>{review.overallExperience}</TableCell>
                     <TableCell>{review.dateOfVisit}</TableCell>
                   </TableRow>
                 ))}

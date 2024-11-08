@@ -1,4 +1,4 @@
-import { LatLngLiteral, MemoRappPlace } from "../types";
+import { GeoJSONPoint, LatLngLiteral, MemoRappGeometry, MemoRappPlace } from "../types";
 
 export const getCityNameFromPlace = (place: MemoRappPlace): string => {
 
@@ -11,7 +11,10 @@ export const getCityNameFromPlace = (place: MemoRappPlace): string => {
 }
 
 export const getLatLngFromPlace = (place: MemoRappPlace): LatLngLiteral => {
-  const lat = place.geometry!.location.lat;
-  const lng = place.geometry!.location.lng;
+  const geometry: MemoRappGeometry | undefined = place.geometry;
+  const location: GeoJSONPoint | undefined = geometry?.location;
+  const coordinates: number[] | undefined = location?.coordinates;
+  const lat: number = coordinates ? coordinates[1] : 0;
+  const lng: number = coordinates ? coordinates[0] : 0;
   return { lat, lng };
 }

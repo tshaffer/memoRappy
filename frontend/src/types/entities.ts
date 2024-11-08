@@ -1,11 +1,11 @@
-import { AddressComponent, Geometry } from "./GooglePlacesAPI";
+import { AddressComponent, MemoRappGeometry } from "./GooglePlacesAPI";
 
 export interface MemoRappPlace {
   place_id: string;
   name: string;
   address_components?: AddressComponent[];
   formatted_address: string;
-  geometry?: Geometry;
+  geometry?: MemoRappGeometry;
   website: string;
 }
 
@@ -15,13 +15,14 @@ export interface StructuredReviewProperties {
   dateOfVisit: string;
 }
 
+export interface ItemReview {
+  item: string;
+  review: string;
+}
+
 export interface ParsedReviewProperties {
-  itemsOrdered: string[];
-  ratings: { item: string; rating: string }[];
-  overallExperience: string;
+  itemReviews: ItemReview[];
   reviewer: string;
-  keywords: string[];
-  phrases: string[];
   place?: MemoRappPlace;
 }
 
@@ -29,12 +30,8 @@ export interface ReviewEntity {
   restaurantName: string;
   userLocation: string;
   dateOfVisit: string;
-  itemsOrdered: string[];
-  ratings: { item: string; rating: string }[];
-  overallExperience: string;
+  itemReviews: [ItemReview]
   reviewer: string;
-  keywords: string[];
-  phrases: string[];
   place: MemoRappPlace;
 }
 
