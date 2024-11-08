@@ -42,12 +42,16 @@ const PlaceSchema: Schema<MemoRappPlace> = new Schema({
   website: { type: String },
 });
 
+const ItemReviewSchema: Schema = new Schema({
+  item: { type: String, required: true },
+  review: { type: String, required: true },
+});
+
 const ReviewSchema: Schema<IReview> = new Schema({
   restaurantName: { type: String, required: true },
   userLocation: { type: String },
   dateOfVisit: { type: String },
-  itemsOrdered: [{ type: String }],
-  ratings: [{ item: String, rating: String }],
+  itemReviews: [ItemReviewSchema],
   reviewer: { type: String },
   place: { type: PlaceSchema },
   reviewText: { type: String, required: true },

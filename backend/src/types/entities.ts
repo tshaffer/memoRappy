@@ -15,9 +15,13 @@ export interface StructuredReviewProperties {
   dateOfVisit: string;
 }
 
+export interface ItemReview {
+  item: string;
+  review: string;
+}
+
 export interface ParsedReviewProperties {
-  itemsOrdered: string[];
-  ratings: { item: string; rating: string }[];
+  itemReviews: ItemReview[];
   reviewer: string;
   place?: MemoRappPlace;
 }
@@ -26,8 +30,7 @@ export interface ReviewEntity {
   restaurantName: string;
   userLocation: string;
   dateOfVisit: string;
-  itemsOrdered: string[];
-  ratings: { item: string; rating: string }[];
+  itemReviews: [ItemReview]
   reviewer: string;
   place: MemoRappPlace;
 }

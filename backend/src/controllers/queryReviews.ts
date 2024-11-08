@@ -147,8 +147,8 @@ const performStructuredQuery = async (parameters: QueryParameters): Promise<IRev
   }
 
   if (itemsOrdered) {
-    query.itemsOrdered = {
-      $elemMatch: { $regex: new RegExp(itemsOrdered.join("|"), "i") },
+    query.itemReviews = {
+      $elemMatch: { item: { $regex: new RegExp(itemsOrdered.join("|"), "i") } }
     };
   }
 

@@ -1,8 +1,8 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import { openai } from '../index';
-import { ChatResponse, ParsedReviewProperties, MemoRappPlace, SubmitReviewBody } from '../types/';
+import { ChatResponse, ParsedReviewProperties, MemoRappPlace, SubmitReviewBody, ItemReview } from '../types/';
 import Review from "../models/Review";
-import { extractCommentsFromItems, extractFieldFromResponse, extractListFromResponse, removeSquareBrackets } from '../utilities';
+import { extractFieldFromResponse, extractItemReviews, extractListFromResponse, removeSquareBrackets } from '../utilities';
 import { getRestaurantProperties } from './googlePlaces';
 import { Request, Response } from 'express';
 
@@ -13,7 +13,7 @@ interface ReviewConversations {
 const reviewConversations: ReviewConversations = {};
 
 export const parsePreview = async (sessionId: string, restaurantName: string, userLocation: string, reviewText: string): Promise<ParsedReviewProperties> => {
-  
+
   // Initialize conversation history if it doesn't exist
   if (!reviewConversations[sessionId]) {
     reviewConversations[sessionId] = [
@@ -24,18 +24,16 @@ export const parsePreview = async (sessionId: string, restaurantName: string, us
         Your task is to extract details such as:
         - Reviewer name
         - Date of visit (in YYYY-MM-DD format)
-        - List of items ordered
-        - Comments about each item (with the format: "item name (comments)")
-
+        - List of items ordered with comments for each item, formatted as "itemReviews" with properties "item" and "review".
+      
          Review: "${reviewText}"
-
+      
         Format the response as follows:
         - Reviewer name: [Name]
         - Date of visit: [YYYY-MM-DD]
-        - List of items ordered: [Item 1, Item 2, etc.]
-        - Comments about each item: [Item 1 (Comment), Item 2 (Comment)]
-      `,
-      },
+        - Item reviews: [{ "item": "Item 1", "review": "Review 1" }, { "item": "Item 2", "review": "Review 2" }]
+        `,
+      }
     ];
   }
   reviewConversations[sessionId].push({ role: "user", content: reviewText });
@@ -53,16 +51,13 @@ export const parsePreview = async (sessionId: string, restaurantName: string, us
       throw new Error('Failed to extract data from the response.');
     }
 
-    // console.log('previewReviewHandler response:', messageContent); // Debugging log
-    // console.log('list of items ordered', extractListFromResponse(messageContent, 'List of items ordered'));
-    // console.log('comments about each item', extractCommentsFromItems(messageContent, 'Comments about each item'));
-
     const place: MemoRappPlace = await getRestaurantProperties(restaurantName, userLocation);
+
+    const itemReviews: ItemReview[] = extractItemReviews(messageContent);
 
     // Extract structured information using adjusted parsing
     const parsedReviewProperties: ParsedReviewProperties = {
-      itemsOrdered: extractListFromResponse(messageContent, 'List of items ordered').map(removeSquareBrackets),
-      ratings: extractCommentsFromItems(messageContent, 'Comments about each item'), // Use the adjusted function
+      itemReviews,
       reviewer: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Reviewer name')),
       place,
     };
@@ -138,19 +133,10 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
     const structuredDataText = structuredDataMatch[1].trim();
     const updatedReviewText = updatedReviewTextMatch[1].trim();
 
-    console.log('chatReviewHandler updatedReviewText:', updatedReviewText); // Debugging log
-    console.log('list of items ordered', extractListFromResponse(updatedReviewText, 'List of items ordered'));
-    console.log('comments about each item', extractListFromResponse(updatedReviewText, 'Comments about each item'));
+    const itemReviews: ItemReview[] = extractItemReviews(structuredDataText);
 
     const parsedReviewProperties: ParsedReviewProperties = {
-      itemsOrdered: extractListFromResponse(structuredDataText, 'List of items ordered').map(removeSquareBrackets),
-      ratings: extractListFromResponse(structuredDataText, 'Comments').map((ratingString: string) => {
-        const parts = ratingString.match(/(.+?)\s?\((.+?)\)/);
-        return {
-          item: parts ? parts[1].trim() : ratingString,
-          rating: parts ? parts[2].trim() : '',
-        };
-      }),
+      itemReviews,
       reviewer: removeSquareBrackets(extractFieldFromResponse(structuredDataText, 'Reviewer name')),
     };
 
@@ -174,7 +160,7 @@ export const submitReview = async (body: SubmitReviewBody) => {
   }
 
   const { restaurantName, userLocation, dateOfVisit } = structuredReviewProperties;
-  const { itemsOrdered, ratings, reviewer, place } = parsedReviewProperties;
+  const { itemReviews, reviewer, place } = parsedReviewProperties;
   if (!restaurantName) {
     throw new Error('Incomplete review data.');
   }
@@ -184,8 +170,7 @@ export const submitReview = async (body: SubmitReviewBody) => {
       restaurantName,
       userLocation,
       dateOfVisit,
-      itemsOrdered,
-      ratings,
+      itemReviews,
       reviewer,
       place,
       reviewText

@@ -5,7 +5,7 @@ import OpenAI from 'openai';
 import mongoose from 'mongoose';
 import express from 'express';
 
-import { chatReviewHandler, addReviewsHandler, previewReviewHandler, queryReviewsHandler, reviewsRouter, submitReviewHandler } from './controllers';
+import { chatReviewHandler, previewReviewHandler, queryReviewsHandler, reviewsRouter, submitReviewHandler, addReviewsFromFileHandler } from './controllers';
 
 export let openai: OpenAI;
 
@@ -26,7 +26,7 @@ app.post('/api/query', queryReviewsHandler);
 app.post('/api/reviews/preview', previewReviewHandler);
 app.post('/api/reviews/chat', chatReviewHandler);
 app.post('/api/reviews/submit', submitReviewHandler);
-app.post('/api/reviews/addReviewsFromFile', addReviewsHandler);
+app.post('/api/reviews/addReviewsFromFile', addReviewsFromFileHandler);
 app.use('/api/reviews', reviewsRouter);
 
 // Serve static files from the frontend build directory, adjusted for production

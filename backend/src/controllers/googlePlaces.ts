@@ -37,7 +37,7 @@ export const getRestaurantProperties = async (restaurantName: string, location: 
 
   try {
     const place: google.maps.places.PlaceResult = await getGooglePlace(url);
-    console.log('google.maps.places.PlaceResult for ' + restaurantName + ':', place);
+    // console.log('google.maps.places.PlaceResult for ' + restaurantName + ':', place);
 
     const placeDetails: MemoRappPlaceDetails | null = await getMemoRappPlaceDetails(place!.place_id!);
     console.log('Place Details:', placeDetails);
@@ -62,7 +62,7 @@ const getGooglePlace = async (url: string): Promise<google.maps.places.PlaceResu
     // Return the most relevant result
     const place: google.maps.places.PlaceResult = places[0];
 
-    console.log('Place:', place);
+    // console.log('Place:', place);
 
     return place;
   }
