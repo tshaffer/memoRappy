@@ -36,9 +36,9 @@ export const queryReviewsHandler: any = async (
   }
 };
 
-const old_handleNaturalLanguageQuery = async (query: string): Promise<IReview[]> => {
+const handleNaturalLanguageQuery = async (query: string): Promise<IReview[]> => {
   try {
-    const parsedQuery: ParsedQuery = await old_parseQueryWithChatGPT(query);
+    const parsedQuery: ParsedQuery = await parseQueryWithChatGPT(query);
     const { queryType, queryParameters } = parsedQuery;
 
     let reviews: IReview[] = [];
@@ -61,10 +61,10 @@ const old_handleNaturalLanguageQuery = async (query: string): Promise<IReview[]>
   }
 };
 
-const handleNaturalLanguageQuery = async (query: string): Promise<any> => {
+const new_handleNaturalLanguageQuery = async (query: string): Promise<any> => {
   try {
     // Step 1: Parse the query to identify the query type and parameters
-    const parsedResponse = await parseQueryWithChatGPT(query);
+    const parsedResponse = await new_parseQueryWithChatGPT(query);
     const { queryType, parameters } = JSON.parse(parsedResponse || "{}");
 
     // Step 2: Handle the return intent query type
@@ -122,7 +122,7 @@ const handleOtherQueryTypes = async (queryType: string, parameters: QueryParamet
   // return [];
 }
 
-const parseQueryWithChatGPT = async (query: string) => {
+const new_parseQueryWithChatGPT = async (query: string) => {
   const response = await openai.chat.completions.create({
     model: "gpt-4",
     messages: [
@@ -177,7 +177,7 @@ const analyzeReturnIntent = async (reviewText: string): Promise<{ explicitReturn
   console.log('analyzeReturnIntent response:', content);
   const result = JSON.parse(content || "{}");
   console.log('analyzeReturnIntent result:', result);
-  
+
   return {
     explicitReturnIntent: result.explicitReturnIntent || 'unknown',
     inferredReturnIntent: result.inferredReturnIntent || 'unknown',
@@ -185,7 +185,7 @@ const analyzeReturnIntent = async (reviewText: string): Promise<{ explicitReturn
   };
 };
 
-const old_parseQueryWithChatGPT = async (query: string): Promise<ParsedQuery> => {
+const parseQueryWithChatGPT = async (query: string): Promise<ParsedQuery> => {
   const response = await openai.chat.completions.create({
     model: "gpt-4",
     messages: [
