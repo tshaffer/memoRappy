@@ -9,12 +9,16 @@ import {
   Tab,
   Box,
   Card,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  RadioGroup,
+  Radio,
 } from '@mui/material';
 import { LoadScript, Autocomplete } from '@react-google-maps/api';
-import { AddReviewDisplayTabs, ChatResponse, MemoRappPlace, ParsedReviewProperties, ReviewEntity, SubmitReviewBody } from '../types';
+import { AddReviewDisplayTabs, ChatResponse, MemoRappPlace, ParsedReviewProperties, PreviewRequestBody, ReviewEntity, SubmitReviewBody } from '../types';
 
 const AddReview: React.FC = () => {
-
   const formatDateToMMDDYYYY = (dateString: string) => {
     if (!dateString) return '';
     const [year, month, day] = dateString.split('-');
@@ -33,6 +37,7 @@ const AddReview: React.FC = () => {
   const [userLocation, setUserLocation] = useState<string>('');
   const [dateOfVisit, setDateOfVisit] = useState('');
   const [reviewText, setReviewText] = useState('');
+  const [wouldReturn, setWouldReturn] = useState<boolean | null>(null); // New state
   const [parsedReviewProperties, setParsedReviewProperties] = useState<ParsedReviewProperties | null>(null);
   const [displayTab, setDisplayTab] = useState(AddReviewDisplayTabs.ReviewText);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -52,7 +57,6 @@ const AddReview: React.FC = () => {
   };
 
   const handlePlaceChanged = () => {
-    console.log('Place changed:', autocompleteRef.current?.getPlace());
     if (autocompleteRef.current) {
       const place: google.maps.places.PlaceResult = autocompleteRef.current.getPlace();
       if (place && place.geometry) {
@@ -62,11 +66,16 @@ const AddReview: React.FC = () => {
     }
   };
 
+  const handleWouldReturnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value === "yes" ? true : event.target.value === "no" ? false : null;
+    setWouldReturn(value);
+  };
+
   const handlePreview = async () => {
     if (!sessionId) return;
     try {
-      const previewBody: any = {
-        structuredReviewProperties: { restaurantName, userLocation, dateOfVisit },
+      const previewBody: PreviewRequestBody = {
+        structuredReviewProperties: { restaurantName, userLocation, dateOfVisit, wouldReturn },
         reviewText,
         sessionId,
       };
@@ -109,7 +118,7 @@ const AddReview: React.FC = () => {
     if (!parsedReviewProperties) return;
     try {
       const submitBody: SubmitReviewBody = {
-        structuredReviewProperties: { restaurantName, userLocation, dateOfVisit },
+        structuredReviewProperties: { restaurantName, userLocation, dateOfVisit, wouldReturn },
         parsedReviewProperties,
         reviewText,
         sessionId: sessionId!,
@@ -143,14 +152,20 @@ const AddReview: React.FC = () => {
 
   const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
-  const renderFormattedAIResponse = (parsedReviewProperties: ParsedReviewProperties) => {
+  const renderPreviewResponse = (parsedReviewProperties: ParsedReviewProperties) => {
     const place: MemoRappPlace = parsedReviewProperties.place!;
+    const getReturnString = () => {
+      if (wouldReturn === true) return 'Yes';
+      if (wouldReturn === false) return 'No';
+      return 'Not specified';
+    }
     return (
       <Box sx={{ textAlign: 'left' }}>
         <Typography><strong>Reviewer:</strong> {parsedReviewProperties.reviewer || 'Not provided'}</Typography>
         <Typography><strong>Restaurant:</strong> {restaurantName || 'Not provided'}</Typography>
         <Typography><strong>Location:</strong> {userLocation || 'Not provided'}</Typography>
         <Typography><strong>Date of Visit:</strong> {formatDateToMMDDYYYY(dateOfVisit) || 'Not provided'}</Typography>
+        <Typography><strong>Would Return:</strong> {getReturnString()}</Typography>
         <Typography><strong>Items Ordered:</strong></Typography>
         <ul>
           {parsedReviewProperties.itemReviews.map((itemReview, idx) => (
@@ -215,6 +230,24 @@ const AddReview: React.FC = () => {
                 placeholder="mm/dd/yyyy"
                 label="Date of Visit"
               />
+              <FormControl component="fieldset" style={{ marginTop: 20, width: '100%' }}>
+                <FormLabel component="legend">Would Return</FormLabel>
+                <Box display="flex" alignItems="center">
+                  <RadioGroup
+                    row
+                    aria-label="would-return"
+                    name="would-return"
+                    value={wouldReturn === true ? 'yes' : wouldReturn === false ? 'no' : ''}
+                    onChange={handleWouldReturnChange}
+                  >
+                    <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+                    <FormControlLabel value="no" control={<Radio />} label="No" />
+                  </RadioGroup>
+                  <Button onClick={() => setWouldReturn(null)} style={{ marginLeft: 10 }}>
+                    Clear
+                  </Button>
+                </Box>
+              </FormControl>
               <TextField
                 style={{ marginTop: 20 }}
                 fullWidth
@@ -228,7 +261,7 @@ const AddReview: React.FC = () => {
               />
             </Box>
           )}
-          {displayTab === AddReviewDisplayTabs.ExtractedInformation && parsedReviewProperties && renderFormattedAIResponse(parsedReviewProperties)}
+          {displayTab === AddReviewDisplayTabs.ExtractedInformation && parsedReviewProperties && renderPreviewResponse(parsedReviewProperties)}
           {displayTab === AddReviewDisplayTabs.ChatHistory && (
             <Box>
               {chatHistory.map((msg, idx) => (
@@ -251,7 +284,7 @@ const AddReview: React.FC = () => {
                     {typeof msg.message === 'string' ? (
                       <Typography variant="body1">{msg.message}</Typography>
                     ) : (
-                      renderFormattedAIResponse(msg.message as ReviewEntity)
+                      renderPreviewResponse(msg.message as ReviewEntity)
                     )}
                   </Card>
                 </Box>
@@ -310,4 +343,3 @@ const AddReview: React.FC = () => {
 };
 
 export default AddReview;
-

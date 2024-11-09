@@ -2,22 +2,20 @@ import { Request, Response } from 'express';
 import { openai } from '../index';
 import Review, { IReview } from '../models/Review';
 import { getCoordinates } from './googlePlaces';
+import { QueryRequestBody } from '../types';
 
 interface QueryParameters {
   location?: string;
   radius?: number;
   restaurantName?: string;
   dateRange: any;
+  wouldReturn: boolean | null;
   itemsOrdered: any;
 }
 
 interface ParsedQuery {
   queryType: 'structured' | 'full-text' | 'hybrid';
   queryParameters: QueryParameters;
-}
-
-interface QueryRequestBody {
-  query: string;
 }
 
 export const queryReviewsHandler: any = async (
@@ -200,6 +198,7 @@ const parseQueryWithChatGPT = async (query: string): Promise<ParsedQuery> => {
         - radius: a distance in meters, if provided (e.g., "within 10 miles")
         - date range: start and end dates for queries related to dates, formatted as YYYY-MM-DD
         - restaurantName: the name of a specific restaurant (e.g., "La Costena")
+        - wouldReturn: whether the reviewer set Would Return. The value can be true, false, or null.
         - itemsOrdered: specific items ordered, if mentioned (e.g., "Caesar Salad")
         
         Determine the queryType based on the following:
@@ -215,6 +214,7 @@ const parseQueryWithChatGPT = async (query: string): Promise<ParsedQuery> => {
             "radius": Distance in meters,
             "dateRange": { "start": "YYYY-MM-DD", "end": "YYYY-MM-DD" },
             "restaurantName": "Restaurant Name",
+            "wouldReturn": true or false or null,
             "itemsOrdered": ["Item1", "Item2", ...],
           }
         }
@@ -243,6 +243,7 @@ const performStructuredQuery = async (parameters: QueryParameters): Promise<IRev
     radius,
     restaurantName,
     dateRange,
+    wouldReturn,
     itemsOrdered,
   } = parameters;
 
@@ -288,6 +289,14 @@ const performStructuredQuery = async (parameters: QueryParameters): Promise<IRev
     }
   }
 
+  if (wouldReturn === true) {
+    query.wouldReturn = true;
+  } else if (wouldReturn === false) {
+    query.wouldReturn = false;
+  } else {
+    query.wouldReturn = null;
+  }
+    
   console.log('Structured query:', query);
   const results: IReview[] = await Review.find(query);
   console.log('Structured results:', results);

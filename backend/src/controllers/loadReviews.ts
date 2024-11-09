@@ -8,12 +8,13 @@ interface TestReview {
   restaurantName: string;
   userLocation: string;
   dateOfVisit: string;
+  wouldReturn: boolean | null;
   reviewText: string;
 };
 
 const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
-const addReview = async (restaurantName: string, userLocation: string, dateOfVisit: string, reviewText: string): Promise<void> => {
+const addReview = async (restaurantName: string, userLocation: string, dateOfVisit: string, wouldReturn: boolean | null, reviewText: string): Promise<void> => {
   const sessionId: string = generateSessionId();
   const parsedReviewProperties: ParsedReviewProperties = await parsePreview(sessionId, restaurantName, userLocation ? userLocation : '', reviewText);
 
@@ -25,6 +26,7 @@ const addReview = async (restaurantName: string, userLocation: string, dateOfVis
       restaurantName,
       userLocation,
       dateOfVisit,
+      wouldReturn,
     },
     parsedReviewProperties,
     reviewText,
@@ -54,8 +56,8 @@ export const addReviewsFromFileHandler = async (
     const reviews: TestReview[] = JSON.parse(data);
 
     for (const review of reviews) {
-      const { restaurantName, userLocation, reviewText, dateOfVisit } = review;
-      await addReview(restaurantName, userLocation, dateOfVisit, reviewText);
+      const { restaurantName, userLocation, reviewText, dateOfVisit, wouldReturn } = review;
+      await addReview(restaurantName, userLocation, dateOfVisit, wouldReturn, reviewText);
       console.log('review added for ' + restaurantName);
     }
     console.log('All reviews loaded:');

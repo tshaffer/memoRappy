@@ -13,6 +13,7 @@ export interface StructuredReviewProperties {
   restaurantName: string;
   userLocation: string;
   dateOfVisit: string;
+  wouldReturn: boolean | null;
 }
 
 export interface ItemReview {
@@ -30,6 +31,7 @@ export interface ReviewEntity {
   restaurantName: string;
   userLocation: string;
   dateOfVisit: string;
+  wouldReturn: boolean | null;
   itemReviews: [ItemReview]
   reviewer: string;
   place: MemoRappPlace;
@@ -50,3 +52,14 @@ export interface SubmitReviewBody {
   reviewText: string;
   sessionId: string;
 }
+
+export interface QueryRequestBody {
+  query: string;
+}
+
+export interface PreviewRequestBody {
+  structuredReviewProperties: StructuredReviewProperties;
+  reviewText: string;
+  sessionId: string;
+}
+

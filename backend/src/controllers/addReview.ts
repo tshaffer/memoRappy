@@ -1,6 +1,6 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import { openai } from '../index';
-import { ChatResponse, ParsedReviewProperties, MemoRappPlace, SubmitReviewBody, ItemReview } from '../types/';
+import { ChatResponse, ParsedReviewProperties, MemoRappPlace, SubmitReviewBody, ItemReview, PreviewRequestBody } from '../types/';
 import Review from "../models/Review";
 import { extractFieldFromResponse, extractItemReviews, extractListFromResponse, removeSquareBrackets } from '../utilities';
 import { getRestaurantProperties } from './googlePlaces';
@@ -69,8 +69,13 @@ export const parsePreview = async (sessionId: string, restaurantName: string, us
   }
 }
 
-export const previewReviewHandler = async (req: Request, res: Response): Promise<any> => {
+export const previewReviewHandler = async (
+  req: Request<{}, {}, PreviewRequestBody>,
+  res: Response
+): Promise<any> => {
 
+  console.log('Preview review request:', req.body); // Debugging log
+  
   const { structuredReviewProperties, reviewText, sessionId } = req.body;
   const { restaurantName, userLocation } = structuredReviewProperties;
 
@@ -159,7 +164,7 @@ export const submitReview = async (body: SubmitReviewBody) => {
     throw new Error('Incomplete review data.');
   }
 
-  const { restaurantName, userLocation, dateOfVisit } = structuredReviewProperties;
+  const { restaurantName, userLocation, dateOfVisit, wouldReturn } = structuredReviewProperties;
   const { itemReviews, reviewer, place } = parsedReviewProperties;
   if (!restaurantName) {
     throw new Error('Incomplete review data.');
@@ -170,6 +175,7 @@ export const submitReview = async (body: SubmitReviewBody) => {
       restaurantName,
       userLocation,
       dateOfVisit,
+      wouldReturn,
       itemReviews,
       reviewer,
       place,

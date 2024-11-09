@@ -51,6 +51,7 @@ const ReviewSchema: Schema<IReview> = new Schema({
   restaurantName: { type: String, required: true },
   userLocation: { type: String },
   dateOfVisit: { type: String },
+  wouldReturn: { type: Boolean },
   itemReviews: [ItemReviewSchema],
   reviewer: { type: String },
   place: { type: PlaceSchema },
