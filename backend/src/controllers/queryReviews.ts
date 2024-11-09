@@ -59,24 +59,70 @@ const handleNaturalLanguageQuery = async (query: string): Promise<IReview[]> => 
   }
 };
 
+// new version
 const new_handleNaturalLanguageQuery = async (query: string): Promise<any> => {
   try {
-    // Step 1: Parse the query to identify the query type and parameters
-    const parsedResponse = await new_parseQueryWithChatGPT(query);
-    const { queryType, parameters } = JSON.parse(parsedResponse || "{}");
+    // Step 1: Parse the query to identify query type and parameters
+    const parsedResponse: ParsedQuery = await parseQueryWithChatGPT(query);
+    const { queryType, queryParameters } = parsedResponse;
 
-    // Step 2: Handle the return intent query type
-    if (queryType === "return_intent") {
-      const reviews = await Review.find();  // Fetch all reviews or relevant ones if needed
+    console.log('handleNaturalLanguageQuery:');
+    console.log(query);
+    console.log(queryType);
+    console.log(queryParameters);
 
-      // Step 3: Analyze each review for return intent and collect results
-      const results = await Promise.all(
-        reviews.map(async (review) => {
-          const { explicitReturnIntent, inferredReturnIntent } = await analyzeReturnIntent(review.reviewText);
+    // Step 2: Start with all reviews and apply filters based on query parameters
+    const reviews = await Review.find();
 
+    // Step 3: Apply location-based filtering
+    let filteredReviews = reviews.filter((review) =>
+      queryParameters.location ? review.userLocation === queryParameters.location : true
+    );
+
+    // Step 4: Apply date range filtering
+    if (queryParameters.dateRange) {
+      const { start, end } = queryParameters.dateRange;
+      filteredReviews = filteredReviews.filter((review) => {
+        const reviewDate = new Date(review.dateOfVisit);
+        return (!start || reviewDate >= new Date(start)) && (!end || reviewDate <= new Date(end));
+      });
+    }
+
+    // Step 5: Apply item-based filtering
+    if (queryParameters.itemsOrdered) {
+      filteredReviews = filteredReviews.filter((review) =>
+        review.itemReviews.some((item) =>
+          queryParameters.itemsOrdered.includes(item.item) // Using item.item as specified
+        )
+      );
+    }
+
+    // Step 6: Apply return intent filtering
+    const finalResults = await Promise.all(
+      filteredReviews.map(async (review) => {
+        // Analyze return intent if wouldReturn is specified
+        let explicitReturnIntent = "unknown";
+        let inferredReturnIntent = "unknown";
+        let returnIntentMatch = true;
+
+        if (queryParameters.wouldReturn !== null) {
+          const result = await analyzeReturnIntent(review.reviewText);
+          explicitReturnIntent = result.explicitReturnIntent;
+          inferredReturnIntent = result.inferredReturnIntent;
+
+          returnIntentMatch = queryParameters.wouldReturn
+            ? explicitReturnIntent === "yes" || inferredReturnIntent === "yes"
+            : explicitReturnIntent === "no" || inferredReturnIntent === "no";
+        }
+
+        // Only include reviews that match the return intent
+        if (returnIntentMatch) {
           return {
             reviewId: review._id,
             restaurantName: review.restaurantName,
+            reviewText: review.reviewText,
+            userLocation: review.userLocation,
+            dateOfVisit: review.dateOfVisit,
             explicitReturnIntent,
             inferredReturnIntent,
             message: explicitReturnIntent !== "unknown"
@@ -85,66 +131,77 @@ const new_handleNaturalLanguageQuery = async (query: string): Promise<any> => {
                 ? `The reviewer did not state explicitly, but it can be inferred that they ${inferredReturnIntent === 'yes' ? 'would' : 'would not'} return.`
                 : "The review did not provide enough information to determine if the reviewer would return.",
           };
-        })
-      );
+        }
 
-      // Step 4: Return the formatted results
-      return results;
-    }
+        return null; // Filter out non-matching reviews
+      })
+    );
 
-    // Step 5: Handle other types of queries if needed
-    // e.g., location-based, item searches, etc.
-    return handleOtherQueryTypes(queryType, parameters);
+    // Filter out null entries
+    const results = finalResults.filter((review) => review !== null);
+
+    return results;
   } catch (error) {
     console.error("Error handling natural language query:", error);
     return [];
   }
 };
 
-const handleOtherQueryTypes = async (queryType: string, parameters: QueryParameters) => {
-
-  console.log('handleOtherQueryTypes:', queryType, parameters);
-  return [];
-
-  // if (queryType === "structured") {
-  //   return performStructuredQuery(parameters);
-  // } else if (queryType === "full-text") {
-  //   return performFullTextSearch("query", await Review.find());
-  // } else if (queryType === "hybrid") {
-  //   const structuredResults = await performStructuredQuery(parameters);
-  //   const fullTextResults = await performFullTextSearch("query", await Review.find());
-
-  //   return [...new Set([...structuredResults, ...fullTextResults])];
-  // }
-
-  // return [];
-}
-
-const new_parseQueryWithChatGPT = async (query: string) => {
+const parseQueryWithChatGPT = async (query: string): Promise<ParsedQuery> => {
   const response = await openai.chat.completions.create({
     model: "gpt-4",
     messages: [
       {
         role: "system",
         content: `
-          You are an assistant that analyzes restaurant reviews for questions related to whether the reviewer would return or recommend returning.
-          For each query, extract structured parameters such as:
-          - "queryType": "return_intent" if the query is about returning or recommending.
-          - "explicit_return_intent" if explicitly stated (yes, no, or unknown).
-          - "inferred_return_intent" if an inference can be made (yes, no, or unknown).
-
-          Only return structured JSON, like this:
-          { "queryType": "return_intent", "explicit_return_intent": "yes", "inferred_return_intent": "unknown" }
-          
-          If the question is not related to returning or recommending, indicate by using:
-          { "queryType": "other" }
-        `,
+        You are an assistant that converts natural language queries into structured parameters for searching restaurant reviews.
+        Your task is to parse the query into structured fields that align with the fields in a restaurant review schema.
+        
+        Please extract any of the following fields as relevant from the user's query:
+        - location: a city, region, or specific place (e.g., "Mountain View")
+        - radius: a distance in meters, if provided (e.g., "within 10 miles")
+        - date range: start and end dates for queries related to dates, formatted as YYYY-MM-DD
+        - restaurantName: the name of a specific restaurant (e.g., "La Costena")
+        - wouldReturn: whether the reviewer set Would Return (if it explicitly or implicitly indicates a return intent). The value can be true, false, or null.
+        - itemsOrdered: specific items ordered, if mentioned (e.g., "Caesar Salad")
+        
+        Determine the queryType based on the following:
+        - If the query can be fully answered by matching structured fields in the database (e.g., location, date, restaurant name, items ordered), set "queryType" to "structured".
+        - If the query requires searching full review text or user comments that are not part of structured fields, set "queryType" to "full-text".
+        - If the query could benefit from both structured search and full-text search, set "queryType" to "hybrid".
+        
+        For each query, return a JSON object with the following format:
+        {
+          "queryType": "structured" or "full-text" or "hybrid",
+          "queryParameters": {
+            "location": "Location Name",
+            "radius": Distance in meters,
+            "dateRange": { "start": "YYYY-MM-DD", "end": "YYYY-MM-DD" },
+            "restaurantName": "Restaurant Name",
+            "wouldReturn": true or false or null,
+            "itemsOrdered": ["Item1", "Item2", ...]
+          }
+        }
+        
+        If any field is missing, set its value to null. Return only the JSON data without additional text.
+        
+        Example inputs and outputs:
+        Input: "Show me reviews for restaurants in Mountain View within the past month"
+        Output: { "queryType": "structured", "queryParameters": { "location": "Mountain View", "radius": null, "dateRange": { "start": "YYYY-MM-01", "end": "YYYY-MM-DD" }, "restaurantName": null, "wouldReturn": null, "itemsOrdered": null } }
+        
+        Input: "What did I say about the Caesar Salad at Doppio Zero?"
+        Output: { "queryType": "structured", "queryParameters": { "location": null, "radius": null, "dateRange": null, "restaurantName": "Doppio Zero", "wouldReturn": null, "itemsOrdered": ["Caesar Salad"] } }
+        
+        Input: "Would I return to La Costena for the tacos?"
+        Output: { "queryType": "structured", "queryParameters": { "location": null, "radius": null, "dateRange": null, "restaurantName": "La Costena", "wouldReturn": true, "itemsOrdered": ["tacos"] } }
+        `
       },
       { role: "user", content: query },
     ],
   });
 
-  return response.choices[0].message?.content;
+  const parsedContent = response.choices[0].message?.content || "{}";
+  return JSON.parse(parsedContent) as ParsedQuery;
 };
 
 const analyzeReturnIntent = async (reviewText: string): Promise<{ explicitReturnIntent: 'yes' | 'no' | 'unknown'; inferredReturnIntent: 'yes' | 'no' | 'unknown'; message: string }> => {
@@ -181,60 +238,6 @@ const analyzeReturnIntent = async (reviewText: string): Promise<{ explicitReturn
     inferredReturnIntent: result.inferredReturnIntent || 'unknown',
     message: result.message || 'No clear return intent detected.',
   };
-};
-
-const parseQueryWithChatGPT = async (query: string): Promise<ParsedQuery> => {
-  const response = await openai.chat.completions.create({
-    model: "gpt-4",
-    messages: [
-      {
-        role: "system",
-        content: `
-        You are an assistant that converts natural language queries into structured parameters for searching restaurant reviews.
-        Your task is to parse the query into structured fields that align with the fields in a restaurant review schema.
-        
-        Please extract any of the following fields as relevant from the user's query:
-        - location: a city, region, or specific place (e.g., "Mountain View")
-        - radius: a distance in meters, if provided (e.g., "within 10 miles")
-        - date range: start and end dates for queries related to dates, formatted as YYYY-MM-DD
-        - restaurantName: the name of a specific restaurant (e.g., "La Costena")
-        - wouldReturn: whether the reviewer set Would Return. The value can be true, false, or null.
-        - itemsOrdered: specific items ordered, if mentioned (e.g., "Caesar Salad")
-        
-        Determine the queryType based on the following:
-        - If the query can be fully answered by matching structured fields in the database (e.g., location, date, restaurant name, items ordered), set "queryType" to "structured".
-        - If the query requires searching full review text or user comments that are not part of structured fields, set "queryType" to "full-text".
-        - If the query could benefit from both structured search and full-text search, set "queryType" to "hybrid".
-        
-        For each query, return a JSON object with the following format:
-        {
-          "queryType": "structured" or "full-text" or "hybrid",
-          "queryParameters": {
-            "location": "Location Name",
-            "radius": Distance in meters,
-            "dateRange": { "start": "YYYY-MM-DD", "end": "YYYY-MM-DD" },
-            "restaurantName": "Restaurant Name",
-            "wouldReturn": true or false or null,
-            "itemsOrdered": ["Item1", "Item2", ...],
-          }
-        }
-        
-        If any field is missing, set its value to null. Return only the JSON data without additional text.
-        
-        Example inputs and outputs:
-        Input: "Show me reviews for restaurants in Mountain View within the past month"
-        Output: { "queryType": "structured", "parameters": { "location": "Mountain View", "radius": null, "dateRange": { "start": "YYYY-MM-01", "end": "YYYY-MM-DD" }, "restaurantName": null, "itemsOrdered": null } }
-        
-        Input: "What did I say about the Caesar Salad at Doppio Zero?"
-        Output: { "queryType": "structured", "parameters": { "location": null, "radius": null, "dateRange": null, "restaurantName": "Doppio Zero", "itemsOrdered": ["Caesar Salad"] } }
-        `
-      },
-      { role: "user", content: query },
-    ],
-  });
-
-  const parsedContent = response.choices[0].message?.content || "{}";
-  return JSON.parse(parsedContent) as ParsedQuery;
 };
 
 const performStructuredQuery = async (parameters: QueryParameters): Promise<IReview[]> => {
