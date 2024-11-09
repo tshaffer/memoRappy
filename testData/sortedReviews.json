@@ -1,0 +1,101 @@
+[
+  {
+    "restaurantName": "Capelo's Barbecue",
+    "location": "Redwood City",
+    "dateOfVisit": "2024-11-01",
+    "reviewText": "Disappointing - I don't think we'll return. I ordered the brisket. The brisket was dry. Lori ordered a pulled pork sandwich which was also disappointing. The mac and cheese was tolerable. The cornbread was dry but had good flavor. The BBQ sauce was too sweet. The outdoor seating is nice. Nice vibe. Lori enjoyed her beer."
+  },
+  {
+    "restaurantName": "Doppio Zero Mountain View",
+    "dateOfVisit": "2024-10-31",
+    "reviewText": "We ordered a Doppio Zero pizza. The toppings for this pizza are burrata, prosciutto, and arugula. It was my favorite. I enjoy it more than the comparable one from Terun. We also ordered a Mortadella pizza. Its toppings included both mortadella and crumbled pistachio. It was good but not as good as the equivalent we had in Italy. The pistachio was too crunchy."
+  },
+  {
+    "restaurantName": "La Costena",
+    "dateOfVisit": "2024-10-24",
+    "reviewText": "Pollo Borracho burrito - juicy and excellent as always. Looking forward to my next visit."
+  },
+  {
+    "restaurantName": "Tin Roof Maui",
+    "location": "Maui",
+    "dateOfVisit": "2024-10-10",
+    "reviewText": "Items ordered: Mochiko Chicken; Kale Salad; Garlic Shrimp; Fat Chow Fun; Garlic Noodles"
+  },
+  {
+    "restaurantName": "Kraken Coffee",
+    "location": "Maui",
+    "dateOfVisit": "2024-10-08",
+    "reviewText": "Kraken coffee is my go to place in the Kihei area. The coffee is really good but sometimes the service is slow."
+  },
+  {
+    "restaurantName": "Fred's Mexican Cafe",
+    "location": "Maui",
+    "dateOfVisit": "2024-10-08",
+    "reviewText": "Arrived for dinner at about 5 pm and were able to get a table outside with a view of the water. Shrimp diablo was really good and the margaritas were really good. I did not like the chips."
+  },
+  {
+    "restaurantName": "Monkeypod Kitchen",
+    "location": "Maui",
+    "dateOfVisit": "2024-10-08",
+    "reviewText": "Monkeypod Mai Tai - delicious. I had two. Cast Iron Shrimp - very good. Margarita Pizza - good. Very nice atmosphere. Sat at the bar at happy hour. No wait to sit at the bar. Happy hour - discounts on the Mai Tai and the Pizza, but not on any seafood."
+  },
+  {
+    "restaurantName": "Mala Ocean Tavern",
+    "location": "Maui",
+    "dateOfVisit": "2024-10-05",
+    "reviewText": "Terrific."
+  },
+  {
+    "restaurantName": "Napili Coffee Store",
+    "location": "Maui",
+    "dateOfVisit": "2024-10-05",
+    "reviewText": "Very good lattes close to our condo. Opened at 6:00 AM. I went there every morning."
+  },
+  {
+    "restaurantName": "South Maui Fish Company",
+    "location": "Maui",
+    "dateOfVisit": "2024-10-05",
+    "reviewText": "Lori and I both ordered fish tacos. The fish was fresh. The pieces were big and thick but the tacos were not all that flavorful. Lori was disappointed that there was no beer either here or in the surrounding shops."
+  },
+  {
+    "restaurantName": "Tin Roof Maui",
+    "location": "Maui",
+    "dateOfVisit": "2024-10-03",
+    "reviewText": "Went straight from the airport to get lunch. Drove a few blocks away and ate it in the car in the shade under a tree. Items ordered: Mochiko Chicken; Kale Salad; Garlic Shrimp; Fat Chow Fun; Garlic Noodles. We had enough leftovers for dinner. I'd like to do the same thing next time we go to Maui."
+  },
+  {
+    "restaurantName": "Miss Arepa",
+    "location": "Maui",
+    "dateOfVisit": "2024-10-03",
+    "reviewText": "I loved mine. Lori disliked hers."
+  },
+  {
+    "restaurantName": "Joey's Kitchen",
+    "location": "Maui",
+    "dateOfVisit": "2024-10-03",
+    "reviewText": "Great garlic chicken; shrimp were disgusting."
+  },
+  {
+    "restaurantName": "Leoda's Kitchen and Pie Shop",
+    "location": "Maui",
+    "dateOfVisit": "2024-10-02",
+    "reviewText": "Loved the key lime pie. Lori liked hers as well, though I can't remember what she ordered."
+  },
+  {
+    "restaurantName": "Terun",
+    "dateOfVisit": "2024-08-30",
+    "reviewText": "We ordered a Margherita pizza. It was good but not as good as the one from Doppio Zero. We also ordered a Diavola pizza. It was very good - nice and spicy."
+  },
+  {
+    "restaurantName": "Cafe Iveta Westside",
+    "location": "Santa Cruz",
+    "dateOfVisit": "2024-08-30",
+    "reviewText": "The Chicken Pesto sandwich is tasty. Order it without the roasted red peppers (as they're slimy) and ask for 'Light on the mayo'. I'm not that crazy about their lattes. Outdoor seating it nice."
+  },
+  {
+    "restaurantName": "Eleventh House Coffee",
+    "location": "Santa Cruz",
+    "dateOfVisit": "2024-08-30",
+    "reviewText": "The latte was excellent - much better than the ones from Iveta. As of this review, it's my favorite latte in Santa Cruz. The Breakfast Biscuit is delicious. House-made biscuit with a fried egg, spicy mayo, and avocado. Outdoor seating it nice."
+  }
+]
