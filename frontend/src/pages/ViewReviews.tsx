@@ -113,6 +113,7 @@ const ViewReviews: React.FC = () => {
       <Box p={3}>
         <Typography variant="h6" gutterBottom>{selectedReview.restaurantName}</Typography>
         <Typography><strong>Location:</strong> {getCityNameFromPlace(selectedReview.place) || 'Not provided'}</Typography>
+        <Typography><strong>Would Return:</strong> {getWouldReturnFromReview(selectedReview)}</Typography>
         <Typography><strong>Date of Visit:</strong> {selectedReview.dateOfVisit || 'Not provided'}</Typography>
         <Typography><strong>Reviewer:</strong> {selectedReview.reviewer || 'Anonymous'}</Typography>
 
