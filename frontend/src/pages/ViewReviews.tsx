@@ -64,6 +64,9 @@ const ViewReviews: React.FC = () => {
       if (sortBy === 'place') {
         aValue = getCityNameFromPlace(a.place) || '';
         bValue = getCityNameFromPlace(b.place) || '';
+      } else if (sortBy === 'wouldReturn') {
+        aValue = getWouldReturnFromReview(a);
+        bValue = getWouldReturnFromReview(b);
       } else {
         aValue = a[sortBy];
         bValue = b[sortBy];
@@ -143,6 +146,16 @@ const ViewReviews: React.FC = () => {
     }
   };
 
+  const getWouldReturnFromReview = (review: ReviewEntityWithFullText): string => {
+    if (review.wouldReturn === true) {
+      return 'Yes';
+    } else if (review.wouldReturn === false) {
+    return 'No';
+    } else {
+      return 'N/A';
+    }
+  }
+
   return (
 
     <Grid container spacing={2}>
@@ -180,6 +193,15 @@ const ViewReviews: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <TableSortLabel
+                      active={sortBy === 'wouldReturn'}
+                      direction={sortBy === 'wouldReturn' ? sortDirection : 'asc'}
+                      onClick={() => handleSort('wouldReturn')}
+                    >
+                      Would Return
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
                       active={sortBy === 'dateOfVisit'}
                       direction={sortBy === 'dateOfVisit' ? sortDirection : 'asc'}
                       onClick={() => handleSort('dateOfVisit')}
@@ -210,6 +232,7 @@ const ViewReviews: React.FC = () => {
                     </TableCell>
                     <TableCell>{review.restaurantName}</TableCell>
                     <TableCell>{getCityNameFromPlace(review.place)}</TableCell>
+                    <TableCell>{getWouldReturnFromReview(review)}</TableCell>
                     <TableCell>{review.dateOfVisit}</TableCell>
                   </TableRow>
                 ))}
