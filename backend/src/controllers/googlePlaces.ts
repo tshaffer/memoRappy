@@ -30,8 +30,9 @@ export const getCoordinates = async (location: string): Promise<LatLngLiteral | 
   }
 };
 
-export const getRestaurantProperties = async (restaurantName: string, location: string): Promise<MemoRappPlace> => {
+export const getRestaurantProperties = async (restaurantName: string): Promise<MemoRappPlace> => {
 
+  const location = '';
   const query = `${restaurantName} ${location}`;
   const url = `${GOOGLE_PLACES_URL}?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}`;
 

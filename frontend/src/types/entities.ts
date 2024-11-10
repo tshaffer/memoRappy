@@ -11,7 +11,6 @@ export interface MemoRappPlace {
 
 export interface StructuredReviewProperties {
   restaurantName: string;
-  userLocation: string;
   dateOfVisit: string;
   wouldReturn: boolean | null;
 }
@@ -29,7 +28,6 @@ export interface ParsedReviewProperties {
 
 export interface ReviewEntity {
   restaurantName: string;
-  userLocation: string;
   dateOfVisit: string;
   wouldReturn: boolean | null;
   itemReviews: [ItemReview]
