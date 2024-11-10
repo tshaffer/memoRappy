@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { openai } from '../index';
+import { openai } from '../server';
 import Review, { IReview } from '../models/Review';
 import { getCoordinates } from './googlePlaces';
 import { QueryRequestBody } from '../types';
@@ -205,7 +205,7 @@ const parseQueryWithChatGPT = async (query: string): Promise<ParsedQuery> => {
 };
 
 const analyzeReturnIntent = async (reviewText: string): Promise<{ explicitReturnIntent: 'yes' | 'no' | 'unknown'; inferredReturnIntent: 'yes' | 'no' | 'unknown'; message: string }> => {
-  
+
   console.log('analyzeReturnIntent:', reviewText);
 
   const response = await openai.chat.completions.create({
@@ -299,7 +299,7 @@ const performStructuredQuery = async (parameters: QueryParameters): Promise<IRev
   } else {
     query.wouldReturn = null;
   }
-    
+
   console.log('Structured query:', query);
   const results: IReview[] = await Review.find(query);
   console.log('Structured results:', results);

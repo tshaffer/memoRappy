@@ -1,5 +1,5 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat';
-import { openai } from '../index';
+import { openai } from '../server';
 import { ChatResponse, ParsedReviewProperties, MemoRappPlace, SubmitReviewBody, ItemReview, PreviewRequestBody } from '../types/';
 import Review from "../models/Review";
 import { extractFieldFromResponse, extractItemReviews, extractListFromResponse, removeSquareBrackets } from '../utilities';
@@ -75,7 +75,7 @@ export const previewReviewHandler = async (
 ): Promise<any> => {
 
   console.log('Preview review request:', req.body); // Debugging log
-  
+
   const { structuredReviewProperties, reviewText, sessionId } = req.body;
   const { restaurantName, userLocation } = structuredReviewProperties;
 
