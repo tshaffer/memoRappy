@@ -14,6 +14,7 @@ import {
   FormLabel,
   RadioGroup,
   Radio,
+  CircularProgress,
 } from '@mui/material';
 import { LoadScript, Autocomplete } from '@react-google-maps/api';
 import { AddReviewDisplayTabs, ChatResponse, MemoRappPlace, ParsedReviewProperties, PreviewRequestBody, ReviewEntity, SubmitReviewBody } from '../types';
@@ -32,6 +33,8 @@ const AddReview: React.FC = () => {
     const year = today.getFullYear();
     return `${year}-${month}-${day}`;
   };
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const [restaurantName, setRestaurantName] = useState('');
   const [dateOfVisit, setDateOfVisit] = useState('');
@@ -72,6 +75,7 @@ const AddReview: React.FC = () => {
   const handlePreview = async () => {
     if (!sessionId) return;
     try {
+      setIsLoading(true);
       const previewBody: PreviewRequestBody = {
         structuredReviewProperties: { restaurantName, dateOfVisit, wouldReturn },
         reviewText,
@@ -89,11 +93,13 @@ const AddReview: React.FC = () => {
     } catch (error) {
       console.error('Error previewing review:', error);
     }
+    setIsLoading(false);
   };
 
   const handleChat = async () => {
     if (!sessionId || !chatInput) return;
     try {
+      setIsLoading(true);
       const response = await fetch('/api/reviews/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -110,11 +116,13 @@ const AddReview: React.FC = () => {
     } catch (error) {
       console.error('Error during chat:', error);
     }
+    setIsLoading(false);
   };
 
   const handleSubmit = async () => {
     if (!parsedReviewProperties) return;
     try {
+      setIsLoading(true);
       const submitBody: SubmitReviewBody = {
         structuredReviewProperties: { restaurantName, dateOfVisit, wouldReturn },
         parsedReviewProperties,
@@ -135,6 +143,7 @@ const AddReview: React.FC = () => {
     } catch (error) {
       console.error('Error submitting review:', error);
     }
+    setIsLoading(false);
   };
 
   // const resetForm = () => {
@@ -178,6 +187,24 @@ const AddReview: React.FC = () => {
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY!} libraries={['places']}>
       <Paper style={{ padding: 20 }}>
+        {isLoading && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'rgba(255, 255, 255, 0.7)',
+              zIndex: 1,
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        )}
         <Typography variant="h4" gutterBottom>
           Add a Review
         </Typography>
