@@ -6,7 +6,6 @@ import { parsePreview, submitReview } from './addReview';
 
 interface TestReview {
   restaurantName: string;
-  userLocation: string;
   dateOfVisit: string;
   wouldReturn: boolean | null;
   reviewText: string;
@@ -14,9 +13,9 @@ interface TestReview {
 
 const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
-const addReview = async (restaurantName: string, userLocation: string, dateOfVisit: string, wouldReturn: boolean | null, reviewText: string): Promise<void> => {
+const addReview = async (restaurantName: string, dateOfVisit: string, wouldReturn: boolean | null, reviewText: string): Promise<void> => {
   const sessionId: string = generateSessionId();
-  const parsedReviewProperties: ParsedReviewProperties = await parsePreview(sessionId, restaurantName, userLocation ? userLocation : '', reviewText);
+  const parsedReviewProperties: ParsedReviewProperties = await parsePreview(sessionId, restaurantName, reviewText);
 
   console.log('Parsed review properties for ' + restaurantName + ':', parsedReviewProperties);
   console.log('Location of ' + restaurantName + ':', parsedReviewProperties.place);
@@ -24,7 +23,6 @@ const addReview = async (restaurantName: string, userLocation: string, dateOfVis
   const body: SubmitReviewBody = {
     structuredReviewProperties: {
       restaurantName,
-      userLocation,
       dateOfVisit,
       wouldReturn,
     },
@@ -56,8 +54,8 @@ export const addReviewsFromFileHandler = async (
     const reviews: TestReview[] = JSON.parse(data);
 
     for (const review of reviews) {
-      const { restaurantName, userLocation, reviewText, dateOfVisit, wouldReturn } = review;
-      await addReview(restaurantName, userLocation, dateOfVisit, wouldReturn, reviewText);
+      const { restaurantName, reviewText, dateOfVisit, wouldReturn } = review;
+      await addReview(restaurantName, dateOfVisit, wouldReturn, reviewText);
       console.log('review added for ' + restaurantName);
     }
     console.log('All reviews loaded:');

@@ -1,6 +1,6 @@
 import path from 'path';
 import express from 'express';
-import { previewReviewHandler, chatReviewHandler, submitReviewHandler } from '.';
+import { previewReviewHandler, chatReviewHandler, submitReviewHandler } from './addReview';
 import { addReviewsFromFileHandler } from './loadReviews';
 import { queryReviewsHandler } from './queryReviews';
 import { reviewsRouter } from './reviews';

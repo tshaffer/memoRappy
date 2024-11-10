@@ -12,7 +12,7 @@ interface ReviewConversations {
 }
 const reviewConversations: ReviewConversations = {};
 
-export const parsePreview = async (sessionId: string, restaurantName: string, userLocation: string, reviewText: string): Promise<ParsedReviewProperties> => {
+export const parsePreview = async (sessionId: string, restaurantName: string, reviewText: string): Promise<ParsedReviewProperties> => {
 
   // Initialize conversation history if it doesn't exist
   if (!reviewConversations[sessionId]) {
@@ -51,7 +51,7 @@ export const parsePreview = async (sessionId: string, restaurantName: string, us
       throw new Error('Failed to extract data from the response.');
     }
 
-    const place: MemoRappPlace = await getRestaurantProperties(restaurantName, userLocation);
+    const place: MemoRappPlace = await getRestaurantProperties(restaurantName);
 
     const itemReviews: ItemReview[] = extractItemReviews(messageContent);
 
@@ -69,7 +69,7 @@ export const parsePreview = async (sessionId: string, restaurantName: string, us
   }
 }
 
-export const previewReviewHandler = async (
+export const previewReviewHandler: any = async (
   req: Request<{}, {}, PreviewRequestBody>,
   res: Response
 ): Promise<any> => {
@@ -77,10 +77,10 @@ export const previewReviewHandler = async (
   console.log('Preview review request:', req.body); // Debugging log
 
   const { structuredReviewProperties, reviewText, sessionId } = req.body;
-  const { restaurantName, userLocation } = structuredReviewProperties;
+  const { restaurantName } = structuredReviewProperties;
 
   try {
-    const parsedReviewProperties: ParsedReviewProperties = await parsePreview(sessionId, restaurantName, userLocation, reviewText);
+    const parsedReviewProperties: ParsedReviewProperties = await parsePreview(sessionId, restaurantName, reviewText);
     return res.json({ parsedReviewProperties });
   } catch (error) {
     console.error('Error processing review preview:', error);
@@ -164,7 +164,7 @@ export const submitReview = async (body: SubmitReviewBody) => {
     throw new Error('Incomplete review data.');
   }
 
-  const { restaurantName, userLocation, dateOfVisit, wouldReturn } = structuredReviewProperties;
+  const { restaurantName, dateOfVisit, wouldReturn } = structuredReviewProperties;
   const { itemReviews, reviewer, place } = parsedReviewProperties;
   if (!restaurantName) {
     throw new Error('Incomplete review data.');
@@ -173,7 +173,6 @@ export const submitReview = async (body: SubmitReviewBody) => {
   try {
     const newReview = new Review({
       restaurantName,
-      userLocation,
       dateOfVisit,
       wouldReturn,
       itemReviews,

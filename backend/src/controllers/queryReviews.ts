@@ -75,9 +75,7 @@ const new_handleNaturalLanguageQuery = async (query: string): Promise<any> => {
     const reviews = await Review.find();
 
     // Step 3: Apply location-based filtering
-    let filteredReviews = reviews.filter((review) =>
-      queryParameters.location ? review.userLocation === queryParameters.location : true
-    );
+    let filteredReviews = reviews.filter((review) => true);
 
     // Step 4: Apply date range filtering
     if (queryParameters.dateRange) {
@@ -121,7 +119,6 @@ const new_handleNaturalLanguageQuery = async (query: string): Promise<any> => {
             reviewId: review._id,
             restaurantName: review.restaurantName,
             reviewText: review.reviewText,
-            userLocation: review.userLocation,
             dateOfVisit: review.dateOfVisit,
             explicitReturnIntent,
             inferredReturnIntent,
