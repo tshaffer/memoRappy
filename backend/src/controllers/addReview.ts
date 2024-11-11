@@ -12,6 +12,8 @@ const reviewConversations: { [sessionId: string]: ChatCompletionMessageParam[] }
 // Preview endpoint to get structured data without saving
 export const previewReviewHandler = async (req: Request, res: Response): Promise<void> => {
 
+  console.log('previewReviewHandler req.body:', req.body); // Debugging log
+  
   const { structuredReviewProperties, reviewText, sessionId } = req.body;
   const { restaurantName, userLocation, dateOfVisit } = structuredReviewProperties;
 

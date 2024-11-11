@@ -14,10 +14,31 @@ import { LoadScript, Autocomplete } from '@react-google-maps/api';
 import { AddReviewDisplayTabs, ChatResponse, PlaceProperties, ParsedReviewProperties, ReviewEntity } from '../types';
 
 export const formatDateToMMDDYYYY = (dateString: string) => {
+  debugger;
   if (!dateString) return '';
   const [year, month, day] = dateString.split('-');
   return `${month}/${day}/${year}`;
 };
+
+export const invokeBackendParsePreview = async (previewBody: any) => {
+  try {
+    console.log('Preview body:', previewBody);
+    const response = await fetch('/api/reviews/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(previewBody),
+    });
+    console.log('Response:', response);
+    const data = await response.json();
+    console.log('Parsed review properties:', data);
+    console.log(data.parsedReviewProperties);
+    return data;
+  } catch (error) {
+    console.log('Error previewing review:', error);
+    console.error('Error previewing review:', error);
+  }
+}
+
 
 const AddReview: React.FC = () => {
 
@@ -70,12 +91,7 @@ const AddReview: React.FC = () => {
         reviewText,
         sessionId,
       };
-      const response = await fetch('/api/reviews/preview', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(previewBody),
-      });
-      const data = await response.json();
+      const data: any = await invokeBackendParsePreview(previewBody);
       setParsedReviewProperties(data.parsedReviewProperties);
       setChatHistory([...chatHistory, { role: 'user', message: reviewText }, { role: 'ai', message: data.parsedReviewProperties }]);
       setDisplayTab(1);
