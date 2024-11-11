@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import { GeoJSONPoint, MemoRappGeometry, MemoRappPlace, ReviewEntityWithFullText } from '../types';
+import { GeoJSONPoint, MongoGeometry, GooglePlaceResult, MongoReviewEntityWithFullText } from '../types';
 
-export interface IReview extends ReviewEntityWithFullText, Document { }
+export interface IReview extends MongoReviewEntityWithFullText, Document { }
 
 export type ReviewModel = Model<IReview>;
 
@@ -22,7 +22,7 @@ const LocationSchema: Schema = new Schema<GeoJSONPoint>({
 });
 
 // Define Geometry Schema, including GeoJSON `location` as `LocationSchema`
-const GeometrySchema: Schema<MemoRappGeometry> = new Schema({
+const GeometrySchema: Schema<MongoGeometry> = new Schema({
   location: { type: LocationSchema, required: true },
   location_type: { type: String },
   viewport: {
@@ -33,7 +33,7 @@ const GeometrySchema: Schema<MemoRappGeometry> = new Schema({
 
 GeometrySchema.index({ location: '2dsphere' }); // Enable 2dsphere index for geospatial queries
 
-const PlaceSchema: Schema<MemoRappPlace> = new Schema({
+const PlaceSchema: Schema<GooglePlaceResult> = new Schema({
   place_id: { type: String, required: true },
   name: { type: String, required: true },
   address_components: [{ type: AddressComponentSchema, required: true }], // Make this an array
@@ -48,12 +48,11 @@ const ItemReviewSchema: Schema = new Schema({
 });
 
 const ReviewSchema: Schema<IReview> = new Schema({
-  restaurantName: { type: String, required: true },
   dateOfVisit: { type: String },
   wouldReturn: { type: Boolean },
   itemReviews: [ItemReviewSchema],
   reviewer: { type: String },
-  place: { type: PlaceSchema },
+  mongoPlace: { type: PlaceSchema },
   reviewText: { type: String, required: true },
 });
 

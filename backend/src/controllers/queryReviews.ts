@@ -117,7 +117,8 @@ const new_handleNaturalLanguageQuery = async (query: string): Promise<any> => {
         if (returnIntentMatch) {
           return {
             reviewId: review._id,
-            restaurantName: review.restaurantName,
+            // restaurantName: review.restaurantName,
+            restaurantName: '',
             reviewText: review.reviewText,
             dateOfVisit: review.dateOfVisit,
             explicitReturnIntent,

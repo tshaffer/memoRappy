@@ -1,11 +1,9 @@
 import axios from 'axios';
-import { GooglePlacesResponse, GooglePlaceDetailsResponse, GooglePlaceDetails, MemoRappPlace, GeoJSONPoint, MemoRappPlaceDetails, MemoRappGeometry, LatLngLiteral } from '../types';
+import { MongoGeometry, GoogleGeometry, MongoViewport, GeoJSONPoint } from '../types';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
-const GOOGLE_PLACES_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
-const GOOGLE_PLACE_DETAILS_BASE_URL = 'https://maps.googleapis.com/maps/api/place/details/json';
 
-export const getCoordinates = async (location: string): Promise<LatLngLiteral | null> => {
+export const getCoordinates = async (location: string): Promise<google.maps.LatLngLiteral | null> => {
   try {
     const url = `https://maps.googleapis.com/maps/api/place/textsearch/json`;
     const response = await axios.get(url, {
@@ -30,129 +28,38 @@ export const getCoordinates = async (location: string): Promise<LatLngLiteral | 
   }
 };
 
-export const getRestaurantProperties = async (restaurantName: string): Promise<MemoRappPlace> => {
-
-  const location = '';
-  const query = `${restaurantName} ${location}`;
-  const url = `${GOOGLE_PLACES_URL}?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}`;
-
-  try {
-    const place: google.maps.places.PlaceResult = await getGooglePlace(url);
-    // console.log('google.maps.places.PlaceResult for ' + restaurantName + ':', place);
-
-    const placeDetails: MemoRappPlaceDetails | null = await getMemoRappPlaceDetails(place!.place_id!);
-    console.log('Place Details:', placeDetails);
-
-    const restaurantProperties: MemoRappPlace = pickMemoRappPlaceDetails(placeDetails!)
-    return restaurantProperties;
-
-  } catch (error) {
-    console.error('Error with Google Places API:', error);
-    throw error;
-  }
-};
-
-const getGooglePlace = async (url: string): Promise<google.maps.places.PlaceResult> => {
-
-  try {
-    const response = await axios.get<GooglePlacesResponse>(url);
-    const places: google.maps.places.PlaceResult[] = (response.data as { results: google.maps.places.PlaceResult[] }).results;
-    if (places.length === 0) {
-      throw new Error('No places found matching the query');
-    }
-    // Return the most relevant result
-    const place: google.maps.places.PlaceResult = places[0];
-
-    // console.log('Place:', place);
-
-    return place;
-  }
-  catch (error) {
-    console.error('Error with Google Places API:', error);
-    throw error;
-  }
-}
-
-function convertToGeoJSON(placeDetails: GooglePlaceDetails): GeoJSONPoint | null {
-  if (!placeDetails.geometry || !placeDetails.geometry.location) {
-    console.error('No location data available in place details');
-    return null;
-  }
-
-  const { lat, lng } = placeDetails.geometry.location;
-  return {
+export const getMongoGeometryFromGoogleGeometry = (googleGeometry: GoogleGeometry): MongoGeometry => {
+  const { lat, lng } = googleGeometry.location;
+  const geoJSONLocation: GeoJSONPoint = {
     type: 'Point',
-    coordinates: [lng, lat] // Note: GeoJSON uses [longitude, latitude] order
+    coordinates: [lng, lat]
   };
+  const mongoViewport: MongoViewport = convertViewport(googleGeometry.viewport.east, googleGeometry.viewport.north, googleGeometry.viewport.south, googleGeometry.viewport.west);
+  const mongoGeometry: MongoGeometry = {
+    location: geoJSONLocation,
+    viewport: mongoViewport
+  };
+  return mongoGeometry;
 }
 
-const getMemoRappPlaceDetails = async (placeId: string): Promise<MemoRappPlaceDetails | null> => {
-  try {
-    const response: any = await axios.get(
-      GOOGLE_PLACE_DETAILS_BASE_URL,
-      {
-        params: {
-          place_id: placeId,
-          key: GOOGLE_PLACES_API_KEY,
-        },
-      }
-    );
-
-    console.log('getPlaceResult response:', response.data);
-
-    const placeDetailsResponse: GooglePlaceDetailsResponse = response.data;
-    const googlePlaceDetails: GooglePlaceDetails = placeDetailsResponse.result;
-
-    const geoJSONLocation: GeoJSONPoint = convertToGeoJSON(googlePlaceDetails)!;
-    console.log(geoJSONLocation); // { type: 'Point', coordinates: [-122.4194, 37.7749] }
-    const memoRappGeometry: MemoRappGeometry = {
-      location: geoJSONLocation,
-      viewport: googlePlaceDetails.geometry!.viewport
-    };
-    const memoRappPlaceDetails: MemoRappPlaceDetails = {
-      ...googlePlaceDetails,
-      geometry: memoRappGeometry,
-    };
-    return memoRappPlaceDetails;
-  } catch (error) {
-    console.error("Error fetching city name:", error);
-    return null;
-  }
-}
-
-// Dummy object to define the shape of MemoRappPlace at runtime
-const memoRappPlaceTemplate: MemoRappPlace = {
-  place_id: '',
-  name: '',
-  address_components: [],
-  formatted_address: '',
-  geometry: {
-    location: {
+const convertViewport = (east: number, north: number, south: number, west: number): MongoViewport => {
+  const mongoViewport: MongoViewport = {
+    northeast: {
       type: 'Point',
-      coordinates: [0, 0]
+      coordinates: [east, north]
     },
-    viewport: {
-      northeast: {
-        type: 'Point',
-        coordinates: [0, 0]
-      },
-      southwest: {
-        type: 'Point',
-        coordinates: [0, 0]
-      }
+    southwest: {
+      type: 'Point',
+      coordinates: [west, south]
     }
-  },
-  website: '',
+    // northeast: {
+    //   lat: north,
+    //   lng: east
+    // },
+    // southwest: {
+    //   lat: south,
+    //   lng: west
+    // }
+  }
+  return mongoViewport;
 };
-
-function pickMemoRappPlaceDetails(details: MemoRappPlaceDetails): MemoRappPlace {
-  const keys = Object.keys(memoRappPlaceTemplate) as (keyof MemoRappPlace)[];
-
-  const result = Object.fromEntries(
-    keys
-      .filter(key => key in details)
-      .map(key => [key, details[key]])
-  ) as unknown as MemoRappPlace;
-
-  return result;
-}

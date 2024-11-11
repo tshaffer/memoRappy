@@ -1,41 +1,40 @@
 import { Request, Response } from 'express';
-import Review from "../models/Review";
+import Review, { IReview } from "../models/Review";
+import { MongoGeometry, GoogleGeometry, MongoReviewEntityWithFullText, ReviewEntityWithFullText } from '../types';
 
-// Get all reviews or filter by query parameters
+// Get all reviews
 export const reviewsRouter = async (req: Request, res: Response) => {
   try {
-    const { restaurantName, location, startDate, endDate, item } = req.query;
-
-    // Build a dynamic query based on the provided filters
-    const query: any = {};
-
-    if (restaurantName) {
-      query.restaurantName = new RegExp(restaurantName as string, 'i'); // Case-insensitive search
-    }
-
-    if (location) {
-      query.location = new RegExp(location as string, 'i'); // Case-insensitive search
-    }
-
-    // Use the raw ISO date strings for date filtering
-    if (startDate && endDate) {
-      query.dateOfVisit = {
-        $gte: startDate as string,
-        $lte: endDate as string,
+    const reviews: IReview[] = await Review.find({}).exec();
+    const googleReviews: ReviewEntityWithFullText[] = reviews.map((review) => {
+      const reviewObj: MongoReviewEntityWithFullText = review.toObject();
+      const reviewEntityWithFullText: ReviewEntityWithFullText = {
+        ...reviewObj,
+        googlePlace: {
+          ...reviewObj.mongoPlace,
+          geometry: convertMongoGeometryToGoogleGeometry(reviewObj.mongoPlace.geometry!)
+        }
       };
-    } else if (startDate) {
-      query.dateOfVisit = { $gte: startDate as string };
-    }
-
-    if (item) {
-      query.itemsOrdered = { $in: [new RegExp(item as string, 'i')] }; // Find if item exists in the list
-    }
-
-    // Query the MongoDB database for matching reviews
-    const reviews = await Review.find(query).exec();
-    res.status(200).json({ reviews });
+      return reviewEntityWithFullText
+    });
+    res.status(200).json({ googleReviews });
   } catch (error) {
     console.error('Error retrieving reviews:', error);
     res.status(500).json({ error: 'An error occurred while retrieving the reviews.' });
   }
 };
+
+export function convertMongoGeometryToGoogleGeometry(mongoGeometry: MongoGeometry): GoogleGeometry {
+  return {
+    location: {
+      lat: mongoGeometry.location.coordinates[1], // GeoJSON uses [lng, lat]
+      lng: mongoGeometry.location.coordinates[0]
+    },
+    viewport: {
+      north: mongoGeometry.viewport.northeast.coordinates[1],
+      south: mongoGeometry.viewport.southwest.coordinates[1],
+      east: mongoGeometry.viewport.northeast.coordinates[0],
+      west: mongoGeometry.viewport.southwest.coordinates[0]
+    }
+  };
+}

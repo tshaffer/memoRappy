@@ -16,13 +16,20 @@ import {
   IconButton,
 } from '@mui/material';
 import DirectionsIcon from '@mui/icons-material/Directions';
-import { LatLngLiteral, MemoRappPlace, ReviewEntityWithFullText } from '../types';
+import { LatLngLiteral, GooglePlaceResult, ReviewEntityWithFullText } from '../types';
 import MapWithMarkers from '../components/MapWIthMarkers';
-import { getCityNameFromPlace, getLatLngFromPlace } from '../utilities';
+import { getCityNameFromPlace } from '../utilities';
+
+interface ColumnProperties {
+  restaurantLabel: string;
+  location: string;
+  dateOfVisit: string;
+  wouldReturn: string;
+}
 
 const ViewReviews: React.FC = () => {
   const [reviews, setReviews] = useState<ReviewEntityWithFullText[]>([]);
-  const [sortBy, setSortBy] = useState<keyof ReviewEntityWithFullText>('restaurantName');
+  const [sortBy, setSortBy] = useState<keyof ColumnProperties>('restaurantLabel');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [sortedReviews, setSortedReviews] = useState<ReviewEntityWithFullText[]>([]);
   const [selectedReview, setSelectedReview] = useState<ReviewEntityWithFullText | null>(null);
@@ -35,7 +42,7 @@ const ViewReviews: React.FC = () => {
     const fetchReviews = async () => {
       const response = await fetch('/api/reviews');
       const data = await response.json();
-      const reviews: ReviewEntityWithFullText[] = data.reviews;
+      const reviews: ReviewEntityWithFullText[] = data.googleReviews;
       setReviews(reviews);
       if (data.length > 0) {
         setSelectedReview(data[0]); // Select the first review by default
@@ -61,15 +68,23 @@ const ViewReviews: React.FC = () => {
       let aValue;
       let bValue;
 
-      if (sortBy === 'place') {
-        aValue = getCityNameFromPlace(a.place) || '';
-        bValue = getCityNameFromPlace(b.place) || '';
+      if (sortBy === 'restaurantLabel') {
+        aValue = getCityNameFromPlace(a.googlePlace) || '';
+        bValue = getCityNameFromPlace(b.googlePlace) || '';
       } else if (sortBy === 'wouldReturn') {
         aValue = getWouldReturnFromReview(a);
         bValue = getWouldReturnFromReview(b);
       } else {
-        aValue = a[sortBy];
-        bValue = b[sortBy];
+        if (sortBy === 'location') {
+          aValue = getCityNameFromPlace(a.googlePlace) || '';
+          bValue = getCityNameFromPlace(b.googlePlace) || '';
+        } else if (sortBy === 'dateOfVisit') {
+          aValue = a.dateOfVisit;
+          bValue = b.dateOfVisit;
+        } else {
+          aValue = a[sortBy];
+          bValue = b[sortBy];
+        }
       }
 
       if (typeof aValue === 'string' && typeof bValue === 'string') {
@@ -85,7 +100,7 @@ const ViewReviews: React.FC = () => {
     setSortedReviews(sorted);
   }, [reviews, sortBy, sortDirection]);
 
-  const handleSort = (property: keyof ReviewEntityWithFullText) => {
+  const handleSort = (property: keyof ColumnProperties) => {
     const isAsc = sortBy === property && sortDirection === 'asc';
     setSortBy(property);
     setSortDirection(isAsc ? 'desc' : 'asc');
@@ -111,8 +126,8 @@ const ViewReviews: React.FC = () => {
     }
     return (
       <Box p={3}>
-        <Typography variant="h6" gutterBottom>{selectedReview.restaurantName}</Typography>
-        <Typography><strong>Location:</strong> {getCityNameFromPlace(selectedReview.place) || 'Not provided'}</Typography>
+        <Typography variant="h6" gutterBottom>{selectedReview.googlePlace.name}</Typography>
+        <Typography><strong>Location:</strong> {getCityNameFromPlace(selectedReview.googlePlace) || 'Not provided'}</Typography>
         <Typography><strong>Would Return:</strong> {getWouldReturnFromReview(selectedReview)}</Typography>
         <Typography><strong>Date of Visit:</strong> {selectedReview.dateOfVisit || 'Not provided'}</Typography>
         <Typography><strong>Reviewer:</strong> {selectedReview.reviewer || 'Anonymous'}</Typography>
@@ -136,12 +151,13 @@ const ViewReviews: React.FC = () => {
     );
   };
 
-  const locations: MemoRappPlace[] = selectedReviews.map((review) => review.place);
+  const locations: GooglePlaceResult[] = selectedReviews.map((review) => review.googlePlace);
 
   const handleShowDirections = (review: ReviewEntityWithFullText) => {
     if (currentLocation) {
-      const destination: MemoRappPlace = review.place;
-      const destinationLatLng: LatLngLiteral = getLatLngFromPlace(destination);
+      const destination: GooglePlaceResult = review.googlePlace;
+      const destinationLocation: google.maps.LatLngLiteral = destination.geometry!.location;
+      const destinationLatLng: google.maps.LatLngLiteral = { lat: destinationLocation.lat, lng: destinationLocation.lng };
       const url = `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.lat},${currentLocation.lng}&destination=${destinationLatLng.lat},${destinationLatLng.lng}&destination_place_id=${destination.name}`;
       window.open(url, '_blank');
     }
@@ -151,7 +167,7 @@ const ViewReviews: React.FC = () => {
     if (review.wouldReturn === true) {
       return 'Yes';
     } else if (review.wouldReturn === false) {
-    return 'No';
+      return 'No';
     } else {
       return 'N/A';
     }
@@ -176,18 +192,18 @@ const ViewReviews: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <TableSortLabel
-                      active={sortBy === 'restaurantName'}
-                      direction={sortBy === 'restaurantName' ? sortDirection : 'asc'}
-                      onClick={() => handleSort('restaurantName')}
+                      active={sortBy === 'restaurantLabel'}
+                      direction={sortBy === 'restaurantLabel' ? sortDirection : 'asc'}
+                      onClick={() => handleSort('restaurantLabel')}
                     >
                       Restaurant Name
                     </TableSortLabel>
                   </TableCell>
                   <TableCell>
                     <TableSortLabel
-                      active={sortBy === 'place'}
-                      direction={sortBy === 'place' ? sortDirection : 'asc'}
-                      onClick={() => handleSort('place')}
+                      active={sortBy === 'location'}
+                      direction={sortBy === 'location' ? sortDirection : 'asc'}
+                      onClick={() => handleSort('location')}
                     >
                       Location
                     </TableSortLabel>
@@ -213,9 +229,9 @@ const ViewReviews: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {sortedReviews.map((review) => (
+                {sortedReviews.map((review, idx) => (
                   <TableRow
-                    key={review.restaurantName}
+                    key={idx}
                     hover
                     onClick={() => setSelectedReview(review)}
                     selected={selectedReviews.includes(review)}
@@ -231,8 +247,8 @@ const ViewReviews: React.FC = () => {
                         <DirectionsIcon />
                       </IconButton>
                     </TableCell>
-                    <TableCell>{review.restaurantName}</TableCell>
-                    <TableCell>{getCityNameFromPlace(review.place)}</TableCell>
+                    <TableCell>{review.googlePlace.name}</TableCell>
+                    <TableCell>{getCityNameFromPlace(review.googlePlace)}</TableCell>
                     <TableCell>{getWouldReturnFromReview(review)}</TableCell>
                     <TableCell>{review.dateOfVisit}</TableCell>
                   </TableRow>

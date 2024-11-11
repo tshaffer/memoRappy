@@ -16,8 +16,10 @@ import {
   Radio,
   CircularProgress,
 } from '@mui/material';
-import { LoadScript, Autocomplete } from '@react-google-maps/api';
-import { AddReviewDisplayTabs, ChatResponse, MemoRappPlace, ParsedReviewProperties, PreviewRequestBody, ReviewEntity, SubmitReviewBody } from '../types';
+import { LoadScript, Autocomplete, Libraries } from '@react-google-maps/api';
+import { AddReviewDisplayTabs, ChatResponse, GooglePlaceResult, ParsedReviewProperties, PreviewRequestBody, ReviewEntity, SubmitReviewBody } from '../types';
+import { pickGooglePlaceProperties } from '../utilities';
+const libraries = ['places'] as Libraries;
 
 const AddReview: React.FC = () => {
   const formatDateToMMDDYYYY = (dateString: string) => {
@@ -36,7 +38,8 @@ const AddReview: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const [restaurantName, setRestaurantName] = useState('');
+  const [googlePlace, setGooglePlace] = useState<GooglePlaceResult | null>(null);
+  const [restaurantLabel, setRestaurantLabel] = useState('');
   const [dateOfVisit, setDateOfVisit] = useState('');
   const [reviewText, setReviewText] = useState('');
   const [wouldReturn, setWouldReturn] = useState<boolean | null>(null); // New state
@@ -61,9 +64,29 @@ const AddReview: React.FC = () => {
   const handlePlaceChanged = () => {
     if (autocompleteRef.current) {
       const place: google.maps.places.PlaceResult = autocompleteRef.current.getPlace();
-      if (place && place.geometry) {
-        setRestaurantName(place.name || '');
-      }
+      const geometry: google.maps.places.PlaceGeometry = place.geometry!;
+
+      console.log('handlePlaceChanged');
+      console.log('place', place);
+      console.log('geometry', geometry);
+      console.log('geometry.location');
+      console.log(geometry.location!);
+      console.log('geometry.viewport');
+      console.log(geometry.viewport);
+
+      console.log(geometry.location!.lat());
+      console.log(geometry.location!.lng());
+      console.log(geometry.viewport!.getNorthEast().lat());
+      console.log(geometry.viewport!.getNorthEast().lng());
+      console.log(geometry.viewport!.getSouthWest().lat());
+      console.log(geometry.viewport!.getSouthWest().lng());
+
+      // setPlaceResult(place);
+      const googlePlace: GooglePlaceResult = pickGooglePlaceProperties(place);
+      setGooglePlace(googlePlace);
+
+      const restaurantLabel = googlePlace.name;
+      setRestaurantLabel(restaurantLabel);
     }
   };
 
@@ -77,7 +100,6 @@ const AddReview: React.FC = () => {
     try {
       setIsLoading(true);
       const previewBody: PreviewRequestBody = {
-        structuredReviewProperties: { restaurantName, dateOfVisit, wouldReturn },
         reviewText,
         sessionId,
       };
@@ -120,11 +142,12 @@ const AddReview: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    debugger;
     if (!parsedReviewProperties) return;
     try {
       setIsLoading(true);
       const submitBody: SubmitReviewBody = {
-        structuredReviewProperties: { restaurantName, dateOfVisit, wouldReturn },
+        structuredReviewProperties: { googlePlace: googlePlace as GooglePlaceResult, dateOfVisit, wouldReturn },
         parsedReviewProperties,
         reviewText,
         sessionId: sessionId!,
@@ -159,7 +182,7 @@ const AddReview: React.FC = () => {
   const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
   const renderPreviewResponse = (parsedReviewProperties: ParsedReviewProperties) => {
-    const place: MemoRappPlace = parsedReviewProperties.place!;
+    const place: GooglePlaceResult = googlePlace!;
     const getReturnString = () => {
       if (wouldReturn === true) return 'Yes';
       if (wouldReturn === false) return 'No';
@@ -168,7 +191,7 @@ const AddReview: React.FC = () => {
     return (
       <Box sx={{ textAlign: 'left' }}>
         <Typography><strong>Reviewer:</strong> {parsedReviewProperties.reviewer || 'Not provided'}</Typography>
-        <Typography><strong>Restaurant:</strong> {restaurantName || 'Not provided'}</Typography>
+        <Typography><strong>Restaurant:</strong> {place.name || 'Not provided'}</Typography>
         <Typography><strong>Date of Visit:</strong> {formatDateToMMDDYYYY(dateOfVisit) || 'Not provided'}</Typography>
         <Typography><strong>Would Return:</strong> {getReturnString()}</Typography>
         <Typography><strong>Items Ordered:</strong></Typography>
@@ -185,7 +208,7 @@ const AddReview: React.FC = () => {
   };
 
   return (
-    <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY!} libraries={['places']}>
+    <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY!} libraries={libraries}>
       <Paper style={{ padding: 20 }}>
         {isLoading && (
           <Box
@@ -225,8 +248,8 @@ const AddReview: React.FC = () => {
                 <TextField
                   fullWidth
                   label="Restaurant Name"
-                  value={restaurantName}
-                  onChange={(e) => setRestaurantName(e.target.value)}
+                  value={restaurantLabel}
+                  onChange={(e) => setRestaurantLabel(e.target.value)}
                   placeholder="Enter the restaurant name"
                   required
                   style={{ marginBottom: 20 }}
@@ -319,7 +342,7 @@ const AddReview: React.FC = () => {
               color="primary"
               fullWidth
               onClick={handlePreview}
-              disabled={!restaurantName || !reviewText}
+              disabled={!googlePlace || !reviewText}
             >
               Preview
             </Button>

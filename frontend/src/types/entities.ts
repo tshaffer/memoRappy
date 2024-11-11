@@ -1,16 +1,16 @@
-import { AddressComponent, MemoRappGeometry } from "./GooglePlacesAPI";
+import { AddressComponent, GoogleGeometry } from "./GooglePlacesAPI";
 
-export interface MemoRappPlace {
+export interface GooglePlaceResult {
   place_id: string;
   name: string;
   address_components?: AddressComponent[];
   formatted_address: string;
-  geometry?: MemoRappGeometry;
+  geometry?: GoogleGeometry;
   website: string;
 }
 
 export interface StructuredReviewProperties {
-  restaurantName: string;
+  googlePlace: GooglePlaceResult;
   dateOfVisit: string;
   wouldReturn: boolean | null;
 }
@@ -23,16 +23,14 @@ export interface ItemReview {
 export interface ParsedReviewProperties {
   itemReviews: ItemReview[];
   reviewer: string;
-  place?: MemoRappPlace;
 }
 
 export interface ReviewEntity {
-  restaurantName: string;
+  googlePlace: GooglePlaceResult;
   dateOfVisit: string;
   wouldReturn: boolean | null;
   itemReviews: [ItemReview]
   reviewer: string;
-  place: MemoRappPlace;
 }
 
 export interface ReviewEntityWithFullText extends ReviewEntity {
@@ -56,7 +54,6 @@ export interface QueryRequestBody {
 }
 
 export interface PreviewRequestBody {
-  structuredReviewProperties: StructuredReviewProperties;
   reviewText: string;
   sessionId: string;
 }

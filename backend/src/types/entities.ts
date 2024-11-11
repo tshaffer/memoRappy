@@ -1,16 +1,27 @@
-import { AddressComponent, MemoRappGeometry } from "./GooglePlacesAPI";
+import { GoogleGeometry } from "./GooglePlacesAPI";
+import { MongoGeometry } from "./MongoPlacesAPI";
+import { AddressComponent } from "./PlacesAPI";
 
-export interface MemoRappPlace {
+export interface GooglePlaceResult {
   place_id: string;
   name: string;
   address_components?: AddressComponent[];
   formatted_address: string;
-  geometry?: MemoRappGeometry;
+  geometry?: GoogleGeometry;
+  website: string;
+}
+
+export interface MongoPlace {
+  place_id: string;
+  name: string;
+  address_components?: AddressComponent[];
+  formatted_address: string;
+  geometry?: MongoGeometry;
   website: string;
 }
 
 export interface StructuredReviewProperties {
-  restaurantName: string;
+  googlePlace: GooglePlaceResult;
   dateOfVisit: string;
   wouldReturn: boolean | null;
 }
@@ -23,19 +34,29 @@ export interface ItemReview {
 export interface ParsedReviewProperties {
   itemReviews: ItemReview[];
   reviewer: string;
-  place?: MemoRappPlace;
 }
 
 export interface ReviewEntity {
-  restaurantName: string;
+  googlePlace: GooglePlaceResult;
   dateOfVisit: string;
   wouldReturn: boolean | null;
-  itemReviews: [ItemReview]
+  itemReviews: ItemReview[]
   reviewer: string;
-  place: MemoRappPlace;
 }
 
 export interface ReviewEntityWithFullText extends ReviewEntity {
+  reviewText: string;
+}
+
+export interface MongoReviewEntity {
+  mongoPlace: MongoPlace;
+  dateOfVisit: string;
+  wouldReturn: boolean | null;
+  itemReviews: ItemReview[]
+  reviewer: string;
+}
+
+export interface MongoReviewEntityWithFullText extends MongoReviewEntity {
   reviewText: string;
 }
 
@@ -56,7 +77,6 @@ export interface QueryRequestBody {
 }
 
 export interface PreviewRequestBody {
-  structuredReviewProperties: StructuredReviewProperties;
   reviewText: string;
   sessionId: string;
 }

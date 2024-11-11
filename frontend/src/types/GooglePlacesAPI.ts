@@ -60,8 +60,8 @@ export interface AddressComponent {
 }
 
 export interface GoogleGeometry {
-  location: LatLngLiteral;
-  viewport: Viewport;
+  location: google.maps.LatLngLiteral;
+  viewport: google.maps.LatLngBoundsLiteral;
 }
 
 // Interface for Geometry, including the location and viewport
