@@ -66,6 +66,7 @@ export interface ChatResponse {
 }
 
 export interface SubmitReviewBody {
+  _id?: string;
   structuredReviewProperties: StructuredReviewProperties;
   parsedReviewProperties: ParsedReviewProperties
   reviewText: string;

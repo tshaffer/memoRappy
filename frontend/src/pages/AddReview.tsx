@@ -162,11 +162,11 @@ const AddReview: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    debugger;
     if (!parsedReviewProperties) return;
     try {
       setIsLoading(true);
       const submitBody: SubmitReviewBody = {
+        _id,
         structuredReviewProperties: { googlePlace: googlePlace as GooglePlaceResult, dateOfVisit, wouldReturn },
         parsedReviewProperties,
         reviewText,
