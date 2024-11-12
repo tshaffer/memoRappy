@@ -210,7 +210,6 @@ const AddReview: React.FC = () => {
     }
     return (
       <Box sx={{ textAlign: 'left' }}>
-        <Typography><strong>Reviewer:</strong> {parsedReviewProperties.reviewer || 'Not provided'}</Typography>
         <Typography><strong>Restaurant:</strong> {place.name || 'Not provided'}</Typography>
         <Typography><strong>Date of Visit:</strong> {formatDateToMMDDYYYY(dateOfVisit) || 'Not provided'}</Typography>
         <Typography><strong>Would Return:</strong> {getReturnString()}</Typography>
@@ -223,6 +222,7 @@ const AddReview: React.FC = () => {
           ))}
         </ul>
         <Typography><strong>Retrieved Location:</strong>{place?.formatted_address}</Typography>
+        <Typography><strong>Reviewer:</strong> {parsedReviewProperties.reviewer || 'Not provided'}</Typography>
       </Box>
     )
   };
