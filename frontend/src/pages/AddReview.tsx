@@ -18,7 +18,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { LoadScript, Autocomplete, Libraries } from '@react-google-maps/api';
-import { AddReviewDisplayTabs, ChatResponse, GooglePlaceResult, ParsedReviewProperties, PreviewRequestBody, ReviewEntity, SubmitReviewBody } from '../types';
+import { AddReviewDisplayTabs, ChatResponse, GooglePlaceResult, ParsedReviewProperties, PreviewRequestBody, ReviewEntity, ReviewEntityWithFullText, SubmitReviewBody } from '../types';
 import { pickGooglePlaceProperties } from '../utilities';
 const libraries = ['places'] as Libraries;
 
@@ -27,10 +27,7 @@ const AddReview: React.FC = () => {
   const { _id } = useParams<{ _id: string }>();
   console.log('AddReview _id:', _id);
   const location = useLocation();
-  const review = location.state?.review;
-  if (review) {
-    console.log('AddReview review:', review);
-  }
+  const review: ReviewEntityWithFullText = location.state?.review;
 
   const formatDateToMMDDYYYY = (dateString: string) => {
     if (!dateString) return '';
@@ -66,6 +63,19 @@ const AddReview: React.FC = () => {
       setSessionId(generateSessionId());
     }
   }, [sessionId]);
+
+  useEffect(() => {
+    if (review) {
+      console.log('AddReview review:', review);
+      setGooglePlace(review.googlePlace);
+      setRestaurantLabel(review.googlePlace.name);
+      setDateOfVisit(review.dateOfVisit);
+      setReviewText(review.reviewText);
+      setWouldReturn(review.wouldReturn);
+      setParsedReviewProperties({ itemReviews: review.itemReviews, reviewer: review.reviewer });
+    }
+  }, [review]);
+
 
   const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setDisplayTab(newValue);
