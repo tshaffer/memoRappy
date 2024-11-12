@@ -16,7 +16,7 @@ import {
   IconButton,
 } from '@mui/material';
 import DirectionsIcon from '@mui/icons-material/Directions';
-import { LatLngLiteral, GooglePlaceResult, ReviewEntityWithFullText } from '../types';
+import { GooglePlaceResult, ReviewEntityWithFullText } from '../types';
 import MapWithMarkers from '../components/MapWIthMarkers';
 import { getCityNameFromPlace } from '../utilities';
 
