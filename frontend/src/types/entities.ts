@@ -40,11 +40,12 @@ export interface ReviewEntity {
   googlePlace: GooglePlaceResult;
   dateOfVisit: string;
   wouldReturn: boolean | null;
-  itemReviews: ItemReview[]
+  itemReviews: ItemReview[];
   reviewer: string;
 }
 
 export interface ReviewEntityWithFullText extends ReviewEntity {
+  _id?: string;
   reviewText: string;
 }
 
@@ -66,6 +67,7 @@ export interface ChatResponse {
 }
 
 export interface SubmitReviewBody {
+  _id?: string;
   structuredReviewProperties: StructuredReviewProperties;
   parsedReviewProperties: ParsedReviewProperties
   reviewText: string;

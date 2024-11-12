@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Paper,
   Table,
@@ -16,6 +17,7 @@ import {
   IconButton,
 } from '@mui/material';
 import DirectionsIcon from '@mui/icons-material/Directions';
+import EditIcon from '@mui/icons-material/Edit';
 import { GooglePlaceResult, ReviewEntityWithFullText } from '../types';
 import MapWithMarkers from '../components/MapWIthMarkers';
 import { getCityNameFromPlace } from '../utilities';
@@ -28,6 +30,9 @@ interface ColumnProperties {
 }
 
 const ViewReviews: React.FC = () => {
+
+  const navigate = useNavigate();
+
   const [reviews, setReviews] = useState<ReviewEntityWithFullText[]>([]);
   const [sortBy, setSortBy] = useState<keyof ColumnProperties>('restaurantLabel');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -153,6 +158,11 @@ const ViewReviews: React.FC = () => {
 
   const locations: GooglePlaceResult[] = selectedReviews.map((review) => review.googlePlace);
 
+  const handleEditReview = (review: ReviewEntityWithFullText) => {
+    console.log('handleEditReview', review);
+    navigate(`/add-review/${review._id}`, { state: { review } });
+  }
+
   const handleShowDirections = (review: ReviewEntityWithFullText) => {
     if (currentLocation) {
       const destination: GooglePlaceResult = review.googlePlace;
@@ -187,6 +197,8 @@ const ViewReviews: React.FC = () => {
                 <TableRow>
                   <TableCell padding="checkbox">
                     <Checkbox />
+                  </TableCell>
+                  <TableCell>
                   </TableCell>
                   <TableCell>
                   </TableCell>
@@ -241,6 +253,11 @@ const ViewReviews: React.FC = () => {
                         checked={selectedReviews.includes(review)}
                         onChange={() => handleSelectReview(review)}
                       />
+                    </TableCell>
+                    <TableCell>
+                      <IconButton onClick={() => handleEditReview(review)}>
+                        <EditIcon />
+                      </IconButton>
                     </TableCell>
                     <TableCell>
                       <IconButton onClick={() => handleShowDirections(review)}>

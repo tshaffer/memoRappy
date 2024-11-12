@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
 import {
   TextField,
   Button,
@@ -17,11 +18,17 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { LoadScript, Autocomplete, Libraries } from '@react-google-maps/api';
-import { AddReviewDisplayTabs, ChatResponse, GooglePlaceResult, ParsedReviewProperties, PreviewRequestBody, ReviewEntity, SubmitReviewBody } from '../types';
+import { ReviewFormDisplayTabs, ChatResponse, GooglePlaceResult, ParsedReviewProperties, PreviewRequestBody, ReviewEntity, ReviewEntityWithFullText, SubmitReviewBody } from '../types';
 import { pickGooglePlaceProperties } from '../utilities';
 const libraries = ['places'] as Libraries;
 
-const AddReview: React.FC = () => {
+const ReviewForm: React.FC = () => {
+
+  const { _id } = useParams<{ _id: string }>();
+  console.log('ReviewForm _id:', _id);
+  const location = useLocation();
+  const review: ReviewEntityWithFullText = location.state?.review;
+
   const formatDateToMMDDYYYY = (dateString: string) => {
     if (!dateString) return '';
     const [year, month, day] = dateString.split('-');
@@ -44,7 +51,7 @@ const AddReview: React.FC = () => {
   const [reviewText, setReviewText] = useState('');
   const [wouldReturn, setWouldReturn] = useState<boolean | null>(null); // New state
   const [parsedReviewProperties, setParsedReviewProperties] = useState<ParsedReviewProperties | null>(null);
-  const [displayTab, setDisplayTab] = useState(AddReviewDisplayTabs.ReviewText);
+  const [displayTab, setDisplayTab] = useState(ReviewFormDisplayTabs.ReviewText);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | ParsedReviewProperties }[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
@@ -56,6 +63,19 @@ const AddReview: React.FC = () => {
       setSessionId(generateSessionId());
     }
   }, [sessionId]);
+
+  useEffect(() => {
+    if (review) {
+      console.log('ReviewForm review:', review);
+      setGooglePlace(review.googlePlace);
+      setRestaurantLabel(review.googlePlace.name);
+      setDateOfVisit(review.dateOfVisit);
+      setReviewText(review.reviewText);
+      setWouldReturn(review.wouldReturn);
+      setParsedReviewProperties({ itemReviews: review.itemReviews, reviewer: review.reviewer });
+    }
+  }, [review]);
+
 
   const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setDisplayTab(newValue);
@@ -142,11 +162,11 @@ const AddReview: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    debugger;
     if (!parsedReviewProperties) return;
     try {
       setIsLoading(true);
       const submitBody: SubmitReviewBody = {
+        _id,
         structuredReviewProperties: { googlePlace: googlePlace as GooglePlaceResult, dateOfVisit, wouldReturn },
         parsedReviewProperties,
         reviewText,
@@ -190,7 +210,6 @@ const AddReview: React.FC = () => {
     }
     return (
       <Box sx={{ textAlign: 'left' }}>
-        <Typography><strong>Reviewer:</strong> {parsedReviewProperties.reviewer || 'Not provided'}</Typography>
         <Typography><strong>Restaurant:</strong> {place.name || 'Not provided'}</Typography>
         <Typography><strong>Date of Visit:</strong> {formatDateToMMDDYYYY(dateOfVisit) || 'Not provided'}</Typography>
         <Typography><strong>Would Return:</strong> {getReturnString()}</Typography>
@@ -203,6 +222,7 @@ const AddReview: React.FC = () => {
           ))}
         </ul>
         <Typography><strong>Retrieved Location:</strong>{place?.formatted_address}</Typography>
+        <Typography><strong>Reviewer:</strong> {parsedReviewProperties.reviewer || 'Not provided'}</Typography>
       </Box>
     )
   };
@@ -239,7 +259,7 @@ const AddReview: React.FC = () => {
         </Tabs>
 
         <Box mt={2}>
-          {displayTab === AddReviewDisplayTabs.ReviewText && (
+          {displayTab === ReviewFormDisplayTabs.ReviewText && (
             <Box>
               <Autocomplete
                 onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
@@ -294,8 +314,8 @@ const AddReview: React.FC = () => {
               />
             </Box>
           )}
-          {displayTab === AddReviewDisplayTabs.ExtractedInformation && parsedReviewProperties && renderPreviewResponse(parsedReviewProperties)}
-          {displayTab === AddReviewDisplayTabs.ChatHistory && (
+          {displayTab === ReviewFormDisplayTabs.ExtractedInformation && parsedReviewProperties && renderPreviewResponse(parsedReviewProperties)}
+          {displayTab === ReviewFormDisplayTabs.ChatHistory && (
             <Box>
               {chatHistory.map((msg, idx) => (
                 <Box
@@ -375,4 +395,4 @@ const AddReview: React.FC = () => {
   );
 };
 
-export default AddReview;
+export default ReviewForm;

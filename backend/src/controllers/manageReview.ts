@@ -1,6 +1,6 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import { openai } from '../index';
-import { ChatResponse, ParsedReviewProperties, GooglePlaceResult, SubmitReviewBody, ItemReview, PreviewRequestBody, ReviewEntityWithFullText, MongoGeometry, GoogleGeometry, MongoPlace, MongoReviewEntityWithFullText } from '../types/';
+import { ChatResponse, ParsedReviewProperties, GooglePlaceResult, SubmitReviewBody, ItemReview, PreviewRequestBody, ReviewEntityWithFullText, MongoGeometry, GoogleGeometry, MongoPlace, MongoReviewEntityWithFullText } from '../types';
 import Review, { IReview } from "../models/Review";
 import { extractFieldFromResponse, extractItemReviews, extractListFromResponse, removeSquareBrackets } from '../utilities';
 import { Request, Response } from 'express';
@@ -154,8 +154,8 @@ export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
 };
 
 export const submitReview = async (body: SubmitReviewBody) => {
+  const { _id, structuredReviewProperties, parsedReviewProperties, reviewText, sessionId } = body;
 
-  const { structuredReviewProperties, parsedReviewProperties, reviewText, sessionId } = body;
   if (!structuredReviewProperties || !parsedReviewProperties || !reviewText || !sessionId) {
     throw new Error('Incomplete review data.');
   }
@@ -163,11 +163,12 @@ export const submitReview = async (body: SubmitReviewBody) => {
   const { googlePlace, dateOfVisit, wouldReturn } = structuredReviewProperties;
   const { itemReviews, reviewer } = parsedReviewProperties;
 
-  // convert geometry from google format to mongoose format
+  // Convert geometry from Google format to Mongoose format
   const mongoGeometry: MongoGeometry = getMongoGeometryFromGoogleGeometry(googlePlace.geometry!);
   const mongoPlace: MongoPlace = { ...googlePlace, geometry: mongoGeometry };
+
   try {
-    const review: MongoReviewEntityWithFullText = {
+    const reviewData: MongoReviewEntityWithFullText = {
       mongoPlace,
       dateOfVisit,
       wouldReturn,
@@ -176,19 +177,33 @@ export const submitReview = async (body: SubmitReviewBody) => {
       reviewText
     };
 
-    const newReview: IReview = new Review(review);
+    let savedReview: IReview | null;
 
-    await newReview.save();
+    if (_id) {
+      // If _id is provided, update the existing document
+      savedReview = await Review.findByIdAndUpdate(_id, reviewData, {
+        new: true,    // Return the updated document
+        runValidators: true // Ensure the updated data complies with schema validation
+      });
+
+      if (!savedReview) {
+        throw new Error('Review not found for update.');
+      }
+    } else {
+      // If no _id, create a new document
+      const newReview = new Review(reviewData);
+      savedReview = await newReview.save();
+    }
 
     // Clear conversation history for the session after submission
     delete reviewConversations[sessionId];
 
-    return newReview;
+    return savedReview;
   } catch (error) {
     console.error('Error saving review:', error);
     throw new Error('An error occurred while saving the review.');
   }
-}
+};
 
 export const submitReviewHandler = async (req: Request, res: Response): Promise<any> => {
 
