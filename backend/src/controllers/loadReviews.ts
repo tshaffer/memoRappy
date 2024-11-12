@@ -1,12 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
-import { GooglePlaceResult, GooglePlacesResponse, ParsedReviewProperties, SubmitReviewBody } from '../types/';
+import { GooglePlaceDetails, GooglePlaceDetailsResponse, GooglePlaceResult, GooglePlacesResponse, ParsedReviewProperties, SubmitReviewBody } from '../types/';
 import { Request, Response } from 'express';
 import { parsePreview, submitReview } from './manageReview';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
+const GOOGLE_PLACE_DETAILS_BASE_URL = 'https://maps.googleapis.com/maps/api/place/details/json';
 
 interface TestReview {
   restaurantName: string;
@@ -73,7 +74,8 @@ export const getRestaurantProperties = async (restaurantName: string): Promise<G
 
   try {
     const place: google.maps.places.PlaceResult = await getGooglePlace(url);
-    const restaurantProperties: GooglePlaceResult = pickGooglePlaceProperties(place!)
+    const placeDetails: GooglePlaceDetails | null = await getGooglePlaceDetails(place!.place_id!);
+    const restaurantProperties: GooglePlaceResult = pickGooglePlaceProperties(placeDetails!)
     return restaurantProperties;
 
   } catch (error) {
@@ -100,7 +102,53 @@ const getGooglePlace = async (url: string): Promise<google.maps.places.PlaceResu
   }
 }
 
-function pickGooglePlaceProperties(googlePlaceResult: google.maps.places.PlaceResult): GooglePlaceResult {
+const getGooglePlaceDetails = async (placeId: string): Promise<GooglePlaceDetails | null> => {
+  try {
+    const response: any = await axios.get(
+      GOOGLE_PLACE_DETAILS_BASE_URL,
+      {
+        params: {
+          place_id: placeId,
+          key: GOOGLE_PLACES_API_KEY,
+        },
+      }
+    );
+
+    console.log('getPlaceResult response:', response.data);
+
+    const placeDetailsResponse: GooglePlaceDetailsResponse = response.data;
+    const googlePlaceDetails: GooglePlaceDetails = placeDetailsResponse.result;
+    return googlePlaceDetails;
+  } catch (error) {
+    console.error("Error fetching city name:", error);
+    return null;
+  }
+}
+
+
+const pickGooglePlaceProperties = (googlePlaceDetails: GooglePlaceDetails): GooglePlaceResult => {
+  const googlePlace: GooglePlaceResult = {
+    place_id: googlePlaceDetails.place_id!,
+    name: googlePlaceDetails.name!,
+    address_components: googlePlaceDetails.address_components,
+    formatted_address: googlePlaceDetails.formatted_address!,
+    geometry: {
+      location: {
+        lat: googlePlaceDetails.geometry!.location!.lat as unknown as number,
+        lng: googlePlaceDetails.geometry!.location!.lng as unknown as number,
+      },
+      viewport: {
+        east: (googlePlaceDetails.geometry!.viewport! as any).northeast.lat,
+        north: (googlePlaceDetails.geometry!.viewport! as any).northeast.lng,
+        south: (googlePlaceDetails.geometry!.viewport! as any).southwest.lat,
+        west: (googlePlaceDetails.geometry!.viewport! as any).southwest.lng,
+      },
+    },
+    website: googlePlaceDetails.website || '',
+  };
+  return googlePlace;
+}
+function old_pickGooglePlaceProperties(googlePlaceResult: google.maps.places.PlaceResult): GooglePlaceResult {
 
   const googlePlace: GooglePlaceResult = {
     place_id: googlePlaceResult.place_id!,
