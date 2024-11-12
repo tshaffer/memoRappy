@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import {
   TextField,
   Button,
@@ -26,6 +26,11 @@ const AddReview: React.FC = () => {
 
   const { _id } = useParams<{ _id: string }>();
   console.log('AddReview _id:', _id);
+  const location = useLocation();
+  const review = location.state?.review;
+  if (review) {
+    console.log('AddReview review:', review);
+  }
 
   const formatDateToMMDDYYYY = (dateString: string) => {
     if (!dateString) return '';
