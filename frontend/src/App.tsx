@@ -4,7 +4,7 @@ import { AppBar, Toolbar, Typography, Button, Container } from '@mui/material';
 import Home from './pages/Home';
 import AddReview from './pages/AddReview';
 import ViewReviews from './pages/ViewReviews';
-import RunQuery from './pages/RunQuery';
+// import RunQuery from './pages/RunQuery';
 import QueryReviews from './pages/QueryReviews';
 
 const App: React.FC = () => {
@@ -26,7 +26,6 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/view-reviews" element={<ViewReviews />} />
-          {/* <Route path="/run-query" element={<RunQuery />} /> */}
           <Route path="/query-reviews" element={<QueryReviews />} />
           <Route path="/add-review" element={<AddReview />} />
           </Routes>
