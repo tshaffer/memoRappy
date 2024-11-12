@@ -1,6 +1,6 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import { openai } from '../index';
-import { ChatResponse, ParsedReviewProperties, GooglePlaceResult, SubmitReviewBody, ItemReview, PreviewRequestBody, ReviewEntityWithFullText, MongoGeometry, GoogleGeometry, MongoPlace, MongoReviewEntityWithFullText } from '../types/';
+import { ChatResponse, ParsedReviewProperties, GooglePlaceResult, SubmitReviewBody, ItemReview, PreviewRequestBody, ReviewEntityWithFullText, MongoGeometry, GoogleGeometry, MongoPlace, MongoReviewEntityWithFullText } from '../types';
 import Review, { IReview } from "../models/Review";
 import { extractFieldFromResponse, extractItemReviews, extractListFromResponse, removeSquareBrackets } from '../utilities';
 import { Request, Response } from 'express';

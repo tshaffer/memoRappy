@@ -3,7 +3,7 @@ import path from 'path';
 import axios from 'axios';
 import { GooglePlaceResult, GooglePlacesResponse, ParsedReviewProperties, SubmitReviewBody } from '../types/';
 import { Request, Response } from 'express';
-import { parsePreview, submitReview } from './addReview';
+import { parsePreview, submitReview } from './manageReview';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json';

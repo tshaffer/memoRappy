@@ -1,4 +1,4 @@
-export * from './addReview';
+export * from './manageReview';
 export * from './googlePlaces';
 export * from './loadReviews';
 export * from './queryReviews';

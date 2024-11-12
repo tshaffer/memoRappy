@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Container } from '@mui/material';
 import Home from './pages/Home';
-import AddReview from './pages/AddReview';
+import ReviewForm from './pages/ReviewForm';
 import ViewReviews from './pages/ViewReviews';
 import QueryReviews from './pages/QueryReviews';
 
@@ -25,8 +25,8 @@ const App: React.FC = () => {
           <Route path="/" element={<Home />} />
           <Route path="/view-reviews" element={<ViewReviews />} />
           <Route path="/query-reviews" element={<QueryReviews />} />
-          <Route path="/add-review" element={<AddReview />} />
-          <Route path="/add-review/:_id" element={<AddReview />} />
+          <Route path="/add-review" element={<ReviewForm />} />
+          <Route path="/add-review/:_id" element={<ReviewForm />} />
         </Routes>
       </Container>
     </Router>
