@@ -160,9 +160,7 @@ const ViewReviews: React.FC = () => {
 
   const handleEditReview = (review: ReviewEntityWithFullText) => {
     console.log('handleEditReview', review);
-    // navigate(`/edit-review/${review.id}`); 
-    navigate("/add-review"); 
-
+    navigate(`/add-review/${review._id}`); 
   }
 
   const handleShowDirections = (review: ReviewEntityWithFullText) => {

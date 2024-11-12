@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   TextField,
   Button,
@@ -22,6 +23,10 @@ import { pickGooglePlaceProperties } from '../utilities';
 const libraries = ['places'] as Libraries;
 
 const AddReview: React.FC = () => {
+
+  const { _id } = useParams<{ _id: string }>();
+  console.log('AddReview _id:', _id);
+
   const formatDateToMMDDYYYY = (dateString: string) => {
     if (!dateString) return '';
     const [year, month, day] = dateString.split('-');

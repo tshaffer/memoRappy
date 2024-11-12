@@ -4,7 +4,6 @@ import { AppBar, Toolbar, Typography, Button, Container } from '@mui/material';
 import Home from './pages/Home';
 import AddReview from './pages/AddReview';
 import ViewReviews from './pages/ViewReviews';
-// import RunQuery from './pages/RunQuery';
 import QueryReviews from './pages/QueryReviews';
 
 const App: React.FC = () => {
@@ -17,7 +16,6 @@ const App: React.FC = () => {
           </Typography>
           <Button color="inherit" component={Link} to="/">Home</Button>
           <Button color="inherit" component={Link} to="/view-reviews">View Reviews</Button>
-          {/* <Button color="inherit" component={Link} to="/run-query">Run Query</Button> */}
           <Button color="inherit" component={Link} to="/query-reviews">Query Reviews</Button>
           <Button color="inherit" component={Link} to="/add-review">Add Review</Button>
         </Toolbar>
@@ -28,7 +26,8 @@ const App: React.FC = () => {
           <Route path="/view-reviews" element={<ViewReviews />} />
           <Route path="/query-reviews" element={<QueryReviews />} />
           <Route path="/add-review" element={<AddReview />} />
-          </Routes>
+          <Route path="/add-review/:_id" element={<AddReview />} />
+        </Routes>
       </Container>
     </Router>
   );
