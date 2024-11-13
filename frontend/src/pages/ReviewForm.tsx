@@ -25,7 +25,6 @@ const libraries = ['places'] as Libraries;
 const ReviewForm: React.FC = () => {
 
   const { _id } = useParams<{ _id: string }>();
-  console.log('ReviewForm _id:', _id);
   const location = useLocation();
   const review: ReviewEntityWithFullText = location.state?.review;
 
@@ -66,7 +65,6 @@ const ReviewForm: React.FC = () => {
 
   useEffect(() => {
     if (review) {
-      console.log('ReviewForm review:', review);
       setGooglePlace(review.googlePlace);
       setRestaurantLabel(review.googlePlace.name);
       setDateOfVisit(review.dateOfVisit);
