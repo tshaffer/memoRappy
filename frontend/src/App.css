@@ -53,6 +53,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  width: 100%; /* Ensure the container takes the full width */
   padding: 20px;
 }
 
@@ -64,7 +65,7 @@
 
 .scrollable-table-container {
   flex: 1;
-  max-width: 60%; /* Adjust the width as needed */
+  max-width: 50%; /* You can adjust this value as needed or remove it */
   overflow-y: auto;
 }
 
@@ -74,4 +75,9 @@
   margin-left: 20px;
   padding: 20px;
   overflow-y: auto;
+}
+
+.full-width-container {
+  max-width: 90% !important;
+  padding: 20px;
 }

@@ -5,6 +5,7 @@ import ReviewForm from './pages/ReviewForm';
 import ViewReviews from './pages/ViewReviews';
 import QueryReviews from './pages/QueryReviews';
 import Reviews from './pages/Reviews';
+import './App.css';
 
 const App: React.FC = () => {
   return (
@@ -20,7 +21,7 @@ const App: React.FC = () => {
           <Button color="inherit" component={Link} to="/add-review">Add Review</Button>
         </Toolbar>
       </AppBar>
-      <Container style={{ marginTop: '20px' }}>
+      <Container className="full-width-container">
         <Routes>
           <Route path="/" element={<Reviews />} />
           <Route path="/view-reviews" element={<ViewReviews />} />
