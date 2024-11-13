@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Typography, Button, Slider, Popover, FormControlLabel, Checkbox, TextField } from '@mui/material';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { GooglePlaceResult, MemoRappReview } from '../types';
@@ -15,6 +15,7 @@ const ReviewsPage: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [anchorElWouldReturn, setAnchorElWouldReturn] = useState<HTMLElement | null>(null);
   const [query, setQuery] = useState<string>("");
+  const controlsRef = useRef<HTMLDivElement | null>(null);
 
   const [googlePlaces, setGooglePlaces] = useState<GooglePlaceResult[]>([]);
   const [memoRappReviews, setMemoRappReviews] = useState<MemoRappReview[]>([]);
@@ -36,6 +37,10 @@ const ReviewsPage: React.FC = () => {
     }
     fetchPlaces();
     fetchReviews();
+
+    // Dynamically set the controls' height as a CSS variable
+    const controlsHeight = controlsRef.current?.offsetHeight || 0;
+    document.documentElement.style.setProperty('--controls-height', `${controlsHeight}px`);
 
     // Get the user's current location
     // navigator.geolocation.getCurrentPosition(
@@ -101,57 +106,58 @@ const ReviewsPage: React.FC = () => {
 
   return (
     <div className="page-container">
-      {/* Freeform Query Input */}
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-        <TextField
-          label="Enter query"
-          variant="outlined"
-          value={query}
-          onChange={handleQueryChange}
-          size="small"
-          style={{ flex: 1 }}
-        />
-        <Button variant="contained" color="primary" onClick={handleSearch}>
-          Search
-        </Button>
-      </div>
-
-      {/* Filtering UI */}
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-        <div>
-          <Button variant="outlined" aria-describedby={openWouldReturn ? 'would-return-popover' : undefined} onClick={handleWouldReturnClick}>
-            Would Return
+      <div ref={controlsRef} className="controls-container">
+        <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <TextField
+            label="Enter query"
+            variant="outlined"
+            value={query}
+            onChange={handleQueryChange}
+            size="small"
+            style={{ flex: 1 }}
+          />
+          <Button variant="contained" color="primary" onClick={handleSearch}>
+            Search
           </Button>
-          <Popover
-            open={Boolean(anchorElWouldReturn)}
-            anchorEl={anchorElWouldReturn}
-            onClose={handleWouldReturnClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-          >
-            <div style={{ padding: '20px' }}>
-              <Typography variant="subtitle1">Would Return</Typography>
-              <FormControlLabel control={<Checkbox checked={wouldReturnFilter.yes} onChange={() => handleWouldReturnChange('yes')} />} label="Yes" />
-              <FormControlLabel control={<Checkbox checked={wouldReturnFilter.no} onChange={() => handleWouldReturnChange('no')} />} label="No" />
-              <FormControlLabel control={<Checkbox checked={wouldReturnFilter.notSpecified} onChange={() => handleWouldReturnChange('notSpecified')} />} label="Not Specified" />
-              <Button variant="outlined" size="small" onClick={handleClearWouldReturnFilter} style={{ marginTop: '10px' }}>Clear</Button>
-            </div>
-          </Popover>
         </div>
-        <div>
-          <Button variant="outlined" aria-describedby={openDistance ? 'distance-popover' : undefined} onClick={handleDistanceClick}>
-            Distance: {distance} miles
-          </Button>
-          <Popover
-            open={Boolean(anchorEl)}
-            anchorEl={anchorEl}
-            onClose={handleDistanceClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-          >
-            <div style={{ padding: '20px' }}>
-              <Typography variant="subtitle1">Select Distance</Typography>
-              <Slider value={distance} onChange={handleDistanceSliderChange} min={1} max={100} valueLabelDisplay="auto" />
-            </div>
-          </Popover>
+
+
+        <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div>
+            <Button variant="outlined" aria-describedby={anchorElWouldReturn ? 'would-return-popover' : undefined} onClick={handleWouldReturnClick}>
+              Would Return
+            </Button>
+            <Popover
+              open={Boolean(anchorElWouldReturn)}
+              anchorEl={anchorElWouldReturn}
+              onClose={handleWouldReturnClose}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+            >
+              <div style={{ padding: '20px' }}>
+                <Typography variant="subtitle1">Would Return</Typography>
+                <FormControlLabel control={<Checkbox checked={wouldReturnFilter.yes} onChange={() => handleWouldReturnChange('yes')} />} label="Yes" />
+                <FormControlLabel control={<Checkbox checked={wouldReturnFilter.no} onChange={() => handleWouldReturnChange('no')} />} label="No" />
+                <FormControlLabel control={<Checkbox checked={wouldReturnFilter.notSpecified} onChange={() => handleWouldReturnChange('notSpecified')} />} label="Not Specified" />
+                <Button variant="outlined" size="small" onClick={handleClearWouldReturnFilter} style={{ marginTop: '10px' }}>Clear</Button>
+              </div>
+            </Popover>
+          </div>
+          <div>
+            <Button variant="outlined" aria-describedby={anchorEl ? 'distance-popover' : undefined} onClick={handleDistanceClick}>
+              Distance: {distance} miles
+            </Button>
+            <Popover
+              open={Boolean(anchorEl)}
+              anchorEl={anchorEl}
+              onClose={handleDistanceClose}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+            >
+              <div style={{ padding: '20px' }}>
+                <Typography variant="subtitle1">Select Distance</Typography>
+                <Slider value={distance} onChange={handleDistanceSliderChange} min={1} max={100} valueLabelDisplay="auto" />
+              </div>
+            </Popover>
+          </div>
         </div>
       </div>
 
@@ -196,7 +202,7 @@ const ReviewsPage: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
-    </div>
+    </div >
   );
 };
 
