@@ -42,14 +42,24 @@
   }
 }
 
-.scrollable-table-container {
-  max-height: calc(100vh - 24px); /* Sets max height with 24px margin */
-  overflow-y: auto;               /* Enables vertical scrolling */
+/* Ensures the page container uses full height and is set up for flex layout */
+.page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 }
 
+/* Allows the table to take up remaining space after other content */
+.scrollable-table-container {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 24px; /* Ensures there's a margin from the bottom of the viewport */
+}
+
+/* Keeps the header row fixed while scrolling */
 .table-head-fixed {
   position: sticky;
   top: 0;
-  background-color: white;        /* Ensures header background remains visible */
-  z-index: 1;                     /* Ensures header stays above table rows */
+  background-color: white;
+  z-index: 1;
 }

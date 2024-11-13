@@ -100,7 +100,7 @@ const ReviewsPage: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className="page-container">
       {/* Freeform Query Input */}
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
         <TextField
