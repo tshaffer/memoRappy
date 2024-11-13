@@ -40,7 +40,6 @@ const ReviewsPage: React.FC = () => {
   };
 
   const handleReviewClick = (review: MemoRappReview) => {
-    console.log("handleReviewClick:", review);
     setSelectedReview(review);
   };
 
@@ -85,7 +84,7 @@ const ReviewsPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className="page-container">
       {/* Freeform Query Input */}
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
         <TextField
@@ -140,57 +139,60 @@ const ReviewsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Scrollable TableContainer */}
-      <TableContainer component={Paper} className="scrollable-table-container">
-        <Table stickyHeader>
-          <TableHead>
-            <TableRow className="table-head-fixed">
-              <TableCell>Place</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {googlePlaces.map((place: GooglePlaceResult) => (
-              <React.Fragment key={place.place_id}>
-                <TableRow>
-                  <TableCell>{place.name}</TableCell>
-                  <TableCell align="right">
-                    <IconButton onClick={() => handleExpandClick(place.place_id)}>
-                      {expandedPlaceId === place.place_id ? <ExpandLess /> : <ExpandMore />}
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell colSpan={2} style={{ padding: 0 }}>
-                    <Collapse in={expandedPlaceId === place.place_id} timeout="auto" unmountOnExit>
-                      <Table size="small">
-                        <TableBody>
-                          {getReviewsForPlace(place.place_id).map((review) => (
-                            <TableRow key={review._id} onClick={() => handleReviewClick(review)} style={{ cursor: 'pointer' }}>
-                              <TableCell>Date: {review.structuredReviewProperties.dateOfVisit}</TableCell>
-                              <TableCell>Would Return: {review.structuredReviewProperties.wouldReturn === null ? 'Not Specified' : review.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </Collapse>
-                  </TableCell>
-                </TableRow>
-              </React.Fragment>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {/* Table and Review Details Container */}
+      <div className="table-and-details-container">
+        {/* Scrollable TableContainer */}
+        <TableContainer component={Paper} className="scrollable-table-container">
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow className="table-head-fixed">
+                <TableCell>Place</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {googlePlaces.map((place: GooglePlaceResult) => (
+                <React.Fragment key={place.place_id}>
+                  <TableRow>
+                    <TableCell>{place.name}</TableCell>
+                    <TableCell align="right">
+                      <IconButton onClick={() => handleExpandClick(place.place_id)}>
+                        {expandedPlaceId === place.place_id ? <ExpandLess /> : <ExpandMore />}
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell colSpan={2} style={{ padding: 0 }}>
+                      <Collapse in={expandedPlaceId === place.place_id} timeout="auto" unmountOnExit>
+                        <Table size="small">
+                          <TableBody>
+                            {getReviewsForPlace(place.place_id).map((review) => (
+                              <TableRow key={review._id} onClick={() => handleReviewClick(review)} style={{ cursor: 'pointer' }}>
+                                <TableCell>Date: {review.structuredReviewProperties.dateOfVisit}</TableCell>
+                                <TableCell>Would Return: {review.structuredReviewProperties.wouldReturn === null ? 'Not Specified' : review.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </Collapse>
+                    </TableCell>
+                  </TableRow>
+                </React.Fragment>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      {/* Selected Review Details */}
-      {selectedReview && (
-        <Paper style={{ marginTop: '20px', padding: '20px' }}>
-          <Typography variant="h6">Review Details</Typography>
-          <Typography><strong>Date of Visit:</strong> {selectedReview.structuredReviewProperties.dateOfVisit}</Typography>
-          <Typography><strong>Would Return:</strong> {selectedReview.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
-          <Typography><strong>Review Text:</strong> {selectedReview.freeformReviewProperties.reviewText}</Typography>
-        </Paper>
-      )}
+        {/* Selected Review Details */}
+        {selectedReview && (
+          <Paper className="review-details">
+            <Typography variant="h6">Review Details</Typography>
+            <Typography><strong>Date of Visit:</strong> {selectedReview.structuredReviewProperties.dateOfVisit}</Typography>
+            <Typography><strong>Would Return:</strong> {selectedReview.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
+            <Typography><strong>Review Text:</strong> {selectedReview.freeformReviewProperties.reviewText}</Typography>
+          </Paper>
+        )}
+      </div>
     </div>
   );
 };

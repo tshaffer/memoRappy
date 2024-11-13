@@ -42,14 +42,35 @@
   }
 }
 
-.scrollable-table-container {
-  max-height: calc(100vh - 24px); /* Sets max height with 24px margin */
-  overflow-y: auto;               /* Enables vertical scrolling */
-}
-
 .table-head-fixed {
   position: sticky;
   top: 0;
   background-color: white;        /* Ensures header background remains visible */
   z-index: 1;                     /* Ensures header stays above table rows */
+}
+
+.page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 20px;
+}
+
+.table-and-details-container {
+  display: flex;
+  flex-direction: row;
+  height: calc(100vh - 160px); /* Adjusted height to account for header, filters, etc. */
+}
+
+.scrollable-table-container {
+  flex: 1;
+  max-width: 60%; /* Adjust the width as needed */
+  overflow-y: auto;
+}
+
+.review-details {
+  flex: 1;
+  margin-left: 20px;
+  padding: 20px;
+  overflow-y: auto;
 }
