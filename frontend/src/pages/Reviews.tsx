@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Typography, Button, Slider, Popover, FormControlLabel, Checkbox, TextField } from '@mui/material';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { GooglePlaceResult, MemoRappReview } from '../types';
-import '../App.css'; // Ensure App.css contains the required classes
+import '../App.css';
 
 const ReviewsPage: React.FC = () => {
   const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
+  const [selectedReview, setSelectedReview] = useState<MemoRappReview | null>(null);
   const [wouldReturnFilter, setWouldReturnFilter] = useState<{ yes: boolean; no: boolean; notSpecified: boolean }>({
     yes: false,
     no: false,
@@ -23,34 +24,24 @@ const ReviewsPage: React.FC = () => {
     const fetchPlaces = async () => {
       const response = await fetch('/api/places');
       const data = await response.json();
-      const googlePlaces: GooglePlaceResult[] = data.googlePlaces;
-      console.log('GooglePlaces:', googlePlaces);
-      setGooglePlaces(googlePlaces);
+      setGooglePlaces(data.googlePlaces);
     }
     const fetchReviews = async () => {
       const response = await fetch('/api/reviews');
       const data = await response.json();
-      const memoRappReviews: MemoRappReview[] = data.memoRappReviews;
-      console.log('MemoRappReviews:', memoRappReviews);
-      setMemoRappReviews(memoRappReviews);
+      setMemoRappReviews(data.memoRappReviews);
     }
     fetchPlaces();
     fetchReviews();
-
-    // Get the user's current location
-    // navigator.geolocation.getCurrentPosition(
-    //   (position) => {
-    //     setCurrentLocation({
-    //       lat: position.coords.latitude,
-    //       lng: position.coords.longitude,
-    //     });
-    //   },
-    //   (error) => console.error('Error getting current location:', error)
-    // );
   }, []);
 
   const handleExpandClick = (placeId: string) => {
     setExpandedPlaceId(expandedPlaceId === placeId ? null : placeId);
+  };
+
+  const handleReviewClick = (review: MemoRappReview) => {
+    console.log("handleReviewClick:", review);
+    setSelectedReview(review);
   };
 
   const handleWouldReturnChange = (filter: keyof typeof wouldReturnFilter) => {
@@ -89,15 +80,9 @@ const ReviewsPage: React.FC = () => {
     console.log("Searching for query:", query);
   };
 
-  const openDistance = Boolean(anchorEl);
-  const idDistance = openDistance ? 'distance-popover' : undefined;
-
-  const openWouldReturn = Boolean(anchorElWouldReturn);
-  const idWouldReturn = openWouldReturn ? 'would-return-popover' : undefined;
-
   const getReviewsForPlace = (placeId: string): MemoRappReview[] => {
     return memoRappReviews.filter((memoRappReview: MemoRappReview) => memoRappReview.place_id === placeId);
-  }
+  };
 
   return (
     <div style={{ padding: '20px' }}>
@@ -119,7 +104,7 @@ const ReviewsPage: React.FC = () => {
       {/* Filtering UI */}
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
         <div>
-          <Button variant="outlined" aria-describedby={openWouldReturn ? 'would-return-popover' : undefined} onClick={handleWouldReturnClick}>
+          <Button variant="outlined" aria-describedby={anchorElWouldReturn ? 'would-return-popover' : undefined} onClick={handleWouldReturnClick}>
             Would Return
           </Button>
           <Popover
@@ -138,7 +123,7 @@ const ReviewsPage: React.FC = () => {
           </Popover>
         </div>
         <div>
-          <Button variant="outlined" aria-describedby={openDistance ? 'distance-popover' : undefined} onClick={handleDistanceClick}>
+          <Button variant="outlined" aria-describedby={anchorEl ? 'distance-popover' : undefined} onClick={handleDistanceClick}>
             Distance: {distance} miles
           </Button>
           <Popover
@@ -181,7 +166,7 @@ const ReviewsPage: React.FC = () => {
                       <Table size="small">
                         <TableBody>
                           {getReviewsForPlace(place.place_id).map((review) => (
-                            <TableRow key={review._id}>
+                            <TableRow key={review._id} onClick={() => handleReviewClick(review)} style={{ cursor: 'pointer' }}>
                               <TableCell>Date: {review.structuredReviewProperties.dateOfVisit}</TableCell>
                               <TableCell>Would Return: {review.structuredReviewProperties.wouldReturn === null ? 'Not Specified' : review.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</TableCell>
                             </TableRow>
@@ -196,6 +181,16 @@ const ReviewsPage: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Selected Review Details */}
+      {selectedReview && (
+        <Paper style={{ marginTop: '20px', padding: '20px' }}>
+          <Typography variant="h6">Review Details</Typography>
+          <Typography><strong>Date of Visit:</strong> {selectedReview.structuredReviewProperties.dateOfVisit}</Typography>
+          <Typography><strong>Would Return:</strong> {selectedReview.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
+          <Typography><strong>Review Text:</strong> {selectedReview.freeformReviewProperties.reviewText}</Typography>
+        </Paper>
+      )}
     </div>
   );
 };
