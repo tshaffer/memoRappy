@@ -3,36 +3,6 @@ import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { GooglePlaceResult, MemoRappReview } from '../types';
 
-interface Review {
-  _id: string;
-  dateOfVisit: string;
-  wouldReturn: boolean | null;
-}
-
-interface Place {
-  _id: string;
-  name: string;
-  reviews: Review[];
-}
-
-const mockPlaces: Place[] = [
-  {
-    _id: '1',
-    name: 'Place 1',
-    reviews: [
-      { _id: 'r1', dateOfVisit: '2024-01-01', wouldReturn: true },
-      { _id: 'r2', dateOfVisit: '2024-01-02', wouldReturn: null },
-    ],
-  },
-  {
-    _id: '2',
-    name: 'Place 2',
-    reviews: [
-      { _id: 'r3', dateOfVisit: '2024-02-01', wouldReturn: false },
-    ],
-  },
-];
-
 const ReviewsPage: React.FC = () => {
   const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
   const [wouldReturnFilter, setWouldReturnFilter] = useState<{ yes: boolean; no: boolean; notSpecified: boolean }>({
@@ -125,6 +95,10 @@ const ReviewsPage: React.FC = () => {
 
   const openWouldReturn = Boolean(anchorElWouldReturn);
   const idWouldReturn = openWouldReturn ? 'would-return-popover' : undefined;
+
+  const getReviewsForPlace = (placeId: string): MemoRappReview[] => {
+    return memoRappReviews.filter((memoRappReview: MemoRappReview) => memoRappReview.place_id === placeId);
+  }
 
   return (
     <div style={{ padding: '20px' }}>
@@ -222,25 +196,25 @@ const ReviewsPage: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {mockPlaces.map((place) => (
-              <React.Fragment key={place._id}>
+            {googlePlaces.map((place: GooglePlaceResult) => (
+              <React.Fragment key={place.place_id}>
                 <TableRow>
                   <TableCell>{place.name}</TableCell>
                   <TableCell align="right">
-                    <IconButton onClick={() => handleExpandClick(place._id)}>
-                      {expandedPlaceId === place._id ? <ExpandLess /> : <ExpandMore />}
+                    <IconButton onClick={() => handleExpandClick(place.place_id)}>
+                      {expandedPlaceId === place.place_id ? <ExpandLess /> : <ExpandMore />}
                     </IconButton>
                   </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell colSpan={2} style={{ padding: 0 }}>
-                    <Collapse in={expandedPlaceId === place._id} timeout="auto" unmountOnExit>
+                    <Collapse in={expandedPlaceId === place.place_id} timeout="auto" unmountOnExit>
                       <Table size="small">
                         <TableBody>
-                          {place.reviews.map((review) => (
+                          {getReviewsForPlace(place.place_id).map((review) => (
                             <TableRow key={review._id}>
-                              <TableCell>Date: {review.dateOfVisit}</TableCell>
-                              <TableCell>Would Return: {review.wouldReturn === null ? 'Not Specified' : review.wouldReturn ? 'Yes' : 'No'}</TableCell>
+                              <TableCell>Date: {review.structuredReviewProperties.dateOfVisit}</TableCell>
+                              <TableCell>Would Return: {review.structuredReviewProperties.wouldReturn === null ? 'Not Specified' : review.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
