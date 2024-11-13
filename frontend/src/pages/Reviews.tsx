@@ -212,29 +212,29 @@ const ReviewsPage: React.FC = () => {
 
         {/* Map or Selected Review Details */}
         {showMap ? (
-          <div>
-            <MapWithMarkers
-              locations={googlePlacesSelected}
-            />
-          </div>
-          // <Paper className="map-container">
-          //   {isLoaded && (
-          //     <GoogleMap
-          //       mapContainerStyle={{ height: '100%', width: '100%' }}
-          //       center={{ lat: -34.397, lng: 150.644 }}
-          //       zoom={10}
-          //     >
-          //       {googlePlaces
-          //         .filter((place) => selectedPlaces.has(place.place_id))
-          //         .map((place) => (
-          //           <Marker
-          //             key={place.place_id}
-          //             position={{ lat: place.geometry.location.lat, lng: place.geometry.location.lng }}
-          //           />
-          //         ))}
-          //     </GoogleMap>
-          //   )}
-          // </Paper>
+          // <div>
+          //   <MapWithMarkers
+          //     locations={googlePlacesSelected}
+          //   />
+          // </div>
+          <Paper className="map-container">
+            {isLoaded && (
+              <GoogleMap
+                mapContainerStyle={{ height: '100%', width: '100%' }}
+                center={{ lat: -34.397, lng: 150.644 }}
+                zoom={10}
+              >
+                {googlePlaces
+                  .filter((place) => selectedPlaces.has(place.place_id))
+                  .map((place) => (
+                    <Marker
+                      key={place.place_id}
+                      position={{ lat: place.geometry!.location.lat, lng: place.geometry!.location.lng }}
+                    />
+                  ))}
+              </GoogleMap>
+            )}
+          </Paper>
         ) : (
           selectedReview && (
             <Paper className="review-details">
