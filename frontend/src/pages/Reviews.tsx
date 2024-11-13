@@ -5,6 +5,7 @@ import { GooglePlaceResult, MemoRappReview } from '../types';
 import '../App.css';
 // Import Google Maps components
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
+import MapWithMarkers from '../components/MapWIthMarkers';
 
 const ReviewsPage: React.FC = () => {
   const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
@@ -22,6 +23,8 @@ const ReviewsPage: React.FC = () => {
   const [showMap, setShowMap] = useState<boolean>(false);
 
   const [googlePlaces, setGooglePlaces] = useState<GooglePlaceResult[]>([]);
+  const [googlePlacesSelected, setGooglePlacesSelected] = useState<GooglePlaceResult[]>([]);
+
   const [memoRappReviews, setMemoRappReviews] = useState<MemoRappReview[]>([]);
 
   const { isLoaded } = useJsApiLoader({
@@ -88,6 +91,14 @@ const ReviewsPage: React.FC = () => {
   };
 
   const toggleMapDisplay = () => {
+    const mapCurrentlyDisplayed = showMap;
+    const newShowMap = !mapCurrentlyDisplayed;
+    if (newShowMap) {
+      const googlePlacesSelected: GooglePlaceResult[] = googlePlaces.filter((place) => selectedPlaces.has(place.place_id));
+      setGooglePlacesSelected(googlePlacesSelected);
+    } else {
+      setGooglePlacesSelected([]);
+    }
     setShowMap((prev) => !prev);
   };
 
@@ -201,7 +212,11 @@ const ReviewsPage: React.FC = () => {
 
         {/* Map or Selected Review Details */}
         {showMap ? (
-          <div>ShowMapHere</div>
+          <div>
+            <MapWithMarkers
+              locations={googlePlacesSelected}
+            />
+          </div>
           // <Paper className="map-container">
           //   {isLoaded && (
           //     <GoogleMap
