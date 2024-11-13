@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { GooglePlaceResult } from '../types';
 import { AdvancedMarker, APIProvider, InfoWindow, Map, MapCameraChangedEvent } from '@vis.gl/react-google-maps';
 import { getLatLngFromPlace } from '../utilities';
+import { Paper } from '@mui/material';
+import '../App.css';
 
 interface Coordinates {
   lat: number;
@@ -110,48 +112,40 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
       apiKey={googleMapsApiKey}
       version="beta"
     >
-      <div
-        style={{
-          position: 'relative',
-          width: '100vw',
-          height: '100vh',
-          overflow: 'hidden', // Ensures that the map fills the entire viewport
-        }}
-        slot="main"
+      {/* <Paper className="map-container"> */}
+      <Map
+        style={{ width: '100%', height: '100%' }}
+        id="gmap"
+        mapId="1ca0b6526e7d4819"
+        defaultCenter={initialCenter}
+        zoom={zoom}
+        onZoomChanged={(event) => handleZoomChanged(event)}
+        fullscreenControl={false}
+        zoomControl={true}
+        gestureHandling={'greedy'}
+        scrollwheel={true}
       >
-        <Map
-          style={{ width: '100%', height: '100%' }}
-          id="gmap"
-          mapId="1ca0b6526e7d4819"
-          defaultCenter={initialCenter}
-          zoom={zoom}
-          onZoomChanged={(event) => handleZoomChanged(event)}
-          fullscreenControl={false}
-          zoomControl={true}
-          gestureHandling={'greedy'}
-          scrollwheel={true}
-        >
-          {locationMarkers}
-          {currentLocation && (
-            <AdvancedMarker position={currentLocation}>
-              <CustomBlueDot />
-            </AdvancedMarker>
-          )}
-          {selectedLocation && (
-            <InfoWindow
-              position={getLatLngFromPlace(selectedLocation)}
-              onCloseClick={handleCloseInfoWindow}
-            >
-              <div>
-                <h4>{selectedLocation.name}</h4>
-                <a href={selectedLocation.website} target="_blank" rel="noopener noreferrer">
-                  {selectedLocation.website}
-                </a>
-              </div>
-            </InfoWindow>
-          )}
-        </Map>
-      </div>
+        {locationMarkers}
+        {currentLocation && (
+          <AdvancedMarker position={currentLocation}>
+            <CustomBlueDot />
+          </AdvancedMarker>
+        )}
+        {selectedLocation && (
+          <InfoWindow
+            position={getLatLngFromPlace(selectedLocation)}
+            onCloseClick={handleCloseInfoWindow}
+          >
+            <div>
+              <h4>{selectedLocation.name}</h4>
+              <a href={selectedLocation.website} target="_blank" rel="noopener noreferrer">
+                {selectedLocation.website}
+              </a>
+            </div>
+          </InfoWindow>
+        )}
+      </Map>
+      {/* </Paper> */}
 
     </APIProvider>
   );
