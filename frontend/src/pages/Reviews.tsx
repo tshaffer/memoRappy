@@ -3,6 +3,8 @@ import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { GooglePlaceResult, MemoRappReview } from '../types';
 import '../App.css';
+// Import Google Maps components
+import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 
 const ReviewsPage: React.FC = () => {
   const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
@@ -16,21 +18,27 @@ const ReviewsPage: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [anchorElWouldReturn, setAnchorElWouldReturn] = useState<HTMLElement | null>(null);
   const [query, setQuery] = useState<string>("");
+  const [selectedPlaces, setSelectedPlaces] = useState<Set<string>>(new Set());
+  const [showMap, setShowMap] = useState<boolean>(false);
 
   const [googlePlaces, setGooglePlaces] = useState<GooglePlaceResult[]>([]);
   const [memoRappReviews, setMemoRappReviews] = useState<MemoRappReview[]>([]);
+
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '', // Ensure your API key is loaded
+  });
 
   useEffect(() => {
     const fetchPlaces = async () => {
       const response = await fetch('/api/places');
       const data = await response.json();
       setGooglePlaces(data.googlePlaces);
-    }
+    };
     const fetchReviews = async () => {
       const response = await fetch('/api/reviews');
       const data = await response.json();
       setMemoRappReviews(data.memoRappReviews);
-    }
+    };
     fetchPlaces();
     fetchReviews();
   }, []);
@@ -79,6 +87,22 @@ const ReviewsPage: React.FC = () => {
     console.log("Searching for query:", query);
   };
 
+  const toggleMapDisplay = () => {
+    setShowMap((prev) => !prev);
+  };
+
+  const handlePlaceSelect = (placeId: string) => {
+    setSelectedPlaces((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(placeId)) {
+        newSet.delete(placeId);
+      } else {
+        newSet.add(placeId);
+      }
+      return newSet;
+    });
+  };
+
   const getReviewsForPlace = (placeId: string): MemoRappReview[] => {
     return memoRappReviews.filter((memoRappReview: MemoRappReview) => memoRappReview.place_id === placeId);
   };
@@ -102,44 +126,29 @@ const ReviewsPage: React.FC = () => {
 
       {/* Filtering UI */}
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-        <div>
-          <Button variant="outlined" aria-describedby={anchorElWouldReturn ? 'would-return-popover' : undefined} onClick={handleWouldReturnClick}>
-            Would Return
-          </Button>
-          <Popover
-            open={Boolean(anchorElWouldReturn)}
-            anchorEl={anchorElWouldReturn}
-            onClose={handleWouldReturnClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-          >
-            <div style={{ padding: '20px' }}>
-              <Typography variant="subtitle1">Would Return</Typography>
-              <FormControlLabel control={<Checkbox checked={wouldReturnFilter.yes} onChange={() => handleWouldReturnChange('yes')} />} label="Yes" />
-              <FormControlLabel control={<Checkbox checked={wouldReturnFilter.no} onChange={() => handleWouldReturnChange('no')} />} label="No" />
-              <FormControlLabel control={<Checkbox checked={wouldReturnFilter.notSpecified} onChange={() => handleWouldReturnChange('notSpecified')} />} label="Not Specified" />
-              <Button variant="outlined" size="small" onClick={handleClearWouldReturnFilter} style={{ marginTop: '10px' }}>Clear</Button>
-            </div>
-          </Popover>
-        </div>
-        <div>
-          <Button variant="outlined" aria-describedby={anchorEl ? 'distance-popover' : undefined} onClick={handleDistanceClick}>
-            Distance: {distance} miles
-          </Button>
-          <Popover
-            open={Boolean(anchorEl)}
-            anchorEl={anchorEl}
-            onClose={handleDistanceClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-          >
-            <div style={{ padding: '20px' }}>
-              <Typography variant="subtitle1">Select Distance</Typography>
-              <Slider value={distance} onChange={handleDistanceSliderChange} min={1} max={100} valueLabelDisplay="auto" />
-            </div>
-          </Popover>
-        </div>
+        <Button variant="outlined" onClick={toggleMapDisplay}>
+          Display Map
+        </Button>
+        <Button variant="outlined" aria-describedby={anchorElWouldReturn ? 'would-return-popover' : undefined} onClick={handleWouldReturnClick}>
+          Would Return
+        </Button>
+        <Popover
+          open={Boolean(anchorElWouldReturn)}
+          anchorEl={anchorElWouldReturn}
+          onClose={handleWouldReturnClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        >
+          <div style={{ padding: '20px' }}>
+            <Typography variant="subtitle1">Would Return</Typography>
+            <FormControlLabel control={<Checkbox checked={wouldReturnFilter.yes} onChange={() => handleWouldReturnChange('yes')} />} label="Yes" />
+            <FormControlLabel control={<Checkbox checked={wouldReturnFilter.no} onChange={() => handleWouldReturnChange('no')} />} label="No" />
+            <FormControlLabel control={<Checkbox checked={wouldReturnFilter.notSpecified} onChange={() => handleWouldReturnChange('notSpecified')} />} label="Not Specified" />
+            <Button variant="outlined" size="small" onClick={handleClearWouldReturnFilter} style={{ marginTop: '10px' }}>Clear</Button>
+          </div>
+        </Popover>
       </div>
 
-      {/* Table and Review Details Container */}
+      {/* Table and Map/Review Details Container */}
       <div className="table-and-details-container">
         {/* Scrollable TableContainer */}
         <TableContainer component={Paper} className="scrollable-table-container">
@@ -147,6 +156,7 @@ const ReviewsPage: React.FC = () => {
             <TableHead>
               <TableRow className="table-head-fixed">
                 <TableCell>Place</TableCell>
+                <TableCell align="center">Select</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -155,6 +165,12 @@ const ReviewsPage: React.FC = () => {
                 <React.Fragment key={place.place_id}>
                   <TableRow>
                     <TableCell>{place.name}</TableCell>
+                    <TableCell align="center">
+                      <Checkbox
+                        checked={selectedPlaces.has(place.place_id)}
+                        onChange={() => handlePlaceSelect(place.place_id)}
+                      />
+                    </TableCell>
                     <TableCell align="right">
                       <IconButton onClick={() => handleExpandClick(place.place_id)}>
                         {expandedPlaceId === place.place_id ? <ExpandLess /> : <ExpandMore />}
@@ -162,7 +178,7 @@ const ReviewsPage: React.FC = () => {
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell colSpan={2} style={{ padding: 0 }}>
+                    <TableCell colSpan={3} style={{ padding: 0 }}>
                       <Collapse in={expandedPlaceId === place.place_id} timeout="auto" unmountOnExit>
                         <Table size="small">
                           <TableBody>
@@ -183,14 +199,36 @@ const ReviewsPage: React.FC = () => {
           </Table>
         </TableContainer>
 
-        {/* Selected Review Details */}
-        {selectedReview && (
-          <Paper className="review-details">
-            <Typography variant="h6">Review Details</Typography>
-            <Typography><strong>Date of Visit:</strong> {selectedReview.structuredReviewProperties.dateOfVisit}</Typography>
-            <Typography><strong>Would Return:</strong> {selectedReview.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
-            <Typography><strong>Review Text:</strong> {selectedReview.freeformReviewProperties.reviewText}</Typography>
-          </Paper>
+        {/* Map or Selected Review Details */}
+        {showMap ? (
+          <div>ShowMapHere</div>
+          // <Paper className="map-container">
+          //   {isLoaded && (
+          //     <GoogleMap
+          //       mapContainerStyle={{ height: '100%', width: '100%' }}
+          //       center={{ lat: -34.397, lng: 150.644 }}
+          //       zoom={10}
+          //     >
+          //       {googlePlaces
+          //         .filter((place) => selectedPlaces.has(place.place_id))
+          //         .map((place) => (
+          //           <Marker
+          //             key={place.place_id}
+          //             position={{ lat: place.geometry.location.lat, lng: place.geometry.location.lng }}
+          //           />
+          //         ))}
+          //     </GoogleMap>
+          //   )}
+          // </Paper>
+        ) : (
+          selectedReview && (
+            <Paper className="review-details">
+              <Typography variant="h6">Review Details</Typography>
+              <Typography><strong>Date of Visit:</strong> {selectedReview.structuredReviewProperties.dateOfVisit}</Typography>
+              <Typography><strong>Would Return:</strong> {selectedReview.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
+              <Typography><strong>Review Text:</strong> {selectedReview.freeformReviewProperties.reviewText}</Typography>
+            </Paper>
+          )
         )}
       </div>
     </div>
