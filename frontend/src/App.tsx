@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Container } from '@mui/material';
-import Home from './pages/Home';
 import ReviewForm from './pages/ReviewForm';
 import ViewReviews from './pages/ViewReviews';
 import QueryReviews from './pages/QueryReviews';
+import Reviews from './pages/Reviews';
 
 const App: React.FC = () => {
   return (
@@ -14,7 +14,7 @@ const App: React.FC = () => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             MemoRapp
           </Typography>
-          <Button color="inherit" component={Link} to="/">Home</Button>
+          <Button color="inherit" component={Link} to="/">Reviews</Button>
           <Button color="inherit" component={Link} to="/view-reviews">View Reviews</Button>
           <Button color="inherit" component={Link} to="/query-reviews">Query Reviews</Button>
           <Button color="inherit" component={Link} to="/add-review">Add Review</Button>
@@ -22,7 +22,7 @@ const App: React.FC = () => {
       </AppBar>
       <Container style={{ marginTop: '20px' }}>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Reviews />} />
           <Route path="/view-reviews" element={<ViewReviews />} />
           <Route path="/query-reviews" element={<QueryReviews />} />
           <Route path="/add-review" element={<ReviewForm />} />
