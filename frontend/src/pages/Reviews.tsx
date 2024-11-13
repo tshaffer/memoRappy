@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Typography, Button, Slider, Popover, FormControlLabel, Checkbox, TextField } from '@mui/material';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
+import { GooglePlaceResult, MemoRappReview } from '../types';
 
 interface Review {
   _id: string;
@@ -43,6 +44,40 @@ const ReviewsPage: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [anchorElWouldReturn, setAnchorElWouldReturn] = useState<HTMLElement | null>(null);
   const [query, setQuery] = useState<string>("");
+
+  const [googlePlaces, setGooglePlaces] = useState<GooglePlaceResult[]>([]);
+  const [memoRappReviews, setMemoRappReviews] = useState<MemoRappReview[]>([]);
+
+  useEffect(() => {
+    const fetchPlaces = async () => {
+      const response = await fetch('/api/places');
+      const data = await response.json();
+      const googlePlaces: GooglePlaceResult[] = data.googlePlaces;
+      console.log('GooglePlaces:', googlePlaces);
+      setGooglePlaces(googlePlaces);
+    }
+    const fetchReviews = async () => {
+      const response = await fetch('/api/reviews');
+      const data = await response.json();
+      const memoRappReviews: MemoRappReview[] = data.memoRappReviews;
+      console.log('MemoRappReviews:', memoRappReviews);
+      setMemoRappReviews(memoRappReviews);
+    }
+    fetchPlaces();
+    fetchReviews();
+
+    // Get the user's current location
+    // navigator.geolocation.getCurrentPosition(
+    //   (position) => {
+    //     setCurrentLocation({
+    //       lat: position.coords.latitude,
+    //       lng: position.coords.longitude,
+    //     });
+    //   },
+    //   (error) => console.error('Error getting current location:', error)
+    // );
+  }, []);
+
 
   const handleExpandClick = (placeId: string) => {
     setExpandedPlaceId(expandedPlaceId === placeId ? null : placeId);
@@ -110,7 +145,7 @@ const ReviewsPage: React.FC = () => {
 
       {/* Filtering UI */}
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-        
+
         {/* Would Return Filter Dropdown */}
         <div>
           <Button variant="outlined" aria-describedby={idWouldReturn} onClick={handleWouldReturnClick}>
@@ -146,7 +181,7 @@ const ReviewsPage: React.FC = () => {
             </div>
           </Popover>
         </div>
-        
+
         {/* Distance Filter */}
         <div>
           <Button variant="outlined" aria-describedby={idDistance} onClick={handleDistanceClick}>

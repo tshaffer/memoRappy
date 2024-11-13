@@ -15,6 +15,7 @@ export const getPlaces = async (request: Request, response: Response, next: any)
       };
       return googlePlace;
     });
+    console.log('googlePlaces:', googlePlaces);
     response.status(200).json({ googlePlaces });
     return;
   } catch (error) {

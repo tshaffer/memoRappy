@@ -2,6 +2,24 @@ import { GoogleGeometry } from "./GooglePlacesAPI";
 import { MongoGeometry } from "./MongoPlacesAPI";
 import { AddressComponent } from "./PlacesAPI";
 
+export interface MemoRappReview {
+  _id?: any; // mongoose.Types.ObjectId;
+  place_id: string;
+  structuredReviewProperties: StructuredReviewProperties;
+  freeformReviewProperties: FreeformReviewProperties;
+}
+
+export interface StructuredReviewProperties {
+  dateOfVisit: string;
+  wouldReturn: boolean | null;
+}
+
+export interface FreeformReviewProperties {
+  reviewText: string;
+  itemReviews: ItemReview[];
+  reviewer?: string;
+}
+
 export interface GooglePlaceResult {
   place_id: string;
   name: string;
@@ -82,4 +100,7 @@ export interface PreviewRequestBody {
   reviewText: string;
   sessionId: string;
 }
+
+
+
 
