@@ -1,5 +1,5 @@
 export * from './entities';
-export * from './GooglePlacesAPI';
-export * from './MongoPlacesAPI';
-export * from './PlacesAPI';
+export * from './googlePlace';
+export * from './mongoPlace';
+export * from './place';
 

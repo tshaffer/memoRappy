@@ -1,10 +1,10 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import { openai } from '../index';
-import { ChatResponse, ParsedReviewProperties, GooglePlaceResult, SubmitReviewBody, ItemReview, PreviewRequestBody, ReviewEntityWithFullText, MongoGeometry, GoogleGeometry, MongoPlace, MongoReviewEntityWithFullText } from '../types';
+// import { FreeformReviewProperties, SubmitReviewBody, ItemReview, MongoGeometry, MongoPlace, MongoReviewEntityWithFullText } from '../types';
 import Review, { IReview } from "../models/Review";
-import { extractFieldFromResponse, extractItemReviews, extractListFromResponse, removeSquareBrackets } from '../utilities';
-import { Request, Response } from 'express';
+import { extractFieldFromResponse, extractItemReviews, removeSquareBrackets } from '../utilities';
 import { getMongoGeometryFromGoogleGeometry } from './googlePlaces';
+import { FreeformReviewProperties, ItemReview } from '../types';
 
 // Store conversations for each session
 interface ReviewConversations {
@@ -12,7 +12,7 @@ interface ReviewConversations {
 }
 const reviewConversations: ReviewConversations = {};
 
-export const parsePreview = async (sessionId: string, reviewText: string): Promise<ParsedReviewProperties> => {
+export const parsePreview = async (sessionId: string, reviewText: string): Promise<FreeformReviewProperties> => {
 
   // Initialize conversation history if it doesn't exist
   if (!reviewConversations[sessionId]) {
@@ -54,167 +54,67 @@ export const parsePreview = async (sessionId: string, reviewText: string): Promi
     const itemReviews: ItemReview[] = extractItemReviews(messageContent);
 
     // Extract structured information using adjusted parsing
-    const parsedReviewProperties: ParsedReviewProperties = {
+    const freeformReviewProperties: FreeformReviewProperties = {
+      reviewText,
       itemReviews,
       reviewer: removeSquareBrackets(extractFieldFromResponse(messageContent, 'Reviewer name')),
     };
 
-    return parsedReviewProperties;
+    return freeformReviewProperties;
   } catch (error) {
     console.error('Error processing review preview:', error);
     throw new Error('Error processing review preview.');
   }
 }
 
-export const previewReviewHandler = async (
-  req: Request<{}, {}, PreviewRequestBody>,
-  res: Response
-): Promise<any> => {
+// export const submitReview = async (body: SubmitReviewBody) => {
+//   const { _id, structuredReviewProperties, parsedReviewProperties, reviewText, sessionId } = body;
 
-  console.log('Preview review request:', req.body); // Debugging log
+//   if (!structuredReviewProperties || !parsedReviewProperties || !reviewText || !sessionId) {
+//     throw new Error('Incomplete review data.');
+//   }
 
-  const { reviewText, sessionId } = req.body;
+//   const { googlePlace, dateOfVisit, wouldReturn } = structuredReviewProperties;
+//   const { itemReviews, reviewer } = parsedReviewProperties;
 
-  try {
-    const parsedReviewProperties: ParsedReviewProperties = await parsePreview(sessionId, reviewText);
-    return res.json({ parsedReviewProperties });
-  } catch (error) {
-    console.error('Error processing review preview:', error);
-    return res.status(500).json({ error: 'An error occurred while processing the review preview.' });
-  }
-};
+//   // Convert geometry from Google format to Mongoose format
+//   const mongoGeometry: MongoGeometry = getMongoGeometryFromGoogleGeometry(googlePlace.geometry!);
+//   const mongoPlace: MongoPlace = { ...googlePlace, geometry: mongoGeometry };
 
-export const chatReviewHandler = async (req: any, res: any): Promise<void> => {
-  const { userInput, sessionId, reviewText } = req.body;
+//   try {
+//     const reviewData: MongoReviewEntityWithFullText = {
+//       mongoPlace,
+//       dateOfVisit,
+//       wouldReturn,
+//       itemReviews,
+//       reviewer,
+//       reviewText
+//     };
 
-  if (!reviewConversations[sessionId]) {
-    res.status(400).json({ error: 'Session not found. Start with a preview first.' });
-    return;
-  }
+//     let savedReview: IReview | null;
 
-  // Add user input to the conversation
-  reviewConversations[sessionId].push({ role: "user", content: userInput });
+//     if (_id) {
+//       // If _id is provided, update the existing document
+//       savedReview = await Review.findByIdAndUpdate(_id, reviewData, {
+//         new: true,    // Return the updated document
+//         runValidators: true // Ensure the updated data complies with schema validation
+//       });
 
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        ...reviewConversations[sessionId],
-        {
-          role: "system",
-          content: `Please provide:
-          1. The updated structured data based on the full conversation. Please ensure that the updated structured data begins with "Updated Structured Data:".
-          2. An updated review text that incorporates the latest user modifications. Please ensure that the updated review text begins with "Updated Review Text:".
+//       if (!savedReview) {
+//         throw new Error('Review not found for update.');
+//       }
+//     } else {
+//       // If no _id, create a new document
+//       const newReview = new Review(reviewData);
+//       savedReview = await newReview.save();
+//     }
 
-          Original Review: "${reviewText}"`,
-        },
-      ],
-      max_tokens: 500,
-      temperature: 0.5,
-    });
+//     // Clear conversation history for the session after submission
+//     delete reviewConversations[sessionId];
 
-    const messageContent = response.choices[0].message?.content;
-    console.log('ChatGPT response:', messageContent); // Debugging log
-
-    if (!messageContent) {
-      res.status(500).json({ error: 'Failed to extract data from the response.' });
-      return;
-    }
-
-    // Adjusted regular expressions to match the response format
-    const structuredDataMatch = messageContent.match(/^Updated Structured Data:\s*([\s\S]*?)Updated Review Text:/m);
-    const updatedReviewTextMatch = messageContent.match(/Updated Review Text:\s*"(.*)"/s);
-
-    if (!structuredDataMatch || !updatedReviewTextMatch) {
-      console.error('Parsing error: Expected structured data and updated review text not found');
-      res.status(500).json({ error: 'Failed to parse updated data.' });
-      return;
-    }
-
-    const structuredDataText = structuredDataMatch[1].trim();
-    const updatedReviewText = updatedReviewTextMatch[1].trim();
-
-    const itemReviews: ItemReview[] = extractItemReviews(structuredDataText);
-
-    const parsedReviewProperties: ParsedReviewProperties = {
-      itemReviews,
-      reviewer: removeSquareBrackets(extractFieldFromResponse(structuredDataText, 'Reviewer name')),
-    };
-
-    const chatResponse: ChatResponse = {
-      parsedReviewProperties,
-      updatedReviewText,
-    };
-
-    res.json(chatResponse);
-  } catch (error) {
-    console.error('Error during chat interaction:', error);
-    res.status(500).json({ error: 'An error occurred while processing the chat response.' });
-  }
-};
-
-export const submitReview = async (body: SubmitReviewBody) => {
-  const { _id, structuredReviewProperties, parsedReviewProperties, reviewText, sessionId } = body;
-
-  if (!structuredReviewProperties || !parsedReviewProperties || !reviewText || !sessionId) {
-    throw new Error('Incomplete review data.');
-  }
-
-  const { googlePlace, dateOfVisit, wouldReturn } = structuredReviewProperties;
-  const { itemReviews, reviewer } = parsedReviewProperties;
-
-  // Convert geometry from Google format to Mongoose format
-  const mongoGeometry: MongoGeometry = getMongoGeometryFromGoogleGeometry(googlePlace.geometry!);
-  const mongoPlace: MongoPlace = { ...googlePlace, geometry: mongoGeometry };
-
-  try {
-    const reviewData: MongoReviewEntityWithFullText = {
-      mongoPlace,
-      dateOfVisit,
-      wouldReturn,
-      itemReviews,
-      reviewer,
-      reviewText
-    };
-
-    let savedReview: IReview | null;
-
-    if (_id) {
-      // If _id is provided, update the existing document
-      savedReview = await Review.findByIdAndUpdate(_id, reviewData, {
-        new: true,    // Return the updated document
-        runValidators: true // Ensure the updated data complies with schema validation
-      });
-
-      if (!savedReview) {
-        throw new Error('Review not found for update.');
-      }
-    } else {
-      // If no _id, create a new document
-      const newReview = new Review(reviewData);
-      savedReview = await newReview.save();
-    }
-
-    // Clear conversation history for the session after submission
-    delete reviewConversations[sessionId];
-
-    return savedReview;
-  } catch (error) {
-    console.error('Error saving review:', error);
-    throw new Error('An error occurred while saving the review.');
-  }
-};
-
-export const submitReviewHandler = async (req: Request, res: Response): Promise<any> => {
-
-  const body = req.body;
-
-  try {
-    const newReview = await submitReview(body);
-    return res.status(201).json({ message: 'Review saved successfully!', review: newReview });
-  } catch (error) {
-    console.error('Error saving review:', error);
-    return res.status(500).json({ error: 'An error occurred while saving the review.' });
-  }
-};
-
+//     return savedReview;
+//   } catch (error) {
+//     console.error('Error saving review:', error);
+//     throw new Error('An error occurred while saving the review.');
+//   }
+// };

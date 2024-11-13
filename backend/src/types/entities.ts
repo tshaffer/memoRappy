@@ -1,29 +1,30 @@
-import { GoogleGeometry } from "./GooglePlacesAPI";
-import { MongoGeometry } from "./MongoPlacesAPI";
-import { AddressComponent } from "./PlacesAPI";
+import mongoose from "mongoose";
+import { AddressComponent } from "./place";
 
-export interface GooglePlaceResult {
+export interface MemoRappPlace {
   place_id: string;
   name: string;
   address_components?: AddressComponent[];
   formatted_address: string;
-  geometry?: GoogleGeometry;
   website: string;
 }
 
-export interface MongoPlace {
+export interface MemoRappReview {
+  _id?: mongoose.Types.ObjectId;
   place_id: string;
-  name: string;
-  address_components?: AddressComponent[];
-  formatted_address: string;
-  geometry?: MongoGeometry;
-  website: string;
+  structuredReviewProperties: StructuredReviewProperties;
+  freeformReviewProperties: FreeformReviewProperties;
 }
 
 export interface StructuredReviewProperties {
-  googlePlace: GooglePlaceResult;
   dateOfVisit: string;
   wouldReturn: boolean | null;
+}
+
+export interface FreeformReviewProperties {
+  reviewText: string;
+  itemReviews: ItemReview[];
+  reviewer?: string;
 }
 
 export interface ItemReview {
@@ -31,54 +32,10 @@ export interface ItemReview {
   review: string;
 }
 
-export interface ParsedReviewProperties {
-  itemReviews: ItemReview[];
-  reviewer: string;
-}
-
-export interface ReviewEntity {
-  googlePlace: GooglePlaceResult;
-  dateOfVisit: string;
-  wouldReturn: boolean | null;
-  itemReviews: ItemReview[]
-  reviewer: string;
-}
-
-export interface ReviewEntityWithFullText extends ReviewEntity {
-  reviewText: string;
-}
-
-export interface MongoReviewEntity {
-  mongoPlace: MongoPlace;
-  dateOfVisit: string;
-  wouldReturn: boolean | null;
-  itemReviews: ItemReview[]
-  reviewer: string;
-}
-
-export interface MongoReviewEntityWithFullText extends MongoReviewEntity {
-  reviewText: string;
-}
-
-export interface ChatResponse {
-  parsedReviewProperties: ParsedReviewProperties;
-  updatedReviewText: string;
-}
-
 export interface SubmitReviewBody {
   _id?: string;
   structuredReviewProperties: StructuredReviewProperties;
-  parsedReviewProperties: ParsedReviewProperties
-  reviewText: string;
-  sessionId: string;
-}
-
-export interface QueryRequestBody {
-  query: string;
-}
-
-export interface PreviewRequestBody {
-  reviewText: string;
+  parsedReviewProperties: FreeformReviewProperties;
   sessionId: string;
 }
 

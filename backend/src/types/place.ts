@@ -1,10 +1,3 @@
-// Interface for a GeoJSON point, with type and coordinates
-export interface GeoJSONPoint {
-  type: 'Point';
-  coordinates: [number, number]; // [longitude, latitude]
-}
-
-// Types for nested properties
 export interface AddressComponent {
   long_name: string;
   short_name: string;

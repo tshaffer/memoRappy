@@ -5,7 +5,7 @@ import OpenAI from 'openai';
 import mongoose from 'mongoose';
 import express from 'express';
 
-import { chatReviewHandler, previewReviewHandler, queryReviewsHandler, reviewsRouter, submitReviewHandler, addReviewsFromFileHandler } from './controllers';
+import { addReviewsFromFileHandler, getPlaces, getReviews } from './controllers';
 
 export let openai: OpenAI;
 
@@ -21,13 +21,10 @@ const app: express.Application = express();
 app.use(cors());
 app.use(express.json());
 
-// Define your API routes first
-app.post('/api/query', queryReviewsHandler);
-app.post('/api/reviews/preview', previewReviewHandler);
-app.post('/api/reviews/chat', chatReviewHandler);
-app.post('/api/reviews/submit', submitReviewHandler);
+// routes
+app.get('/api/places', getPlaces);
+app.get('/api/reviews', getReviews);
 app.post('/api/reviews/addReviewsFromFile', addReviewsFromFileHandler);
-app.use('/api/reviews', reviewsRouter);
 
 // Serve static files from the frontend build directory, adjusted for production
 const frontendPath = process.env.NODE_ENV === 'production'

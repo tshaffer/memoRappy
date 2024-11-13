@@ -1,10 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
-import { GooglePlaceDetails, GooglePlaceDetailsResponse, GooglePlaceResult, GooglePlacesResponse, ParsedReviewProperties, SubmitReviewBody } from '../types/';
+// import { GooglePlaceDetails, GooglePlaceDetailsResponse, GooglePlaceResult, GooglePlacesResponse, ParsedReviewProperties, SubmitReviewBody } from '../types/';
 import { Request, Response } from 'express';
-import { parsePreview, submitReview } from './manageReview';
-
+import { FreeformReviewProperties, GooglePlace, GooglePlaceDetails, GooglePlaceDetailsResponse, GooglePlaceResult, GooglePlacesResponse, MemoRappReview, StructuredReviewProperties } from '../types';
+import { parsePreview } from './manageReview';
+import { addPlace } from './places';
+import { IMongoPlace, IReview } from '../models';
+// import { parsePreview, submitReview } from './manageReview';
+import { addReview } from './reviews';
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
 const GOOGLE_PLACE_DETAILS_BASE_URL = 'https://maps.googleapis.com/maps/api/place/details/json';
@@ -16,23 +20,39 @@ interface TestReview {
   reviewText: string;
 };
 
+interface AddReviewBody {
+  place_id: string;
+  structuredReviewProperties: StructuredReviewProperties;
+  freeformReviewProperties: FreeformReviewProperties
+}
+
 const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
-const addReview = async (restaurantName: string, dateOfVisit: string, wouldReturn: boolean | null, reviewText: string): Promise<void> => {
+const addTestReview = async (restaurantName: string, dateOfVisit: string, wouldReturn: boolean | null, reviewText: string): Promise<void> => {
   const sessionId: string = generateSessionId();
-  const parsedReviewProperties: ParsedReviewProperties = await parsePreview(sessionId, reviewText);
-  const place: GooglePlaceResult = await getRestaurantProperties(restaurantName);
-  const body: SubmitReviewBody = {
+  
+  const freeformReviewProperties: FreeformReviewProperties = await parsePreview(sessionId, reviewText);
+  console.log('freeformReviewProperties:', freeformReviewProperties);
+  
+  const place: GooglePlace = await getRestaurantProperties(restaurantName);
+  console.log('place:', place);
+
+  const newMongoPlace: IMongoPlace | null= await addPlace(place);
+  console.log('newMongoPlace:', newMongoPlace?.toObject());
+
+  const placeId: string = place.place_id;
+  const addReviewBody: MemoRappReview = {
+    place_id: placeId,
     structuredReviewProperties: {
-      googlePlace: place,
       dateOfVisit,
       wouldReturn,
     },
-    parsedReviewProperties,
-    reviewText,
-    sessionId,
+    freeformReviewProperties: freeformReviewProperties,
   };
-  await submitReview(body);
+  const newReview: IReview | null = await addReview(addReviewBody);
+  console.log('newReview:', newReview?.toObject());
+
+  return Promise.resolve();
 }
 
 interface AddReviewFromFileBody {
@@ -55,7 +75,7 @@ export const addReviewsFromFileHandler = async (
 
     for (const review of reviews) {
       const { restaurantName, reviewText, dateOfVisit, wouldReturn } = review;
-      await addReview(restaurantName, dateOfVisit, wouldReturn, reviewText);
+      await addTestReview(restaurantName, dateOfVisit, wouldReturn, reviewText);
       console.log('review added for ' + restaurantName);
     }
     console.log('All reviews loaded:');
@@ -66,7 +86,7 @@ export const addReviewsFromFileHandler = async (
   }
 }
 
-export const getRestaurantProperties = async (restaurantName: string): Promise<GooglePlaceResult> => {
+export const getRestaurantProperties = async (restaurantName: string): Promise<GooglePlace> => {
 
   const location = '';
   const query = `${restaurantName} ${location}`;
@@ -125,7 +145,6 @@ const getGooglePlaceDetails = async (placeId: string): Promise<GooglePlaceDetail
   }
 }
 
-
 const pickGooglePlaceProperties = (googlePlaceDetails: GooglePlaceDetails): GooglePlaceResult => {
   const googlePlace: GooglePlaceResult = {
     place_id: googlePlaceDetails.place_id!,
@@ -148,26 +167,26 @@ const pickGooglePlaceProperties = (googlePlaceDetails: GooglePlaceDetails): Goog
   };
   return googlePlace;
 }
-function old_pickGooglePlaceProperties(googlePlaceResult: google.maps.places.PlaceResult): GooglePlaceResult {
+// function old_pickGooglePlaceProperties(googlePlaceResult: google.maps.places.PlaceResult): GooglePlaceResult {
 
-  const googlePlace: GooglePlaceResult = {
-    place_id: googlePlaceResult.place_id!,
-    name: googlePlaceResult.name!,
-    address_components: googlePlaceResult.address_components,
-    formatted_address: googlePlaceResult.formatted_address!,
-    geometry: {
-      location: {
-        lat: googlePlaceResult.geometry!.location!.lat as unknown as number,
-        lng: googlePlaceResult.geometry!.location!.lng as unknown as number,
-      },
-      viewport: {
-        east: (googlePlaceResult.geometry!.viewport! as any).northeast.lat,
-        north: (googlePlaceResult.geometry!.viewport! as any).northeast.lng,
-        south: (googlePlaceResult.geometry!.viewport! as any).southwest.lat,
-        west: (googlePlaceResult.geometry!.viewport! as any).southwest.lng,
-      },
-    },
-    website: googlePlaceResult.website || '',
-  };
-  return googlePlace;
-}
+//   const googlePlace: GooglePlaceResult = {
+//     place_id: googlePlaceResult.place_id!,
+//     name: googlePlaceResult.name!,
+//     address_components: googlePlaceResult.address_components,
+//     formatted_address: googlePlaceResult.formatted_address!,
+//     geometry: {
+//       location: {
+//         lat: googlePlaceResult.geometry!.location!.lat as unknown as number,
+//         lng: googlePlaceResult.geometry!.location!.lng as unknown as number,
+//       },
+//       viewport: {
+//         east: (googlePlaceResult.geometry!.viewport! as any).northeast.lat,
+//         north: (googlePlaceResult.geometry!.viewport! as any).northeast.lng,
+//         south: (googlePlaceResult.geometry!.viewport! as any).southwest.lat,
+//         west: (googlePlaceResult.geometry!.viewport! as any).southwest.lng,
+//       },
+//     },
+//     website: googlePlaceResult.website || '',
+//   };
+//   return googlePlace;
+// }
