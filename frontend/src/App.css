@@ -41,3 +41,15 @@
     transform: rotate(360deg);
   }
 }
+
+.scrollable-table-container {
+  max-height: calc(100vh - 24px); /* Sets max height with 24px margin */
+  overflow-y: auto;               /* Enables vertical scrolling */
+}
+
+.table-head-fixed {
+  position: sticky;
+  top: 0;
+  background-color: white;        /* Ensures header background remains visible */
+  z-index: 1;                     /* Ensures header stays above table rows */
+}

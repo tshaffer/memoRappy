@@ -48,7 +48,6 @@ const ReviewsPage: React.FC = () => {
     // );
   }, []);
 
-
   const handleExpandClick = (placeId: string) => {
     setExpandedPlaceId(expandedPlaceId === placeId ? null : placeId);
   };
@@ -86,7 +85,6 @@ const ReviewsPage: React.FC = () => {
   };
 
   const handleSearch = () => {
-    // Handle the search functionality for the freeform query here
     console.log("Searching for query:", query);
   };
 
@@ -119,76 +117,46 @@ const ReviewsPage: React.FC = () => {
 
       {/* Filtering UI */}
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-
-        {/* Would Return Filter Dropdown */}
         <div>
-          <Button variant="outlined" aria-describedby={idWouldReturn} onClick={handleWouldReturnClick}>
+          <Button variant="outlined" aria-describedby={openWouldReturn ? 'would-return-popover' : undefined} onClick={handleWouldReturnClick}>
             Would Return
           </Button>
           <Popover
-            id={idWouldReturn}
-            open={openWouldReturn}
+            open={Boolean(anchorElWouldReturn)}
             anchorEl={anchorElWouldReturn}
             onClose={handleWouldReturnClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'left',
-            }}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
           >
             <div style={{ padding: '20px' }}>
               <Typography variant="subtitle1">Would Return</Typography>
-              <FormControlLabel
-                control={<Checkbox checked={wouldReturnFilter.yes} onChange={() => handleWouldReturnChange('yes')} />}
-                label="Yes"
-              />
-              <FormControlLabel
-                control={<Checkbox checked={wouldReturnFilter.no} onChange={() => handleWouldReturnChange('no')} />}
-                label="No"
-              />
-              <FormControlLabel
-                control={<Checkbox checked={wouldReturnFilter.notSpecified} onChange={() => handleWouldReturnChange('notSpecified')} />}
-                label="Not Specified"
-              />
-              <Button variant="outlined" size="small" onClick={handleClearWouldReturnFilter} style={{ marginTop: '10px' }}>
-                Clear
-              </Button>
+              <FormControlLabel control={<Checkbox checked={wouldReturnFilter.yes} onChange={() => handleWouldReturnChange('yes')} />} label="Yes" />
+              <FormControlLabel control={<Checkbox checked={wouldReturnFilter.no} onChange={() => handleWouldReturnChange('no')} />} label="No" />
+              <FormControlLabel control={<Checkbox checked={wouldReturnFilter.notSpecified} onChange={() => handleWouldReturnChange('notSpecified')} />} label="Not Specified" />
+              <Button variant="outlined" size="small" onClick={handleClearWouldReturnFilter} style={{ marginTop: '10px' }}>Clear</Button>
             </div>
           </Popover>
         </div>
-
-        {/* Distance Filter */}
         <div>
-          <Button variant="outlined" aria-describedby={idDistance} onClick={handleDistanceClick}>
+          <Button variant="outlined" aria-describedby={openDistance ? 'distance-popover' : undefined} onClick={handleDistanceClick}>
             Distance: {distance} miles
           </Button>
           <Popover
-            id={idDistance}
-            open={openDistance}
+            open={Boolean(anchorEl)}
             anchorEl={anchorEl}
             onClose={handleDistanceClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'left',
-            }}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
           >
             <div style={{ padding: '20px' }}>
               <Typography variant="subtitle1">Select Distance</Typography>
-              <Slider
-                value={distance}
-                onChange={handleDistanceSliderChange}
-                aria-labelledby="distance-slider"
-                min={1}
-                max={100}
-                valueLabelDisplay="auto"
-              />
+              <Slider value={distance} onChange={handleDistanceSliderChange} min={1} max={100} valueLabelDisplay="auto" />
             </div>
           </Popover>
         </div>
       </div>
 
-      {/* Table to display places with expandable rows for reviews */}
-      <TableContainer component={Paper}>
-        <Table>
+      {/* Scrollable TableContainer */}
+      <TableContainer component={Paper} style={{ maxHeight: 'calc(100vh - 24px)', overflowY: 'auto' }}>
+        <Table stickyHeader>
           <TableHead>
             <TableRow>
               <TableCell>Place</TableCell>
