@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Typography, Button, Slider, Popover, FormControlLabel, Checkbox, TextField } from '@mui/material';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { GooglePlaceResult, MemoRappReview } from '../types';
+import '../App.css'; // Ensure App.css contains the required classes
 
 const ReviewsPage: React.FC = () => {
   const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
@@ -155,10 +156,10 @@ const ReviewsPage: React.FC = () => {
       </div>
 
       {/* Scrollable TableContainer */}
-      <TableContainer component={Paper} style={{ maxHeight: 'calc(100vh - 24px)', overflowY: 'auto' }}>
+      <TableContainer component={Paper} className="scrollable-table-container">
         <Table stickyHeader>
           <TableHead>
-            <TableRow>
+            <TableRow className="table-head-fixed">
               <TableCell>Place</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
