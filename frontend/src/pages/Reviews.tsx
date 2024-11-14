@@ -69,6 +69,10 @@ const ReviewsPage: React.FC = () => {
     setSelectedReview(review);
   };
 
+  const handleFreeformQuery = async () => {
+    console.log('Query:', query);
+  }
+
   const handleWouldReturnSearch = async () => {
     const queryParameters: QueryParameters = {
       wouldReturn: { ...wouldReturnFilter },
@@ -79,11 +83,13 @@ const ReviewsPage: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(queryParameters), // Send the natural language query to your backend
       });
-      const result = await apiResponse.json();
-      console.log('Query results:', result);
+      const memoRappReviews: MemoRappReview[] = await apiResponse.json();
+      console.log('Query results:', memoRappReviews);
+      setMemoRappReviews(memoRappReviews);
     } catch (error) {
       console.error('Error handling query:', error);
     }
+    handleWouldReturnClose();
   };
 
   const handleWouldReturnChange = (filter: keyof typeof wouldReturnFilter) => {
@@ -142,6 +148,10 @@ const ReviewsPage: React.FC = () => {
     });
   };
 
+  const getPlacesWithReviews = (): GooglePlaceResult[] => {
+    return googlePlaces.filter((place: GooglePlaceResult) => memoRappReviews.some((review: MemoRappReview) => review.place_id === place.place_id));
+  }
+
   const getReviewsForPlace = (placeId: string): MemoRappReview[] => {
     return memoRappReviews.filter((memoRappReview: MemoRappReview) => memoRappReview.place_id === placeId);
   };
@@ -158,7 +168,7 @@ const ReviewsPage: React.FC = () => {
           size="small"
           style={{ flex: 1 }}
         />
-        <Button variant="contained" color="primary" onClick={handleWouldReturnSearch}>
+        <Button variant="contained" color="primary" onClick={handleFreeformQuery}>
           Search
         </Button>
       </div>
@@ -230,7 +240,7 @@ const ReviewsPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {googlePlaces.map((place: GooglePlaceResult) => (
+              {getPlacesWithReviews().map((place: GooglePlaceResult) => (
                 <React.Fragment key={place.place_id}>
                   <TableRow>
                     <TableCell align="center">
