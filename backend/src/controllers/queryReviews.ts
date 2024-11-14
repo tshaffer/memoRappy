@@ -6,12 +6,18 @@ interface QueryReviewBody {
   fileName: string;
 }
 
+interface WouldReturnQuery {
+  yes: boolean;
+  no: boolean;
+  notSpecified: boolean;
+}
+
 interface QueryParameters {
   location?: string;
   radius?: number;
   restaurantName?: string;
   dateRange?: any;
-  wouldReturn?: boolean | null;
+  wouldReturn: WouldReturnQuery;
   itemsOrdered?: any;
 }
 
@@ -39,21 +45,31 @@ export const performStructuredQuery = async (parameters: QueryParameters): Promi
 
   let query: any = {};
 
+  query = buildWouldReturnQuery(wouldReturn);
+
   // if (restaurantName !== undefined) {
   //   query = { "structuredReviewProperties.restaurantName": restaurantName };
   // }
-
-  // Would Return
-  if (wouldReturn === true || wouldReturn === false) {
-    query["structuredReviewProperties.wouldReturn"] = wouldReturn;
-  } else if (wouldReturn === null) {
-    query["structuredReviewProperties.wouldReturn"] = null;
-  }
 
   console.log('Structured query:', query);
   const results: IReview[] = await Review.find(query);
   console.log('Structured results:', results);
   return results;
+};
+
+const buildWouldReturnQuery = (filter: WouldReturnQuery): any => {
+  const values: (boolean | null)[] = [];
+  
+  if (filter.yes) values.push(true);
+  if (filter.no) values.push(false);
+  if (filter.notSpecified) values.push(null);
+
+  if (values.length === 0) {
+    // If no filters are selected, do not add any conditions for wouldReturn
+    return {};
+  }
+
+  return { "structuredReviewProperties.wouldReturn": { $in: values } };
 };
 
 /*

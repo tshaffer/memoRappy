@@ -7,19 +7,25 @@ import '../App.css';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 import MapWithMarkers from '../components/MapWIthMarkers';
 
+interface WouldReturnQuery {
+  yes: boolean;
+  no: boolean;
+  notSpecified: boolean;
+}
+
 interface QueryParameters {
   location?: string;
   radius?: number;
   restaurantName?: string;
   dateRange?: any;
-  wouldReturn?: boolean | null;
+  wouldReturn: WouldReturnQuery;
   itemsOrdered?: any;
 }
 
 const ReviewsPage: React.FC = () => {
   const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
   const [selectedReview, setSelectedReview] = useState<MemoRappReview | null>(null);
-  const [wouldReturnFilter, setWouldReturnFilter] = useState<{ yes: boolean; no: boolean; notSpecified: boolean }>({
+  const [wouldReturnFilter, setWouldReturnFilter] = useState<WouldReturnQuery>({
     yes: false,
     no: false,
     notSpecified: false,
@@ -64,14 +70,9 @@ const ReviewsPage: React.FC = () => {
   };
 
   const handleWouldReturnSearch = async () => {
-    const queryParameters: QueryParameters = {};
-    if (wouldReturnFilter.yes) {
-      queryParameters.wouldReturn = true;
-    } else if (wouldReturnFilter.no) {
-      queryParameters.wouldReturn = false;
-    } else if (wouldReturnFilter.notSpecified) {
-      queryParameters.wouldReturn = null;
-    }
+    const queryParameters: QueryParameters = {
+      wouldReturn: { ...wouldReturnFilter },
+    };
     try {
       const apiResponse = await fetch('/api/reviews/queryReviews', {
         method: 'POST',
