@@ -149,12 +149,45 @@ const ReviewsPage: React.FC = () => {
           onClose={handleWouldReturnClose}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         >
-          <div style={{ padding: '20px' }}>
-            <Typography variant="subtitle1">Would Return</Typography>
-            <FormControlLabel control={<Checkbox checked={wouldReturnFilter.yes} onChange={() => handleWouldReturnChange('yes')} />} label="Yes" />
-            <FormControlLabel control={<Checkbox checked={wouldReturnFilter.no} onChange={() => handleWouldReturnChange('no')} />} label="No" />
-            <FormControlLabel control={<Checkbox checked={wouldReturnFilter.notSpecified} onChange={() => handleWouldReturnChange('notSpecified')} />} label="Not Specified" />
-            <Button variant="outlined" size="small" onClick={handleClearWouldReturnFilter} style={{ marginTop: '10px' }}>Clear</Button>
+          <div style={{ padding: '20px', display: 'flex', flexDirection: 'column' }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Would Return
+            </Typography>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <FormControlLabel
+                control={<Checkbox checked={wouldReturnFilter.yes} onChange={() => handleWouldReturnChange('yes')} />}
+                label="Yes"
+              />
+              <FormControlLabel
+                control={<Checkbox checked={wouldReturnFilter.no} onChange={() => handleWouldReturnChange('no')} />}
+                label="No"
+              />
+              <FormControlLabel
+                control={<Checkbox checked={wouldReturnFilter.notSpecified} onChange={() => handleWouldReturnChange('notSpecified')} />}
+                label="Not Specified"
+              />
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={handleClearWouldReturnFilter}
+                style={{
+                  marginTop: '10px',
+                  color: 'black',
+                  borderColor: 'black',
+                  alignSelf: 'center' // Centers Clear button with checkbox labels
+                }}
+              >
+                Clear
+              </Button>
+            </div>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSearch} // Ensure you have this function defined to handle the search
+              style={{ alignSelf: 'flex-end', marginTop: '10px' }}
+            >
+              Search
+            </Button>
           </div>
         </Popover>
       </div>
