@@ -161,6 +161,27 @@ const ReviewsPage: React.FC = () => {
   const openDistance = Boolean(anchorElSetDistance);
   const idDistance = openDistance ? 'distance-popover' : undefined;
 
+  const handleSearchByFilter = async () => {
+    console.log('handleSearchByFilter');
+    // const queryParameters: QueryParameters = {
+    //   location: query,
+    //   radius: distance,
+    //   wouldReturn: { ...wouldReturnFilter },
+    // };
+    // try {
+    //   const apiResponse = await fetch('/api/reviews/queryReviews', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify(queryParameters),
+    //   });
+    //   const memoRappReviews: MemoRappReview[] = await apiResponse.json();
+    //   console.log('Query results:', memoRappReviews);
+    //   setMemoRappReviews(memoRappReviews);
+    // } catch (error) {
+    //   console.error('Error handling query:', error);
+    // }
+  };
+
   return (
     <div className="page-container">
       {/* Freeform Query Input */}
@@ -190,6 +211,15 @@ const ReviewsPage: React.FC = () => {
         <Button variant="outlined" aria-describedby={anchorElSetDistance ? 'would-return-popover' : undefined} onClick={handleDistanceClick}>
           Distance Away
         </Button>
+        <Button variant="outlined" aria-describedby={anchorElWouldReturn ? 'would-return-popover' : undefined} onClick={handleWouldReturnClick}>
+          Would Return
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={handleSearchByFilter}
+        >
+          Search
+        </Button>
         <Popover
           id={idDistance}
           open={openDistance}
@@ -206,6 +236,7 @@ const ReviewsPage: React.FC = () => {
               <Typography variant="body2">{distance} mi</Typography> {/* Current slider value */}
             </div>
             <Slider
+              // disabled
               value={distance}
               onChange={handleDistanceSliderChange}
               aria-labelledby="distance-slider"
@@ -216,9 +247,6 @@ const ReviewsPage: React.FC = () => {
             />
           </div>
         </Popover>
-        <Button variant="outlined" aria-describedby={anchorElWouldReturn ? 'would-return-popover' : undefined} onClick={handleWouldReturnClick}>
-          Would Return
-        </Button>
         <Popover
           open={Boolean(anchorElWouldReturn)}
           anchorEl={anchorElWouldReturn}
