@@ -7,6 +7,15 @@ import '../App.css';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 import MapWithMarkers from '../components/MapWIthMarkers';
 
+interface QueryParameters {
+  location?: string;
+  radius?: number;
+  restaurantName?: string;
+  dateRange?: any;
+  wouldReturn?: boolean | null;
+  itemsOrdered?: any;
+}
+
 const ReviewsPage: React.FC = () => {
   const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
   const [selectedReview, setSelectedReview] = useState<MemoRappReview | null>(null);
@@ -54,6 +63,28 @@ const ReviewsPage: React.FC = () => {
     setSelectedReview(review);
   };
 
+  const handleWouldReturnSearch = async () => {
+    const queryParameters: QueryParameters = {};
+    if (wouldReturnFilter.yes) {
+      queryParameters.wouldReturn = true;
+    } else if (wouldReturnFilter.no) {
+      queryParameters.wouldReturn = false;
+    } else if (wouldReturnFilter.notSpecified) {
+      queryParameters.wouldReturn = null;
+    }
+    try {
+      const apiResponse = await fetch('/api/reviews/queryReviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(queryParameters), // Send the natural language query to your backend
+      });
+      const result = await apiResponse.json();
+      console.log('Query results:', result);
+    } catch (error) {
+      console.error('Error handling query:', error);
+    }
+  };
+
   const handleWouldReturnChange = (filter: keyof typeof wouldReturnFilter) => {
     setWouldReturnFilter((prev) => ({ ...prev, [filter]: !prev[filter] }));
   };
@@ -84,10 +115,6 @@ const ReviewsPage: React.FC = () => {
 
   const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(event.target.value);
-  };
-
-  const handleSearch = () => {
-    console.log("Searching for query:", query);
   };
 
   const toggleMapDisplay = () => {
@@ -130,7 +157,7 @@ const ReviewsPage: React.FC = () => {
           size="small"
           style={{ flex: 1 }}
         />
-        <Button variant="contained" color="primary" onClick={handleSearch}>
+        <Button variant="contained" color="primary" onClick={handleWouldReturnSearch}>
           Search
         </Button>
       </div>
@@ -182,7 +209,7 @@ const ReviewsPage: React.FC = () => {
             <Button
               variant="contained"
               color="primary"
-              onClick={handleSearch} // Ensure you have this function defined to handle the search
+              onClick={handleWouldReturnSearch} // Ensure you have this function defined to handle the search
               style={{ alignSelf: 'flex-end', marginTop: '10px' }}
             >
               Search
