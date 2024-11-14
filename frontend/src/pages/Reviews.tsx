@@ -202,9 +202,9 @@ const ReviewsPage: React.FC = () => {
         >
           <div style={{ padding: '20px' }}>
             <Typography variant="subtitle1">Select Distance</Typography>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 10px' }}>
-              <Typography variant="body2">0</Typography> {/* Static "0" label */}
-              <Typography variant="body2">{distance}</Typography> {/* Current slider value */}
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography variant="body2">0 mi</Typography> {/* Static "0" label */}
+              <Typography variant="body2">{distance} mi</Typography> {/* Current slider value */}
             </div>
             <Slider
               value={distance}
@@ -212,6 +212,7 @@ const ReviewsPage: React.FC = () => {
               aria-labelledby="distance-slider"
               min={0}
               max={10}
+              step={0.5}
               valueLabelDisplay="off"
             />
           </div>
