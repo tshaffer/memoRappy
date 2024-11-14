@@ -159,29 +159,27 @@ const ReviewsPage: React.FC = () => {
         </Popover>
       </div>
 
-      {/* Table and Map/Review Details Container */}
       <div className="table-and-details-container">
-        {/* Scrollable TableContainer */}
         <TableContainer component={Paper} className="scrollable-table-container">
           <Table stickyHeader>
             <TableHead>
               <TableRow className="table-head-fixed">
+                <TableCell align="center"></TableCell>
                 <TableCell>Place</TableCell>
-                <TableCell align="center">Select</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableCell align="center"></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {googlePlaces.map((place: GooglePlaceResult) => (
                 <React.Fragment key={place.place_id}>
                   <TableRow>
-                    <TableCell>{place.name}</TableCell>
                     <TableCell align="center">
                       <Checkbox
                         checked={selectedPlaces.has(place.place_id)}
                         onChange={() => handlePlaceSelect(place.place_id)}
                       />
                     </TableCell>
+                    <TableCell>{place.name}</TableCell>
                     <TableCell align="right">
                       <IconButton onClick={() => handleExpandClick(place.place_id)}>
                         {expandedPlaceId === place.place_id ? <ExpandLess /> : <ExpandMore />}
@@ -210,31 +208,12 @@ const ReviewsPage: React.FC = () => {
           </Table>
         </TableContainer>
 
-        {/* Map or Selected Review Details */}
         {showMap ? (
           <Paper className="map-container">
             <MapWithMarkers
               locations={googlePlacesSelected}
             />
           </Paper>
-          // <Paper className="map-container">
-          //   {isLoaded && (
-          //     <GoogleMap
-          //       mapContainerStyle={{ height: '100%', width: '100%' }}
-          //       center={{ lat: -34.397, lng: 150.644 }}
-          //       zoom={10}
-          //     >
-          //       {googlePlaces
-          //         .filter((place) => selectedPlaces.has(place.place_id))
-          //         .map((place) => (
-          //           <Marker
-          //             key={place.place_id}
-          //             position={{ lat: place.geometry!.location.lat, lng: place.geometry!.location.lng }}
-          //           />
-          //         ))}
-          //     </GoogleMap>
-          //   )}
-          // </Paper>
         ) : (
           selectedReview && (
             <Paper className="review-details">
