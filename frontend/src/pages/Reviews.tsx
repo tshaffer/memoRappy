@@ -200,8 +200,7 @@ const ReviewsPage: React.FC = () => {
             horizontal: 'left',
           }}
         >
-          <div style={{ padding: '20px' }}>
-            <Typography variant="subtitle1">Select Distance</Typography>
+          <div style={{ padding: '20px', minWidth: '200px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography variant="body2">0 mi</Typography> {/* Static "0" label */}
               <Typography variant="body2">{distance} mi</Typography> {/* Current slider value */}
