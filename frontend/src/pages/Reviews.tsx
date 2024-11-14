@@ -184,85 +184,6 @@ const ReviewsPage: React.FC = () => {
     // }
   };
 
-  /*
-          <Popover
-            id={idDistance}
-            open={openDistance}
-            anchorEl={anchorElSetDistance}
-            onClose={handleDistanceClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'left',
-            }}
-          >
-            <div style={{ padding: '20px', minWidth: '200px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="body2">0 mi</Typography> 
-                <Typography variant="body2">{distance} mi</Typography>
-              </div>
-              <Slider
-                value={distance}
-                onChange={handleDistanceSliderChange}
-                aria-labelledby="distance-slider"
-                min={0}
-                max={10}
-                step={0.5}
-                valueLabelDisplay="off"
-              />
-            </div>
-          </Popover>
-  */
-  /*
-  import { Popover, Typography, Slider, Switch, FormControlLabel } from '@mui/material';
-  import React, { useState } from 'react';
-  
-  const [distanceFilterEnabled, setDistanceFilterEnabled] = useState(false);
-  const [distance, setDistance] = useState(0);
-  
-  const handleDistanceFilterToggle = () => {
-    setDistanceFilterEnabled((prev) => !prev);
-  };
-  
-  const handleDistanceSliderChange = (event: Event, newValue: number | number[]) => {
-    setDistance(newValue as number);
-  };
-  
-  <Popover
-    id={idDistance}
-    open={openDistance}
-    anchorEl={anchorElSetDistance}
-    onClose={handleDistanceClose}
-    anchorOrigin={{
-      vertical: 'bottom',
-      horizontal: 'left',
-    }}
-  >
-    <div style={{ padding: '20px', minWidth: '200px' }}>
-      <Typography variant="subtitle1">Distance Away Filter</Typography>
-      
-      <FormControlLabel
-        control={<Switch checked={distanceFilterEnabled} onChange={handleDistanceFilterToggle} />}
-        label="Enable Distance Filter"
-      />
-      
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 10px', marginTop: '10px' }}>
-        <Typography variant="body2">0</Typography>
-        <Typography variant="body2">{distance}</Typography>
-      </div>
-      <Slider
-        value={distance}
-        onChange={handleDistanceSliderChange}
-        aria-labelledby="distance-slider"
-        min={0}
-        max={10}
-        step={0.5}
-        disabled={!distanceFilterEnabled}  // Disable slider when filter is off
-        valueLabelDisplay="off"
-      />
-    </div>
-  </Popover>
-  */
-
   const handleDistanceFilterToggle = () => {
     setDistanceFilterEnabled((prev) => !prev);
   };
@@ -324,9 +245,9 @@ const ReviewsPage: React.FC = () => {
               label="Enable Distance Filter"
             />
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 10px', marginTop: '10px' }}>
-              <Typography variant="body2">0</Typography>
-              <Typography variant="body2">{distance}</Typography>
+            <div style={{ display: 'flex', justifyContent: 'space-between'}}>
+              <Typography variant="body2">0 mi</Typography>
+              <Typography variant="body2">{distance} mi</Typography>
             </div>
             <Slider
               value={distance}
