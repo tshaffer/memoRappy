@@ -188,30 +188,34 @@ const ReviewsPage: React.FC = () => {
           {showMap ? "Hide Map" : "Display Map"}
         </Button>
         <Button variant="outlined" aria-describedby={anchorElSetDistance ? 'would-return-popover' : undefined} onClick={handleDistanceClick}>
-          Distance
+          Distance Away
         </Button>
         <Popover
-            id={idDistance}
-            open={openDistance}
-            anchorEl={anchorElSetDistance}
-            onClose={handleDistanceClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'left',
-            }}
-          >
-            <div style={{ padding: '20px' }}>
-              <Typography variant="subtitle1">Select Distance</Typography>
-              <Slider
-                value={distance}
-                onChange={handleDistanceSliderChange}
-                aria-labelledby="distance-slider"
-                min={1}
-                max={100}
-                valueLabelDisplay="auto"
-              />
+          id={idDistance}
+          open={openDistance}
+          anchorEl={anchorElSetDistance}
+          onClose={handleDistanceClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
+        >
+          <div style={{ padding: '20px' }}>
+            <Typography variant="subtitle1">Select Distance</Typography>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 10px' }}>
+              <Typography variant="body2">0</Typography> {/* Static "0" label */}
+              <Typography variant="body2">{distance}</Typography> {/* Current slider value */}
             </div>
-          </Popover>
+            <Slider
+              value={distance}
+              onChange={handleDistanceSliderChange}
+              aria-labelledby="distance-slider"
+              min={0}
+              max={10}
+              valueLabelDisplay="off"
+            />
+          </div>
+        </Popover>
         <Button variant="outlined" aria-describedby={anchorElWouldReturn ? 'would-return-popover' : undefined} onClick={handleWouldReturnClick}>
           Would Return
         </Button>
