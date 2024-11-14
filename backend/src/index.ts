@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import express from 'express';
 
 import { addReviewsFromFileHandler, getPlaces, getReviews } from './controllers';
+import { queryReviews } from './controllers/queryReviews';
 
 export let openai: OpenAI;
 
@@ -24,6 +25,7 @@ app.use(express.json());
 // routes
 app.get('/api/places', getPlaces);
 app.get('/api/reviews', getReviews);
+app.post('/api/reviews/queryReviews', queryReviews);
 app.post('/api/reviews/addReviewsFromFile', addReviewsFromFileHandler);
 
 // Serve static files from the frontend build directory, adjusted for production
