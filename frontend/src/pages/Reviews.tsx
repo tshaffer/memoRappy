@@ -33,6 +33,7 @@ const ReviewsPage: React.FC = () => {
   });
   const [distance, setDistance] = useState<number>(10);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [anchorElSetDistance, setAnchorElSetDistance] = useState<HTMLElement | null>(null);
   const [anchorElWouldReturn, setAnchorElWouldReturn] = useState<HTMLElement | null>(null);
   const [query, setQuery] = useState<string>("");
   const [selectedPlaces, setSelectedPlaces] = useState<Set<string>>(new Set());
@@ -106,11 +107,11 @@ const ReviewsPage: React.FC = () => {
   };
 
   const handleDistanceClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+    setAnchorElSetDistance(event.currentTarget);
   };
 
   const handleDistanceClose = () => {
-    setAnchorEl(null);
+    setAnchorElSetDistance(null);
   };
 
   const handleWouldReturnClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -157,6 +158,9 @@ const ReviewsPage: React.FC = () => {
 
   const isDisplayMapDisabled = selectedPlaces.size === 0;
 
+  const openDistance = Boolean(anchorElSetDistance);
+  const idDistance = openDistance ? 'distance-popover' : undefined;
+
   return (
     <div className="page-container">
       {/* Freeform Query Input */}
@@ -183,6 +187,31 @@ const ReviewsPage: React.FC = () => {
         >
           {showMap ? "Hide Map" : "Display Map"}
         </Button>
+        <Button variant="outlined" aria-describedby={anchorElSetDistance ? 'would-return-popover' : undefined} onClick={handleDistanceClick}>
+          Distance
+        </Button>
+        <Popover
+            id={idDistance}
+            open={openDistance}
+            anchorEl={anchorElSetDistance}
+            onClose={handleDistanceClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'left',
+            }}
+          >
+            <div style={{ padding: '20px' }}>
+              <Typography variant="subtitle1">Select Distance</Typography>
+              <Slider
+                value={distance}
+                onChange={handleDistanceSliderChange}
+                aria-labelledby="distance-slider"
+                min={1}
+                max={100}
+                valueLabelDisplay="auto"
+              />
+            </div>
+          </Popover>
         <Button variant="outlined" aria-describedby={anchorElWouldReturn ? 'would-return-popover' : undefined} onClick={handleWouldReturnClick}>
           Would Return
         </Button>
