@@ -171,10 +171,9 @@ const ReviewsPage: React.FC = () => {
                 size="small"
                 onClick={handleClearWouldReturnFilter}
                 style={{
-                  marginTop: '10px',
                   color: 'black',
                   borderColor: 'black',
-                  alignSelf: 'center' // Centers Clear button with checkbox labels
+                  height: 'fit-content', // Adjusts height to match the checkbox labels
                 }}
               >
                 Clear
