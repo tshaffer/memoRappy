@@ -125,13 +125,11 @@ const ReviewsPage: React.FC = () => {
   };
 
   const toggleMapDisplay = () => {
-    const mapCurrentlyDisplayed = showMap;
-    const newShowMap = !mapCurrentlyDisplayed;
-    if (newShowMap) {
-      const googlePlacesSelected: GooglePlaceResult[] = googlePlaces.filter((place) => selectedPlaces.has(place.place_id));
-      setGooglePlacesSelected(googlePlacesSelected);
-    } else {
+    if (showMap) {
       setGooglePlacesSelected([]);
+    } else {
+      const placesSelected = googlePlaces.filter((place) => selectedPlaces.has(place.place_id));
+      setGooglePlacesSelected(placesSelected);
     }
     setShowMap((prev) => !prev);
   };
@@ -156,6 +154,8 @@ const ReviewsPage: React.FC = () => {
     return memoRappReviews.filter((memoRappReview: MemoRappReview) => memoRappReview.place_id === placeId);
   };
 
+  const isDisplayMapDisabled = selectedPlaces.size === 0;
+
   return (
     <div className="page-container">
       {/* Freeform Query Input */}
@@ -175,8 +175,12 @@ const ReviewsPage: React.FC = () => {
 
       {/* Filtering UI */}
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-        <Button variant="outlined" onClick={toggleMapDisplay}>
-          Display Map
+        <Button
+          variant="outlined"
+          onClick={toggleMapDisplay}
+          disabled={isDisplayMapDisabled && !showMap}
+        >
+          {showMap ? "Hide Map" : "Display Map"}
         </Button>
         <Button variant="outlined" aria-describedby={anchorElWouldReturn ? 'would-return-popover' : undefined} onClick={handleWouldReturnClick}>
           Would Return
