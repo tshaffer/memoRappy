@@ -6,6 +6,7 @@ import '../App.css';
 // Import Google Maps components
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 import MapWithMarkers from '../components/MapWIthMarkers';
+import { getCityNameFromPlace } from '../utilities';
 
 interface WouldReturnQuery {
   yes: boolean;
@@ -240,6 +241,7 @@ const ReviewsPage: React.FC = () => {
               <TableRow className="table-head-fixed">
                 <TableCell align="center"></TableCell>
                 <TableCell>Place</TableCell>
+                <TableCell>Location</TableCell>
                 <TableCell align="center"></TableCell>
               </TableRow>
             </TableHead>
@@ -254,6 +256,7 @@ const ReviewsPage: React.FC = () => {
                       />
                     </TableCell>
                     <TableCell>{place.name}</TableCell>
+                    <TableCell>{getCityNameFromPlace(place) || 'Not provided'}</TableCell>
                     <TableCell align="right">
                       <IconButton onClick={() => handleExpandClick(place.place_id)}>
                         {expandedPlaceId === place.place_id ? <ExpandLess /> : <ExpandMore />}
