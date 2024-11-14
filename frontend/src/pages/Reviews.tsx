@@ -15,11 +15,11 @@ interface WouldReturnQuery {
 }
 
 interface QueryParameters {
-  location?: string;
+  lat?: number; lng?: number;
   radius?: number;
   restaurantName?: string;
   dateRange?: any;
-  wouldReturn: WouldReturnQuery;
+  wouldReturn?: WouldReturnQuery;
   itemsOrdered?: any;
 }
 
@@ -165,29 +165,56 @@ const ReviewsPage: React.FC = () => {
 
   const handleSearchByFilter = async () => {
     console.log('handleSearchByFilter');
-    // const queryParameters: QueryParameters = {
-    //   location: query,
-    //   radius: distance,
-    //   wouldReturn: { ...wouldReturnFilter },
-    // };
-    // try {
-    //   const apiResponse = await fetch('/api/reviews/queryReviews', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(queryParameters),
-    //   });
-    //   const memoRappReviews: MemoRappReview[] = await apiResponse.json();
-    //   console.log('Query results:', memoRappReviews);
-    //   setMemoRappReviews(memoRappReviews);
-    // } catch (error) {
-    //   console.error('Error handling query:', error);
-    // }
+
+    let lat: number = 0;
+    let lng: number = 0;
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          console.log('Current location:', position.coords);
+          lat = position.coords.latitude;
+          lng = position.coords.longitude;
+          // setCurrentLocation({
+          //   lat: position.coords.latitude,
+          //   lng: position.coords.longitude,
+          // });
+          if (lat !== 0 && lng !== 0) {
+            console.log(distance);
+            const radius: number = distance * 1609.34; // Convert miles to meters
+
+            const queryParameters: QueryParameters = {
+              lat,
+              lng,
+              radius,
+            };
+            try {
+              const apiResponse = await fetch('/api/reviews/queryReviews', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(queryParameters),
+              });
+              const data = await apiResponse.json();
+              // const memoRappReviews: MemoRappReview[] = await apiResponse.json();
+              console.log('Query results:', data);
+              // setMemoRappReviews(memoRappReviews);
+            } catch (error) {
+              console.error('Error handling query:', error);
+            }
+          }
+        },
+        (error) => console.error("Error getting current location: ", error),
+        { enableHighAccuracy: true }
+      );
+    }
+
+
   };
 
   const handleDistanceFilterToggle = () => {
     setDistanceFilterEnabled((prev) => !prev);
   };
-  
+
   return (
     <div className="page-container">
       {/* Freeform Query Input */}
@@ -245,7 +272,7 @@ const ReviewsPage: React.FC = () => {
               label="Enable Distance Filter"
             />
 
-            <div style={{ display: 'flex', justifyContent: 'space-between'}}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography variant="body2">0 mi</Typography>
               <Typography variant="body2">{distance} mi</Typography>
             </div>

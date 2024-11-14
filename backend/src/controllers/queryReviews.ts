@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { IReview } from "../models";
 import Review from "../models/Review";
+import MongoPlace, { IMongoPlace } from '../models/MongoPlace';  
+
 
 interface QueryReviewBody {
   fileName: string;
@@ -13,11 +15,12 @@ interface WouldReturnQuery {
 }
 
 interface QueryParameters {
-  location?: string;
+  lat?: number;
+  lng?: number;
   radius?: number;
   restaurantName?: string;
   dateRange?: any;
-  wouldReturn: WouldReturnQuery;
+  wouldReturn?: WouldReturnQuery;
   itemsOrdered?: any;
 }
 
@@ -26,14 +29,16 @@ export const queryReviews = async (
   response: Response
 ): Promise<void> => {
 
-  const reviews: IReview[] = await performStructuredQuery(request.body);
-  console.log('Query results:', reviews);
-  response.json(reviews);
+  const mongoPlaces: IMongoPlace[] = await performPlacesQuery(request.body);
+
+  // const reviews: IReview[] = await performStructuredQuery(request.body);
+  console.log('Query results:', mongoPlaces);
+  response.json(mongoPlaces);
 }
 
-export const performStructuredQuery = async (parameters: QueryParameters): Promise<IReview[]> => {
+export const performPlacesQuery = async (parameters: QueryParameters): Promise<IMongoPlace[]> => {
   const {
-    location,
+    lat, lng,
     radius,
     restaurantName,
     dateRange,
@@ -45,11 +50,57 @@ export const performStructuredQuery = async (parameters: QueryParameters): Promi
 
   let query: any = {};
 
-  query = buildWouldReturnQuery(wouldReturn);
+  if (lat !== undefined && lng !== undefined) {
+    query = buildLocationQuery(lat, lng, radius);
+  }
 
-  // if (restaurantName !== undefined) {
-  //   query = { "structuredReviewProperties.restaurantName": restaurantName };
-  // }
+  console.log('Places query:', query);
+  const results: IMongoPlace[] = await MongoPlace.find(query);
+  console.log('Places results:', results);
+  return results;
+}
+
+const buildLocationQuery = (lat: number, lng: number, radius: number | undefined): any => {
+  const effectiveRadius = radius ?? 5000;
+  // const query = {
+  //   "place.geometry.location":
+  //   {
+  //     $near: {
+  //       $geometry: { type: 'Point', coordinates: [lng, lat] },
+  //       $maxDistance: effectiveRadius,
+  //     }
+  //   }
+  // };
+  const query = {
+    "geometry.location": { // Use "geometry.location" instead of "place.geometry.location"
+      $near: {
+        $geometry: { type: "Point", coordinates: [lng, lat] },
+        $maxDistance: effectiveRadius // in meters
+      }
+    }
+  };
+  console.log('Location query:', query);
+  return query;
+}
+
+
+export const performStructuredQuery = async (parameters: QueryParameters): Promise<IReview[]> => {
+  const {
+    lat, lng,
+    radius,
+    restaurantName,
+    dateRange,
+    wouldReturn,
+    itemsOrdered,
+  } = parameters;
+
+  console.log('Query parameters:', parameters);
+
+  let query: any = {};
+
+  if (wouldReturn !== undefined) {
+    query = buildWouldReturnQuery(wouldReturn);
+  }
 
   console.log('Structured query:', query);
   const results: IReview[] = await Review.find(query);
@@ -57,15 +108,14 @@ export const performStructuredQuery = async (parameters: QueryParameters): Promi
   return results;
 };
 
-const buildWouldReturnQuery = (filter: WouldReturnQuery): any => {
+const buildWouldReturnQuery = (wouldReturn: WouldReturnQuery): any => {
   const values: (boolean | null)[] = [];
-  
-  if (filter.yes) values.push(true);
-  if (filter.no) values.push(false);
-  if (filter.notSpecified) values.push(null);
+
+  if (wouldReturn.yes) values.push(true);
+  if (wouldReturn.no) values.push(false);
+  if (wouldReturn.notSpecified) values.push(null);
 
   if (values.length === 0) {
-    // If no filters are selected, do not add any conditions for wouldReturn
     return {};
   }
 

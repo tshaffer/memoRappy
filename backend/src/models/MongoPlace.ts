@@ -37,6 +37,8 @@ const MongoPlaceSchema: Schema = new Schema({
   geometry: MongoGeometrySchema
 });
 
+MongoPlaceSchema.index({ "geometry.location": "2dsphere" });
+
 const MongoPlace: MongoPlaceModel = mongoose.model<IMongoPlace>('MongoPlace', MongoPlaceSchema);
 
 export default MongoPlace;
