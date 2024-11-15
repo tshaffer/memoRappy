@@ -418,7 +418,6 @@ const ReviewsPage: React.FC = () => {
                   <TableCell align="center"></TableCell>
                   <TableCell align="center"></TableCell>
                   <TableCell align="center"></TableCell>
-                  <TableCell align="center"></TableCell>
                   <TableCell>Place</TableCell>
                   <TableCell>Location</TableCell>
                   <TableCell align="center"></TableCell>
