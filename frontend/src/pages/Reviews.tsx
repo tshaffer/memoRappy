@@ -364,19 +364,19 @@ const ReviewsPage: React.FC = () => {
                 {getPlacesWithReviews().map((place: GooglePlaceResult) => (
                   <React.Fragment key={place.place_id}>
                     <TableRow className="table-row-hover">
-                      <TableCell align="center" className="dimmed" style={{ maxWidth: '30px', padding: '0px', textAlign: 'center' }}>
-                        <Checkbox style={{ maxWidth: '30px', padding: '0px', textAlign: 'center' }}
+                      <TableCell align="center" className="dimmed" style={{ width: '30px', maxWidth: '30px', padding: '0px', textAlign: 'center' }}>
+                        <Checkbox style={{ width: '30px', maxWidth: '30px', padding: '0px', textAlign: 'center' }}
                           checked={selectedPlaces.has(place.place_id)}
                           onChange={() => handlePlaceSelect(place.place_id)}
                         />
                       </TableCell>
-                      <TableCell align="right" className="dimmed" style={{ maxWidth: '30px', padding: '0px', textAlign: 'center' }}>
-                        <IconButton onClick={() => handleShowMap(place.place_id)} style={{ maxWidth: '30px', padding: '0px', textAlign: 'center'  }}>
+                      <TableCell align="right" className="dimmed" style={{ width: '30px', maxWidth: '30px', padding: '0px', textAlign: 'center' }}>
+                        <IconButton onClick={() => handleShowMap(place.place_id)} style={{ width: '30px', maxWidth: '30px', padding: '0px', textAlign: 'center'  }}>
                           <MapIcon />
                         </IconButton>
                       </TableCell>
-                      <TableCell align="right" className="dimmed" style={{ maxWidth: '30px', padding: '0px', textAlign: 'center'  }}>
-                        <IconButton onClick={() => handleShowDirections(place.place_id)} style={{ maxWidth: '30px', padding: '0px', textAlign: 'center'  }}>
+                      <TableCell align="right" className="dimmed" style={{ width: '30px', maxWidth: '30px', padding: '0px', textAlign: 'center'  }}>
+                        <IconButton onClick={() => handleShowDirections(place.place_id)} style={{ width: '30px', maxWidth: '30px', padding: '0px', textAlign: 'center'  }}>
                           <DirectionsIcon />
                         </IconButton>
                       </TableCell>
