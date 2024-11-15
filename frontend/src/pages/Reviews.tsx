@@ -276,7 +276,7 @@ const ReviewsPage: React.FC = () => {
     return (
       <MapWithMarkers
         initialCenter={specifiedLocation}
-        locations={googlePlacesSelected}
+        locations={googlePlaces}
       />
     );
   }
@@ -299,7 +299,6 @@ const ReviewsPage: React.FC = () => {
           </Button>
         </div>
 
-        {/* Filtering UI */}
         <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
           <Button variant="outlined" aria-describedby={anchorElSetDistance ? 'set-distance-popover' : undefined} onClick={handleDistanceClick}>
             Distance Away
