@@ -457,8 +457,21 @@ const ReviewsPage: React.FC = () => {
               </TableBody>
             </Table>
           </TableContainer>
+          {/* {showMap ? (
+              <Paper id="mapContainer" className="map-container">
+                {renderMap()}
+              </Paper>
+            ) : (
+              selectedReview && (
+                <Paper id="reviewDetails" className="review-details">
+                  <Typography variant="h6">Review Details</Typography>
+                  <Typography><strong>Date of Visit:</strong> {selectedReview.structuredReviewProperties.dateOfVisit}</Typography>
+                  <Typography><strong>Would Return:</strong> {selectedReview.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
+                  <Typography><strong>Review Text:</strong> {selectedReview.freeformReviewProperties.reviewText}</Typography>
+                </Paper>
+              )
+            )} */}
           <div>
-            {/* Toggle UI */}
             <ToggleButtonGroup
               value={showMap ? "map" : "details"}
               exclusive
