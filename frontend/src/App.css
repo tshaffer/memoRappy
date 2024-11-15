@@ -92,3 +92,10 @@
 .table-row-hover:hover .dimmed {
   opacity: 1; /* Normal state */
 }
+
+.small-column {
+  width: 50px; /* Adjust to the desired size */
+  max-width: 50px;
+  text-align: center; /* Optional: Ensure the content is centered */
+  padding: 0px;
+}
