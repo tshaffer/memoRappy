@@ -9,6 +9,8 @@ import { getCityNameFromPlace } from '../utilities';
 
 import DirectionsIcon from '@mui/icons-material/Directions';
 import MapIcon from '@mui/icons-material/Map';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 
 interface Coordinates {
   lat: number;

@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 import express from 'express';
 
 import { addReviewsFromFileHandler, getPlaces, getReviews } from './controllers';
-import { queryReviews } from './controllers/queryReviews';
+import { getCountsByWouldReturnHandler, queryReviews } from './controllers/queryReviews';
 
 export let openai: OpenAI;
 
@@ -27,6 +27,8 @@ app.get('/api/places', getPlaces);
 app.get('/api/reviews', getReviews);
 app.post('/api/reviews/queryReviews', queryReviews);
 app.post('/api/reviews/addReviewsFromFile', addReviewsFromFileHandler);
+
+app.post('/api/reviews/getCountsByWouldReview', getCountsByWouldReturnHandler);
 
 // Serve static files from the frontend build directory, adjusted for production
 const frontendPath = process.env.NODE_ENV === 'production'

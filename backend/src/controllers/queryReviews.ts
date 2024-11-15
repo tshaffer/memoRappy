@@ -124,6 +124,31 @@ const buildWouldReturnQuery = (wouldReturn: WouldReturnQuery): any => {
   return { "structuredReviewProperties.wouldReturn": { $in: values } };
 };
 
+export const getCountsByWouldReturnHandler = async (
+  request: Request,
+  response: Response
+): Promise<void> => {
+  const placeId = request.body.placeId;
+  const results = await getCountsByWouldReturn(placeId);
+  response.json(results);
+}
+
+const getCountsByWouldReturn = async (placeId: string): Promise<any[]> => {
+  const results = await Review.aggregate([
+    {
+      $match: { place_id: placeId } // Filter reviews by the given place_id
+    },
+    {
+      $group: {
+        _id: "$structuredReviewProperties.wouldReturn", // Group by wouldReturn value
+        count: { $sum: 1 } // Count the number of documents in each group
+      }
+    }
+  ]);
+
+  return results;
+};
+
 /*
 export const chatty_performStructuredQuery = async (parameters: QueryParameters): Promise<IReview[]> => {
   const {
