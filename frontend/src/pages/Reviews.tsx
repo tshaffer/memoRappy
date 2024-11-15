@@ -102,6 +102,36 @@ const ReviewsPage: React.FC = () => {
     fetchReviews();
   }, []);
 
+  interface WouldReturnCounts {
+    yesCount: number;
+    noCount: number;
+    nullCount: number;
+  }
+
+  const getWouldReturnToPlaceCounts = (placeId: string): WouldReturnCounts => {
+    const counts: WouldReturnCounts = {
+      yesCount: 0,
+      noCount: 0,
+      nullCount: 0,
+    };
+
+    memoRappReviews.forEach((memoRappReview: MemoRappReview) => {
+      if (memoRappReview.place_id === placeId) {
+        const wouldReturn = memoRappReview.structuredReviewProperties.wouldReturn;
+
+        if (wouldReturn === true) {
+          counts.yesCount += 1;
+        } else if (wouldReturn === false) {
+          counts.noCount += 1;
+        } else {
+          counts.nullCount += 1;
+        }
+      }
+    });
+
+    return counts;
+  };
+
   const handleExpandClick = (placeId: string) => {
     setExpandedPlaceId(expandedPlaceId === placeId ? null : placeId);
   };
@@ -259,6 +289,34 @@ const ReviewsPage: React.FC = () => {
     );
   }
 
+  const renderThumbsUps = (placeId: string) => {
+    const yesCount = getWouldReturnToPlaceCounts(placeId).yesCount;
+    if (yesCount > 0) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+          <span style={{ marginRight: '8px' }}>{yesCount}</span>
+          <ThumbUpIcon />
+        </div>
+      );
+    } else {
+      return null;
+    }
+  }
+
+  const renderThumbsDowns = (placeId: string) => {
+    const noCount = getWouldReturnToPlaceCounts(placeId).noCount;
+    if (noCount > 0) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+          <span style={{ marginRight: '8px' }}>{noCount}</span>
+          <ThumbDownIcon />
+        </div>
+      );
+    } else {
+      return null;
+    }
+  }
+
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY!} libraries={libraries}>
       <div className="page-container">
@@ -400,16 +458,10 @@ const ReviewsPage: React.FC = () => {
                         </IconButton>
                       </TableCell>
                       <TableCell align="right" style={thumbsStyle}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                          <span style={{ marginRight: '8px' }}>{4}</span>
-                          <ThumbUpIcon />
-                        </div>
+                        {renderThumbsUps(place.place_id)}
                       </TableCell>
                       <TableCell align="right" style={thumbsStyle}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                          <span style={{ marginRight: '8px' }}>{2}</span>
-                          <ThumbDownIcon />
-                        </div>
+                        {renderThumbsDowns(place.place_id)}
                       </TableCell>
                       <TableCell>{place.name}</TableCell>
                       <TableCell>{getCityNameFromPlace(place) || 'Not provided'}</TableCell>
