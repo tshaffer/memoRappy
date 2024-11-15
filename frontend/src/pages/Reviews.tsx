@@ -408,70 +408,62 @@ const ReviewsPage: React.FC = () => {
         </div>
 
         <div className="table-and-details-container">
-          <TableContainer component={Paper} className="scrollable-table-container">
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow className="table-head-fixed">
-                  <TableCell align="center"></TableCell>
-                  <TableCell>Place</TableCell>
-                  <TableCell>Location</TableCell>
-                  <TableCell align="center"></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {getPlacesWithReviews().map((place: GooglePlaceResult) => (
-                  <React.Fragment key={place.place_id}>
-                    <TableRow>
-                      <TableCell align="center">
-                        <Checkbox
-                          checked={selectedPlaces.has(place.place_id)}
-                          onChange={() => handlePlaceSelect(place.place_id)}
-                        />
-                      </TableCell>
-                      <TableCell>{place.name}</TableCell>
-                      <TableCell>{getCityNameFromPlace(place) || 'Not provided'}</TableCell>
-                      <TableCell align="right">
-                        <IconButton onClick={() => handleExpandClick(place.place_id)}>
-                          {expandedPlaceId === place.place_id ? <ExpandLess /> : <ExpandMore />}
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell colSpan={3} style={{ padding: 0 }}>
-                        <Collapse in={expandedPlaceId === place.place_id} timeout="auto" unmountOnExit>
-                          <Table size="small">
-                            <TableBody>
-                              {getReviewsForPlace(place.place_id).map((review) => (
-                                <TableRow key={review._id} onClick={() => handleReviewClick(review)} style={{ cursor: 'pointer' }}>
-                                  <TableCell>Date: {review.structuredReviewProperties.dateOfVisit}</TableCell>
-                                  <TableCell>Would Return: {review.structuredReviewProperties.wouldReturn === null ? 'Not Specified' : review.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </Collapse>
-                      </TableCell>
-                    </TableRow>
-                  </React.Fragment>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          {/* {showMap ? (
-              <Paper id="mapContainer" className="map-container">
-                {renderMap()}
-              </Paper>
-            ) : (
-              selectedReview && (
-                <Paper id="reviewDetails" className="review-details">
-                  <Typography variant="h6">Review Details</Typography>
-                  <Typography><strong>Date of Visit:</strong> {selectedReview.structuredReviewProperties.dateOfVisit}</Typography>
-                  <Typography><strong>Would Return:</strong> {selectedReview.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
-                  <Typography><strong>Review Text:</strong> {selectedReview.freeformReviewProperties.reviewText}</Typography>
-                </Paper>
-              )
-            )} */}
-          <div>
+          <div className="scrollable-table-container">
+            <TableContainer component={Paper}>
+              <Table stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <TableCell align="center"></TableCell>
+                    <TableCell>Place</TableCell>
+                    <TableCell>Location</TableCell>
+                    <TableCell align="center"></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {getPlacesWithReviews().map((place: GooglePlaceResult) => (
+                    <React.Fragment key={place.place_id}>
+                      <TableRow>
+                        <TableCell align="center">
+                          <Checkbox
+                            checked={selectedPlaces.has(place.place_id)}
+                            onChange={() => handlePlaceSelect(place.place_id)}
+                          />
+                        </TableCell>
+                        <TableCell>{place.name}</TableCell>
+                        <TableCell>{getCityNameFromPlace(place) || 'Not provided'}</TableCell>
+                        <TableCell align="right">
+                          <IconButton onClick={() => handleExpandClick(place.place_id)}>
+                            {expandedPlaceId === place.place_id ? <ExpandLess /> : <ExpandMore />}
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell colSpan={3} style={{ padding: 0 }}>
+                          <Collapse in={expandedPlaceId === place.place_id} timeout="auto" unmountOnExit>
+                            <Table size="small">
+                              <TableBody>
+                                {getReviewsForPlace(place.place_id).map((review) => (
+                                  <TableRow
+                                    key={review._id}
+                                    onClick={() => handleReviewClick(review)}
+                                    style={{ cursor: 'pointer' }}
+                                  >
+                                    <TableCell>Date: {review.structuredReviewProperties.dateOfVisit}</TableCell>
+                                    <TableCell>Would Return: {review.structuredReviewProperties.wouldReturn === null ? 'Not Specified' : review.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
+                    </React.Fragment>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
+          <div className="right-panel">
             <ToggleButtonGroup
               value={showMap ? "map" : "details"}
               exclusive
@@ -493,13 +485,64 @@ const ReviewsPage: React.FC = () => {
               selectedReview && (
                 <Paper id="reviewDetails" className="review-details">
                   <Typography variant="h6">Review Details</Typography>
+                  <Typography>
+                    <strong>Date of Visit:</strong> {selectedReview.structuredReviewProperties.dateOfVisit}
+                  </Typography>
+                  <Typography>
+                    <strong>Would Return:</strong>{' '}
+                    {selectedReview.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}
+                  </Typography>
+                  <Typography>
+                    <strong>Review Text:</strong> {selectedReview.freeformReviewProperties.reviewText}
+                  </Typography>
+                </Paper>
+              )
+            )}
+          </div>
+
+          {/* {showMap ? (
+              <Paper id="mapContainer" className="map-container">
+                {renderMap()}
+              </Paper>
+            ) : (
+              selectedReview && (
+                <Paper id="reviewDetails" className="review-details">
+                  <Typography variant="h6">Review Details</Typography>
                   <Typography><strong>Date of Visit:</strong> {selectedReview.structuredReviewProperties.dateOfVisit}</Typography>
                   <Typography><strong>Would Return:</strong> {selectedReview.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
                   <Typography><strong>Review Text:</strong> {selectedReview.freeformReviewProperties.reviewText}</Typography>
                 </Paper>
               )
-            )}
-          </div>
+            )} */}
+          {/* <div>
+              <ToggleButtonGroup
+                value={showMap ? "map" : "details"}
+                exclusive
+                onChange={togglePanel}
+                style={{ marginBottom: '10px', display: 'flex', justifyContent: 'center' }}
+              >
+                <ToggleButton value="map" aria-label="Map">
+                  Map
+                </ToggleButton>
+                <ToggleButton value="details" aria-label="Review Details">
+                  Review Details
+                </ToggleButton>
+              </ToggleButtonGroup>
+              {showMap ? (
+                <Paper id="mapContainer" className="map-container">
+                  {renderMap()}
+                </Paper>
+              ) : (
+                selectedReview && (
+                  <Paper id="reviewDetails" className="review-details">
+                    <Typography variant="h6">Review Details</Typography>
+                    <Typography><strong>Date of Visit:</strong> {selectedReview.structuredReviewProperties.dateOfVisit}</Typography>
+                    <Typography><strong>Would Return:</strong> {selectedReview.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
+                    <Typography><strong>Review Text:</strong> {selectedReview.freeformReviewProperties.reviewText}</Typography>
+                  </Paper>
+                )
+              )}
+            </div> */}
         </div>
       </div>
     </LoadScript>

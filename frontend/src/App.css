@@ -49,24 +49,56 @@
   z-index: 1;                     /* Ensures header stays above table rows */
 }
 
-.page-container {
+.full-width-container {
+  max-width: 90% !important;
+  padding: 20px;
+}
+
+/* .page-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  width: 100%; /* Ensure the container takes the full width */
+  width: 100%;
   padding: 20px;
+} */
+
+/* .table-and-details-container {
+  display: flex;
+  flex-direction: row;
+  height: calc(100vh - 160px);
+} */
+
+/* .scrollable-table-container {
+  flex: 1;
+  max-width: 50%;
+  overflow-y: auto;
+} */
+
+/* .review-details,
+.map-container {
+  flex: 1;
+  margin-left: 20px;
+  padding: 20px;
+  overflow-y: auto;
+} */
+
+.page-container {
+  display: flex;
+  flex-direction: row;
+  height: 100vh; /* Ensure it takes full viewport height */
 }
 
 .table-and-details-container {
   display: flex;
-  flex-direction: row;
-  height: calc(100vh - 160px); /* Adjusted height to account for header, filters, etc. */
+  flex: 1;
+  overflow: hidden; /* Prevent overflow from breaking the layout */
 }
 
 .scrollable-table-container {
-  flex: 1;
-  max-width: 50%; /* You can adjust this value as needed or remove it */
+  flex: 0 0 300px; /* Fixed width for the table */
+  max-width: 300px; /* Ensure the table doesn't shrink beyond this */
   overflow-y: auto;
+  border-right: 1px solid #ccc; /* Optional: add a separator */
 }
 
 .review-details,
@@ -75,9 +107,6 @@
   margin-left: 20px;
   padding: 20px;
   overflow-y: auto;
-}
-
-.full-width-container {
-  max-width: 90% !important;
-  padding: 20px;
+  display: flex; /* Ensure the content inside these containers respects flex layout */
+  flex-direction: column; /* Organize content vertically */
 }
