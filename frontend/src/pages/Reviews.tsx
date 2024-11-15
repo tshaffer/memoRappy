@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Typography, Button, Slider, Popover, FormControlLabel, Checkbox, TextField, Switch } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Typography, Button, Slider, Popover, FormControlLabel, Checkbox, TextField, Switch, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { GooglePlaceResult, MemoRappReview } from '../types';
 import '../App.css';
@@ -263,6 +263,14 @@ const ReviewsPage: React.FC = () => {
     }
   };
 
+  const togglePanel = (_: React.MouseEvent<HTMLElement>, newView: string | null) => {
+    if (newView === "map") {
+      setShowMap(true);
+    } else if (newView === "details") {
+      setShowMap(false);
+    }
+  };
+
   const renderMap = () => {
 
     return (
@@ -293,13 +301,6 @@ const ReviewsPage: React.FC = () => {
 
         {/* Filtering UI */}
         <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <Button
-            variant="outlined"
-            onClick={toggleMapDisplay}
-            disabled={isDisplayMapDisabled && !showMap}
-          >
-            {showMap ? "Hide Map" : "Display Map"}
-          </Button>
           <Button variant="outlined" aria-describedby={anchorElSetDistance ? 'set-distance-popover' : undefined} onClick={handleDistanceClick}>
             Distance Away
           </Button>
@@ -466,20 +467,36 @@ const ReviewsPage: React.FC = () => {
               </TableBody>
             </Table>
           </TableContainer>
-          {showMap ? (
-            <Paper id='mapContainer' className="map-container">
-              {renderMap()}
-            </Paper>
-          ) : (
-            selectedReview && (
-              <Paper id='reviewDetails' className="review-details">
-                <Typography variant="h6">Review Details</Typography>
-                <Typography><strong>Date of Visit:</strong> {selectedReview.structuredReviewProperties.dateOfVisit}</Typography>
-                <Typography><strong>Would Return:</strong> {selectedReview.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
-                <Typography><strong>Review Text:</strong> {selectedReview.freeformReviewProperties.reviewText}</Typography>
+          <div>
+            {/* Toggle UI */}
+            <ToggleButtonGroup
+              value={showMap ? "map" : "details"}
+              exclusive
+              onChange={togglePanel}
+              style={{ marginBottom: '10px', display: 'flex', justifyContent: 'center' }}
+            >
+              <ToggleButton value="map" aria-label="Map">
+                Map
+              </ToggleButton>
+              <ToggleButton value="details" aria-label="Review Details">
+                Review Details
+              </ToggleButton>
+            </ToggleButtonGroup>
+            {showMap ? (
+              <Paper id="mapContainer" className="map-container">
+                {renderMap()}
               </Paper>
-            )
-          )}
+            ) : (
+              selectedReview && (
+                <Paper id="reviewDetails" className="review-details">
+                  <Typography variant="h6">Review Details</Typography>
+                  <Typography><strong>Date of Visit:</strong> {selectedReview.structuredReviewProperties.dateOfVisit}</Typography>
+                  <Typography><strong>Would Return:</strong> {selectedReview.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
+                  <Typography><strong>Review Text:</strong> {selectedReview.freeformReviewProperties.reviewText}</Typography>
+                </Paper>
+              )
+            )}
+          </div>
         </div>
       </div>
     </LoadScript>
