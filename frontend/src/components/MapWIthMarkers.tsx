@@ -14,7 +14,7 @@ interface MapWithMarkersProps {
   locations: GooglePlaceResult[];
 }
 
-const DEFAULT_CENTER = { lat: 37.3944829, lng: -122.0790619 };
+// const DEFAULT_CENTER = { lat: 37.3944829, lng: -122.0790619 };
 const DEFAULT_ZOOM = 14;
 
 const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, locations }) => {
@@ -68,15 +68,15 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
     }} />
   );
 
-  const getInitialCenter = (): Coordinates => {
-    if (currentLocation) {
-      return currentLocation;
-    } else if (locations.length > 0) {
-      return getLatLngFromPlace(locations[0]);
-    } else {
-      return DEFAULT_CENTER;
-    }
-  }
+  // const getInitialCenter = (): Coordinates => {
+  //   if (currentLocation) {
+  //     return currentLocation;
+  //   } else if (locations.length > 0) {
+  //     return getLatLngFromPlace(locations[0]);
+  //   } else {
+  //     return DEFAULT_CENTER;
+  //   }
+  // }
 
   const handleMarkerClick = (location: GooglePlaceResult) => {
     setSelectedLocation(location);
