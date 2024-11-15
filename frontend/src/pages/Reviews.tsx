@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Typography, Button, Slider, Popover, FormControlLabel, Checkbox, TextField, Switch } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Typography, Button, Slider, Popover, FormControlLabel, Checkbox, TextField, Switch, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { GooglePlaceResult, MemoRappReview } from '../types';
 import '../App.css';
@@ -263,8 +263,16 @@ const ReviewsPage: React.FC = () => {
     }
   };
 
-  const renderMap = () => {
+  const togglePanel = (_: React.MouseEvent<HTMLElement>, newView: string | null) => {
+    if (newView === "map") {
+      setShowMap(true);
+    } else if (newView === "details") {
+      setShowMap(false);
+    }
+  };
 
+
+  const renderMap = () => {
     return (
       <MapWithMarkers
         initialCenter={specifiedLocation}
@@ -293,13 +301,6 @@ const ReviewsPage: React.FC = () => {
 
         {/* Filtering UI */}
         <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <Button
-            variant="outlined"
-            onClick={toggleMapDisplay}
-            disabled={isDisplayMapDisabled && !showMap}
-          >
-            {showMap ? "Hide Map" : "Display Map"}
-          </Button>
           <Button variant="outlined" aria-describedby={anchorElSetDistance ? 'set-distance-popover' : undefined} onClick={handleDistanceClick}>
             Distance Away
           </Button>
@@ -332,7 +333,19 @@ const ReviewsPage: React.FC = () => {
                   style={{ marginBottom: 20 }}
                 /> */}
           </Autocomplete>
-
+          <ToggleButtonGroup
+            value={showMap ? "map" : "details"}
+            exclusive
+            onChange={togglePanel}
+            style={{ marginBottom: '10px', display: 'flex', justifyContent: 'center' }}
+          >
+            <ToggleButton value="map" aria-label="Map">
+              Map
+            </ToggleButton>
+            <ToggleButton value="details" aria-label="Review Details">
+              Review Details
+            </ToggleButton>
+          </ToggleButtonGroup>
           <Popover
             id={idDistance}
             open={openDistance}
