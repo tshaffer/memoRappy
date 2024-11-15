@@ -222,35 +222,15 @@ const ReviewsPage: React.FC = () => {
   const handlePlaceChanged = () => {
     if (autocompleteRef.current) {
       const place: google.maps.places.PlaceResult = autocompleteRef.current.getPlace();
-      const geometry: google.maps.places.PlaceGeometry = place.geometry!;
-
-      console.log('handlePlaceChanged');
-      console.log('place', place);
-      console.log('geometry', geometry);
-      console.log('geometry.location');
-      console.log(geometry.location!);
-      console.log('geometry.viewport');
-      console.log(geometry.viewport);
-
-      console.log(geometry.location!.lat());
-      console.log(geometry.location!.lng());
-      console.log(geometry.viewport!.getNorthEast().lat());
-      console.log(geometry.viewport!.getNorthEast().lng());
-      console.log(geometry.viewport!.getSouthWest().lat());
-      console.log(geometry.viewport!.getSouthWest().lng());
-
-      setSpecifiedLocation(
-        {
-          lat: geometry.location!.lat(),
-          lng: geometry.location!.lng(),
-        }
-      );
-      // setPlaceResult(place);
-      // const googlePlace: GooglePlaceResult = pickGooglePlaceProperties(place);
-      // setGooglePlace(googlePlace);
-
-      // const restaurantLabel = googlePlace.name;
-      // setRestaurantLabel(restaurantLabel);
+      if (place.geometry !== undefined) {
+        const geometry: google.maps.places.PlaceGeometry = place.geometry!;
+        setSpecifiedLocation(
+          {
+            lat: geometry.location!.lat(),
+            lng: geometry.location!.lng(),
+          }
+        );
+        console.log("Place changed:", place);}
     }
   };
 
@@ -262,6 +242,12 @@ const ReviewsPage: React.FC = () => {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
+            setSpecifiedLocation(
+              {
+                lat: latitude,
+                lng: longitude,
+              }
+            );
             console.log("Current Location Coordinates:", { latitude, longitude });
 
             // Optionally, you can use reverse geocoding here to convert coordinates to an address
