@@ -288,9 +288,10 @@ const ViewReviews: React.FC = () => {
         <Paper>{renderDetailPanel()}</Paper>
       </Grid>
       {showMap && (
-        <MapWithMarkers
-          locations={locations}
-        />
+        <div>pizza</div>
+        // <MapWithMarkers
+        //   locations={locations}
+        // />
       )}
     </Grid>
   );
