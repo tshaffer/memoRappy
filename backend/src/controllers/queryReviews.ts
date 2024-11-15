@@ -146,13 +146,6 @@ const getCountsByWouldReturn = async (placeId: string): Promise<any> => {
     }
   ]);
 
-  // const x = results.map((result: any) => {
-  //   return {
-  //     wouldReturn: results ? 
-  //     count: result.count
-  //   };
-  // }
-
   const counts = {
     yesCount: 0,
     noCount: 0,
