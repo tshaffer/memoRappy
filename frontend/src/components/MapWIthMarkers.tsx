@@ -11,13 +11,14 @@ interface Coordinates {
 }
 
 interface MapWithMarkersProps {
+  initialCenter: Coordinates;
   locations: GooglePlaceResult[];
 }
 
 const DEFAULT_CENTER = { lat: 37.3944829, lng: -122.0790619 };
 const DEFAULT_ZOOM = 14;
 
-const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
+const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, locations }) => {
 
   const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<GooglePlaceResult | null>(null);
@@ -104,7 +105,7 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ locations }) => {
 
   const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY!;
 
-  const initialCenter: Coordinates = getInitialCenter();
+  // const initialCenter: Coordinates = getInitialCenter();
   const locationMarkers: JSX.Element[] = renderMarkers();
 
   return (

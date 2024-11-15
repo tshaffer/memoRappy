@@ -7,6 +7,12 @@ import { Autocomplete, Libraries, LoadScript } from '@react-google-maps/api';
 import MapWithMarkers from '../components/MapWIthMarkers';
 import { getCityNameFromPlace } from '../utilities';
 
+interface Coordinates {
+  lat: number;
+  lng: number;
+}
+
+
 interface WouldReturnQuery {
   yes: boolean;
   no: boolean;
@@ -21,6 +27,8 @@ interface QueryParameters {
   wouldReturn?: WouldReturnQuery;
   itemsOrdered?: any;
 }
+
+const DEFAULT_CENTER: Coordinates = { lat: 37.3944829, lng: -122.0790619 };
 
 const ReviewsPage: React.FC = () => {
   const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
@@ -276,6 +284,7 @@ const ReviewsPage: React.FC = () => {
 
     return (
       <MapWithMarkers
+        initialCenter={DEFAULT_CENTER}
         locations={googlePlacesSelected}
       />
     );
