@@ -81,3 +81,14 @@
   max-width: 90% !important;
   padding: 20px;
 }
+
+/* Dim the first three columns by default */
+.table-row-hover .dimmed {
+  opacity: 0.5; /* Dimmed state */
+  transition: opacity 0.2s ease; /* Smooth transition */
+}
+
+/* Restore normal state on hover */
+.table-row-hover:hover .dimmed {
+  opacity: 1; /* Normal state */
+}

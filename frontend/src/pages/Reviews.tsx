@@ -265,12 +265,6 @@ const ReviewsPage: React.FC = () => {
           <Button variant="outlined" aria-describedby={anchorElWouldReturn ? 'would-return-popover' : undefined} onClick={handleWouldReturnClick}>
             Would Return
           </Button>
-          {/* <Button
-            variant="outlined"
-            onClick={handleSearchByFilter}
-          >
-            Search
-          </Button> */}
           <Autocomplete
             onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
             onPlaceChanged={handlePlaceChanged}
@@ -369,19 +363,19 @@ const ReviewsPage: React.FC = () => {
               <TableBody>
                 {getPlacesWithReviews().map((place: GooglePlaceResult) => (
                   <React.Fragment key={place.place_id}>
-                    <TableRow>
-                      <TableCell align="center">
+                    <TableRow className="table-row-hover">
+                      <TableCell align="center" className="dimmed">
                         <Checkbox
                           checked={selectedPlaces.has(place.place_id)}
                           onChange={() => handlePlaceSelect(place.place_id)}
                         />
                       </TableCell>
-                      <TableCell align="right">
+                      <TableCell align="right" className="dimmed">
                         <IconButton onClick={() => handleShowMap(place.place_id)}>
                           <MapIcon />
                         </IconButton>
                       </TableCell>
-                      <TableCell align="right">
+                      <TableCell align="right" className="dimmed">
                         <IconButton onClick={() => handleShowDirections(place.place_id)}>
                           <DirectionsIcon />
                         </IconButton>
@@ -402,7 +396,9 @@ const ReviewsPage: React.FC = () => {
                               {getReviewsForPlace(place.place_id).map((review) => (
                                 <TableRow key={review._id} onClick={() => handleReviewClick(review)} style={{ cursor: 'pointer' }}>
                                   <TableCell>Date: {review.structuredReviewProperties.dateOfVisit}</TableCell>
-                                  <TableCell>Would Return: {review.structuredReviewProperties.wouldReturn === null ? 'Not Specified' : review.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</TableCell>
+                                  <TableCell>
+                                    Would Return: {review.structuredReviewProperties.wouldReturn === null ? 'Not Specified' : review.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}
+                                  </TableCell>
                                 </TableRow>
                               ))}
                             </TableBody>
