@@ -230,7 +230,8 @@ const ReviewsPage: React.FC = () => {
             lng: geometry.location!.lng(),
           }
         );
-        console.log("Place changed:", place);}
+        console.log("Place changed:", place);
+      }
     }
   };
 
@@ -465,14 +466,13 @@ const ReviewsPage: React.FC = () => {
               </TableBody>
             </Table>
           </TableContainer>
-
           {showMap ? (
-            <Paper className="map-container">
+            <Paper id='mapContainer' className="map-container">
               {renderMap()}
             </Paper>
           ) : (
             selectedReview && (
-              <Paper className="review-details">
+              <Paper id='reviewDetails' className="review-details">
                 <Typography variant="h6">Review Details</Typography>
                 <Typography><strong>Date of Visit:</strong> {selectedReview.structuredReviewProperties.dateOfVisit}</Typography>
                 <Typography><strong>Would Return:</strong> {selectedReview.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
