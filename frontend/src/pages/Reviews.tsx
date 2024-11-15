@@ -372,18 +372,18 @@ const ReviewsPage: React.FC = () => {
                   <React.Fragment key={place.place_id}>
                     <TableRow className="table-row-hover">
                       <TableCell align="center" className="dimmed" style={smallColumnStyle}>
-                        <Checkbox style={smallColumnStyle}
+                        <Checkbox
                           checked={selectedPlaces.has(place.place_id)}
                           onChange={() => handlePlaceSelect(place.place_id)}
                         />
                       </TableCell>
                       <TableCell align="right" className="dimmed" style={smallColumnStyle}>
-                        <IconButton onClick={() => handleShowMap(place.place_id)} style={smallColumnStyle}>
+                        <IconButton onClick={() => handleShowMap(place.place_id)}>
                           <MapIcon />
                         </IconButton>
                       </TableCell>
                       <TableCell align="right" className="dimmed" style={smallColumnStyle}>
-                        <IconButton onClick={() => handleShowDirections(place.place_id)} style={smallColumnStyle}>
+                        <IconButton onClick={() => handleShowDirections(place.place_id)}>
                           <DirectionsIcon />
                         </IconButton>
                       </TableCell>
