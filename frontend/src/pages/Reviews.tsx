@@ -32,6 +32,13 @@ interface QueryParameters {
 
 const DEFAULT_CENTER: Coordinates = { lat: 37.3944829, lng: -122.0790619 };
 
+const smallColumnStyle: React.CSSProperties = {
+  width: '35px',
+  maxWidth: '35px',
+  textAlign: 'center',
+  padding: '0',
+};
+
 const ReviewsPage: React.FC = () => {
   const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
   const [selectedReview, setSelectedReview] = useState<MemoRappReview | null>(null);
@@ -364,19 +371,19 @@ const ReviewsPage: React.FC = () => {
                 {getPlacesWithReviews().map((place: GooglePlaceResult) => (
                   <React.Fragment key={place.place_id}>
                     <TableRow className="table-row-hover">
-                      <TableCell align="center" className="dimmed" style={{ width: '30px', maxWidth: '30px', padding: '0px', textAlign: 'center' }}>
-                        <Checkbox style={{ width: '30px', maxWidth: '30px', padding: '0px', textAlign: 'center' }}
+                      <TableCell align="center" className="dimmed" style={smallColumnStyle}>
+                        <Checkbox style={smallColumnStyle}
                           checked={selectedPlaces.has(place.place_id)}
                           onChange={() => handlePlaceSelect(place.place_id)}
                         />
                       </TableCell>
-                      <TableCell align="right" className="dimmed" style={{ width: '30px', maxWidth: '30px', padding: '0px', textAlign: 'center' }}>
-                        <IconButton onClick={() => handleShowMap(place.place_id)} style={{ width: '30px', maxWidth: '30px', padding: '0px', textAlign: 'center'  }}>
+                      <TableCell align="right" className="dimmed" style={smallColumnStyle}>
+                        <IconButton onClick={() => handleShowMap(place.place_id)} style={smallColumnStyle}>
                           <MapIcon />
                         </IconButton>
                       </TableCell>
-                      <TableCell align="right" className="dimmed" style={{ width: '30px', maxWidth: '30px', padding: '0px', textAlign: 'center'  }}>
-                        <IconButton onClick={() => handleShowDirections(place.place_id)} style={{ width: '30px', maxWidth: '30px', padding: '0px', textAlign: 'center'  }}>
+                      <TableCell align="right" className="dimmed" style={smallColumnStyle}>
+                        <IconButton onClick={() => handleShowDirections(place.place_id)} style={smallColumnStyle}>
                           <DirectionsIcon />
                         </IconButton>
                       </TableCell>
