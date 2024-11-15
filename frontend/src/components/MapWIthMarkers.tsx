@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { GooglePlaceResult } from '../types';
 import { AdvancedMarker, APIProvider, InfoWindow, Map, MapCameraChangedEvent } from '@vis.gl/react-google-maps';
 import { getLatLngFromPlace } from '../utilities';
-import { Paper } from '@mui/material';
 import '../App.css';
 
 interface Coordinates {

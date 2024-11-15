@@ -12,7 +12,6 @@ interface Coordinates {
   lng: number;
 }
 
-
 interface WouldReturnQuery {
   yes: boolean;
   no: boolean;
@@ -51,7 +50,9 @@ const ReviewsPage: React.FC = () => {
 
   const [distanceFilterEnabled, setDistanceFilterEnabled] = useState(false);
   const [distance, setDistance] = useState(0);
+
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const [specifiedLocation, setSpecifiedLocation] = useState<Coordinates>(DEFAULT_CENTER);
 
   const libraries = ['places'] as Libraries;
 
@@ -238,6 +239,12 @@ const ReviewsPage: React.FC = () => {
       console.log(geometry.viewport!.getSouthWest().lat());
       console.log(geometry.viewport!.getSouthWest().lng());
 
+      setSpecifiedLocation(
+        {
+          lat: geometry.location!.lat(),
+          lng: geometry.location!.lng(),
+        }
+      );
       // setPlaceResult(place);
       // const googlePlace: GooglePlaceResult = pickGooglePlaceProperties(place);
       // setGooglePlace(googlePlace);
@@ -271,20 +278,9 @@ const ReviewsPage: React.FC = () => {
 
   const renderMap = () => {
 
-    const ic = { lat: 37.7749, lng: -122.4194 };
-    /*
-        if (currentLocation) {
-          return currentLocation;
-        } else if (locations.length > 0) {
-          return getLatLngFromPlace(locations[0]);
-        } else {
-          return DEFAULT_CENTER;
-        }
-    */
-
     return (
       <MapWithMarkers
-        initialCenter={DEFAULT_CENTER}
+        initialCenter={specifiedLocation}
         locations={googlePlacesSelected}
       />
     );
