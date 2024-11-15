@@ -68,16 +68,6 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
     }} />
   );
 
-  const getInitialCenter = (): Coordinates => {
-    if (currentLocation) {
-      return currentLocation;
-    } else if (locations.length > 0) {
-      return getLatLngFromPlace(locations[0]);
-    } else {
-      return DEFAULT_CENTER;
-    }
-  }
-
   const handleMarkerClick = (location: GooglePlaceResult) => {
     setSelectedLocation(location);
   };
@@ -112,7 +102,6 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
       apiKey={googleMapsApiKey}
       version="beta"
     >
-      {/* <Paper className="map-container"> */}
       <Map
         style={{ width: '100%', height: '100%' }}
         id="gmap"

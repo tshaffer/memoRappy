@@ -272,7 +272,6 @@ const ReviewsPage: React.FC = () => {
   };
 
   const renderMap = () => {
-
     return (
       <MapWithMarkers
         initialCenter={specifiedLocation}
@@ -323,15 +322,6 @@ const ReviewsPage: React.FC = () => {
               onChange={handleInputChange} // Custom input handling
               style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}
             />
-            {/* <TextField
-                  fullWidth
-                  label="Restaurant Name"
-                  value={restaurantLabel}
-                  onChange={(e) => setRestaurantLabel(e.target.value)}
-                  placeholder="Enter the restaurant name"
-                  required
-                  style={{ marginBottom: 20 }}
-                /> */}
           </Autocomplete>
 
           <Popover
