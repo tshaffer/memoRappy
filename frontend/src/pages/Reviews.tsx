@@ -398,7 +398,7 @@ const ReviewsPage: React.FC = () => {
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell colSpan={3} style={{ padding: 0 }}>
+                      <TableCell colSpan={6} style={{ padding: 0 }}>
                         <Collapse in={expandedPlaceId === place.place_id} timeout="auto" unmountOnExit>
                           <Table size="small">
                             <TableBody>
