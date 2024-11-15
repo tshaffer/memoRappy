@@ -274,13 +274,11 @@ const ReviewsPage: React.FC = () => {
         }
     */
 
-    return (<div>pizza</div>);
-    // return (
-    //   <MapWithMarkers
-    //     initialCenter={ic}
-    //     locations={googlePlacesSelected}
-    //   />
-    // );
+    return (
+      <MapWithMarkers
+        locations={googlePlacesSelected}
+      />
+    );
   }
 
   return (
@@ -479,9 +477,7 @@ const ReviewsPage: React.FC = () => {
 
           {showMap ? (
             <Paper className="map-container">
-              <MapWithMarkers
-                locations={googlePlacesSelected}
-              />
+              {renderMap()}
             </Paper>
           ) : (
             selectedReview && (
