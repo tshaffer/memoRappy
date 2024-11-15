@@ -133,7 +133,7 @@ export const getCountsByWouldReturnHandler = async (
   response.json(results);
 }
 
-const getCountsByWouldReturn = async (placeId: string): Promise<any[]> => {
+const getCountsByWouldReturn = async (placeId: string): Promise<any> => {
   const results = await Review.aggregate([
     {
       $match: { place_id: placeId } // Filter reviews by the given place_id
@@ -146,7 +146,31 @@ const getCountsByWouldReturn = async (placeId: string): Promise<any[]> => {
     }
   ]);
 
-  return results;
+  // const x = results.map((result: any) => {
+  //   return {
+  //     wouldReturn: results ? 
+  //     count: result.count
+  //   };
+  // }
+
+  const counts = {
+    yesCount: 0,
+    noCount: 0,
+    nullCount: 0,
+  };
+
+  // Map results to the appropriate properties
+  results.forEach((result) => {
+    if (result._id === true) {
+      counts.yesCount = result.count;
+    } else if (result._id === false) {
+      counts.noCount = result.count;
+    } else if (result._id === null) {
+      counts.nullCount = result.count;
+    }
+  });
+
+  return counts;
 };
 
 /*
