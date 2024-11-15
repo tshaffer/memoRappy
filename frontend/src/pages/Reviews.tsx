@@ -41,6 +41,13 @@ const smallColumnStyle: React.CSSProperties = {
   padding: '0',
 };
 
+const thumbsStyle: React.CSSProperties = {
+  width: '60px',
+  maxWidth: '60px',
+  textAlign: 'center',
+  padding: '0',
+};
+
 const ReviewsPage: React.FC = () => {
   const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
   const [selectedReview, setSelectedReview] = useState<MemoRappReview | null>(null);
@@ -364,6 +371,9 @@ const ReviewsPage: React.FC = () => {
                   <TableCell align="center"></TableCell>
                   <TableCell align="center"></TableCell>
                   <TableCell align="center"></TableCell>
+                  <TableCell align="center"></TableCell>
+                  <TableCell align="center"></TableCell>
+                  <TableCell align="center"></TableCell>
                   <TableCell>Place</TableCell>
                   <TableCell>Location</TableCell>
                   <TableCell align="center"></TableCell>
@@ -389,6 +399,18 @@ const ReviewsPage: React.FC = () => {
                           <DirectionsIcon />
                         </IconButton>
                       </TableCell>
+                      <TableCell align="right" style={thumbsStyle}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                          <span style={{ marginRight: '8px' }}>{4}</span>
+                          <ThumbUpIcon />
+                        </div>
+                      </TableCell>
+                      <TableCell align="right" style={thumbsStyle}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                          <span style={{ marginRight: '8px' }}>{2}</span>
+                          <ThumbDownIcon />
+                        </div>
+                      </TableCell>
                       <TableCell>{place.name}</TableCell>
                       <TableCell>{getCityNameFromPlace(place) || 'Not provided'}</TableCell>
                       <TableCell align="right">
@@ -398,7 +420,7 @@ const ReviewsPage: React.FC = () => {
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell colSpan={6} style={{ padding: 0 }}>
+                      <TableCell colSpan={9} style={{ padding: 0 }}>
                         <Collapse in={expandedPlaceId === place.place_id} timeout="auto" unmountOnExit>
                           <Table size="small">
                             <TableBody>
