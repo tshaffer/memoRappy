@@ -40,7 +40,6 @@ const ReviewsPage: React.FC = () => {
     no: false,
     notSpecified: false,
   });
-  const [anchorElSetDistance, setAnchorElSetDistance] = useState<HTMLElement | null>(null);
   const [anchorElWouldReturn, setAnchorElWouldReturn] = useState<HTMLElement | null>(null);
   const [query, setQuery] = useState<string>("");
   const [selectedPlaces, setSelectedPlaces] = useState<Set<string>>(new Set());
@@ -51,9 +50,6 @@ const ReviewsPage: React.FC = () => {
   const [googlePlaces, setGooglePlaces] = useState<GooglePlaceResult[]>([]);
 
   const [memoRappReviews, setMemoRappReviews] = useState<MemoRappReview[]>([]);
-
-  const [distanceFilterEnabled, setDistanceFilterEnabled] = useState(false);
-  const [distance, setDistance] = useState(0);
 
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [specifiedLocation, setSpecifiedLocation] = useState<Coordinates>(DEFAULT_CENTER);
@@ -153,14 +149,6 @@ const ReviewsPage: React.FC = () => {
     setWouldReturnFilter({ yes: false, no: false, notSpecified: false });
   };
 
-  const handleDistanceSliderChange = (event: Event, newValue: number | number[]) => {
-    setDistance(newValue as number);
-  };
-
-  const handleDistanceClose = () => {
-    setAnchorElSetDistance(null);
-  };
-
   const handleWouldReturnClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElWouldReturn(event.currentTarget);
   };
@@ -191,53 +179,6 @@ const ReviewsPage: React.FC = () => {
 
   const getReviewsForPlace = (placeId: string): MemoRappReview[] => {
     return memoRappReviews.filter((memoRappReview: MemoRappReview) => memoRappReview.place_id === placeId);
-  };
-
-  const openDistance = Boolean(anchorElSetDistance);
-  const idDistance = openDistance ? 'distance-popover' : undefined;
-
-  const handleSearchByFilter = async () => {
-    console.log('handleSearchByFilter');
-
-    let lat: number = 0;
-    let lng: number = 0;
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          console.log('Current location:', position.coords);
-          lat = position.coords.latitude;
-          lng = position.coords.longitude;
-          if (lat !== 0 && lng !== 0) {
-            console.log(distance);
-            const radius: number = distance * 1609.34; // Convert miles to meters
-
-            const queryParameters: QueryParameters = {
-              lat,
-              lng,
-              radius,
-            };
-            try {
-              const apiResponse = await fetch('/api/reviews/queryReviews', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(queryParameters),
-              });
-              const data = await apiResponse.json();
-              console.log('Query results:', data);
-            } catch (error) {
-              console.error('Error handling query:', error);
-            }
-          }
-        },
-        (error) => console.error("Error getting current location: ", error),
-        { enableHighAccuracy: true }
-      );
-    }
-  };
-
-  const handleDistanceFilterToggle = () => {
-    setDistanceFilterEnabled((prev) => !prev);
   };
 
   const handlePlaceChanged = () => {
@@ -324,12 +265,12 @@ const ReviewsPage: React.FC = () => {
           <Button variant="outlined" aria-describedby={anchorElWouldReturn ? 'would-return-popover' : undefined} onClick={handleWouldReturnClick}>
             Would Return
           </Button>
-          <Button
+          {/* <Button
             variant="outlined"
             onClick={handleSearchByFilter}
           >
             Search
-          </Button>
+          </Button> */}
           <Autocomplete
             onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
             onPlaceChanged={handlePlaceChanged}
@@ -363,40 +304,6 @@ const ReviewsPage: React.FC = () => {
               Review Details
             </ToggleButton>
           </ToggleButtonGroup>
-          <Popover
-            id={idDistance}
-            open={openDistance}
-            anchorEl={anchorElSetDistance}
-            onClose={handleDistanceClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'left',
-            }}
-          >
-            <div style={{ padding: '20px', minWidth: '200px' }}>
-              <Typography variant="subtitle1">Distance Away Filter</Typography>
-
-              <FormControlLabel
-                control={<Switch checked={distanceFilterEnabled} onChange={handleDistanceFilterToggle} />}
-                label="Enable Distance Filter"
-              />
-
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="body2">0 mi</Typography>
-                <Typography variant="body2">{distance} mi</Typography>
-              </div>
-              <Slider
-                value={distance}
-                onChange={handleDistanceSliderChange}
-                aria-labelledby="distance-slider"
-                min={0}
-                max={10}
-                step={0.5}
-                disabled={!distanceFilterEnabled}  // Disable slider when filter is off
-                valueLabelDisplay="off"
-              />
-            </div>
-          </Popover>
 
           <Popover
             open={Boolean(anchorElWouldReturn)}
