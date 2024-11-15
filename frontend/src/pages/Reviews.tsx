@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Typography, Button, Slider, Popover, FormControlLabel, Checkbox, TextField, Switch } from '@mui/material';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { GooglePlaceResult, MemoRappReview } from '../types';
 import '../App.css';
 // Import Google Maps components
-import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
+import { Autocomplete, GoogleMap, Libraries, LoadScript, Marker, useJsApiLoader } from '@react-google-maps/api';
 import MapWithMarkers from '../components/MapWIthMarkers';
 import { getCityNameFromPlace } from '../utilities';
 
@@ -45,6 +45,9 @@ const ReviewsPage: React.FC = () => {
 
   const [distanceFilterEnabled, setDistanceFilterEnabled] = useState(false);
   const [distance, setDistance] = useState(0);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+  const libraries = ['places'] as Libraries;
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '', // Ensure your API key is loaded
@@ -215,7 +218,59 @@ const ReviewsPage: React.FC = () => {
     setDistanceFilterEnabled((prev) => !prev);
   };
 
+  const handlePlaceChanged = () => {
+    if (autocompleteRef.current) {
+      const place: google.maps.places.PlaceResult = autocompleteRef.current.getPlace();
+      const geometry: google.maps.places.PlaceGeometry = place.geometry!;
+
+      console.log('handlePlaceChanged');
+      console.log('place', place);
+      console.log('geometry', geometry);
+      console.log('geometry.location');
+      console.log(geometry.location!);
+      console.log('geometry.viewport');
+      console.log(geometry.viewport);
+
+      console.log(geometry.location!.lat());
+      console.log(geometry.location!.lng());
+      console.log(geometry.viewport!.getNorthEast().lat());
+      console.log(geometry.viewport!.getNorthEast().lng());
+      console.log(geometry.viewport!.getSouthWest().lat());
+      console.log(geometry.viewport!.getSouthWest().lng());
+
+      // setPlaceResult(place);
+      // const googlePlace: GooglePlaceResult = pickGooglePlaceProperties(place);
+      // setGooglePlace(googlePlace);
+
+      // const restaurantLabel = googlePlace.name;
+      // setRestaurantLabel(restaurantLabel);
+    }
+  };
+
+  const handleInputChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = event.target.value.trim().toLowerCase();
+
+    if (inputValue === "current location") {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            console.log("Current Location Coordinates:", { latitude, longitude });
+
+            // Optionally, you can use reverse geocoding here to convert coordinates to an address
+          },
+          (error) => {
+            console.error("Error retrieving current location:", error);
+          }
+        );
+      } else {
+        console.error("Geolocation is not supported by this browser.");
+      }
+    }
+  };
+
   return (
+    <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY!} libraries={libraries}>
     <div className="page-container">
       {/* Freeform Query Input */}
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -253,6 +308,26 @@ const ReviewsPage: React.FC = () => {
         >
           Search
         </Button>
+        <Autocomplete
+          onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+          onPlaceChanged={handlePlaceChanged}
+        >
+          <input
+            type="text"
+            placeholder="Enter the location"
+            onChange={handleInputChange} // Custom input handling
+            style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}
+          />
+          {/* <TextField
+                  fullWidth
+                  label="Restaurant Name"
+                  value={restaurantLabel}
+                  onChange={(e) => setRestaurantLabel(e.target.value)}
+                  placeholder="Enter the restaurant name"
+                  required
+                  style={{ marginBottom: 20 }}
+                /> */}
+        </Autocomplete>
 
         <Popover
           id={idDistance}
@@ -406,6 +481,7 @@ const ReviewsPage: React.FC = () => {
         )}
       </div>
     </div>
+    </LoadScript>
   );
 };
 
