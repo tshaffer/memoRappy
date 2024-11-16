@@ -42,6 +42,7 @@ export interface GooglePlaceDetails {
   // Additional fields can be added as needed
 }
 
+// Is this any different from GooglePlace?
 export interface GooglePlaceResult {
   place_id: string;
   name: string;

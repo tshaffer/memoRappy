@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Typography, Button, Slider, Popover, FormControlLabel, Checkbox, TextField, Switch, ToggleButton, ToggleButtonGroup } from '@mui/material';
-import { ExpandMore, ExpandLess } from '@mui/icons-material';
-import { GoogleGeometry, GooglePlaceResult, MemoRappReview } from '../types';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Button, Popover, FormControlLabel, Checkbox, TextField, ToggleButton, ToggleButtonGroup, Slider, Switch, Radio } from '@mui/material';
+import { FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlaceResult, MemoRappReview, WouldReturnQuery } from '../types';
 import '../App.css';
 import { Autocomplete, Libraries, LoadScript } from '@react-google-maps/api';
 import MapWithMarkers from '../components/MapWIthMarkers';
@@ -15,12 +14,6 @@ import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 interface Coordinates {
   lat: number;
   lng: number;
-}
-
-interface WouldReturnQuery {
-  yes: boolean;
-  no: boolean;
-  notSpecified: boolean;
 }
 
 interface QueryParameters {
@@ -49,6 +42,9 @@ const thumbsStyle: React.CSSProperties = {
 };
 
 const ReviewsPage: React.FC = () => {
+  const [filteredPlaces, setFilteredPlaces] = useState<GooglePlaceResult[]>([]);
+  const [filteredReviews, setFilteredReviews] = useState<MemoRappReview[]>([]);
+
   const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
   const [selectedReview, setSelectedReview] = useState<MemoRappReview | null>(null);
   const [selectedPlace, setSelectedPlace] = useState<GooglePlaceResult | null>(null);
@@ -57,6 +53,7 @@ const ReviewsPage: React.FC = () => {
     no: false,
     notSpecified: false,
   });
+  const [anchorElSetDistance, setAnchorElSetDistance] = useState<HTMLElement | null>(null);
   const [anchorElWouldReturn, setAnchorElWouldReturn] = useState<HTMLElement | null>(null);
   const [query, setQuery] = useState<string>("");
   const [selectedPlaces, setSelectedPlaces] = useState<Set<string>>(new Set());
@@ -70,6 +67,13 @@ const ReviewsPage: React.FC = () => {
 
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [specifiedLocation, setSpecifiedLocation] = useState<Coordinates>(DEFAULT_CENTER);
+
+  const [distanceFilterEnabled, setDistanceFilterEnabled] = useState(false);
+  const [fromLocation, setFromLocation] = useState<'current' | 'specified'>('current');
+  const [fromLocationLocation, setFromLocationLocation] = useState<Coordinates>(DEFAULT_CENTER);
+  const [fromLocationDistance, setFromLocationDistance] = useState(5);
+
+  const fromLocationAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   const libraries = ['places'] as Libraries;
 
@@ -93,11 +97,13 @@ const ReviewsPage: React.FC = () => {
       const response = await fetch('/api/places');
       const data = await response.json();
       setGooglePlaces(data.googlePlaces);
+      setFilteredPlaces(data.googlePlaces);
     };
     const fetchReviews = async () => {
       const response = await fetch('/api/reviews');
       const data = await response.json();
       setMemoRappReviews(data.memoRappReviews);
+      setFilteredReviews(data.memoRappReviews);
     };
     fetchPlaces();
     fetchReviews();
@@ -173,6 +179,17 @@ const ReviewsPage: React.FC = () => {
     console.log('Query:', query);
   }
 
+  const handleDistanceSliderChange = (event: Event, newValue: number | number[]) => {
+    setFromLocationDistance(newValue as number);
+  };
+
+  const handleDistanceClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElSetDistance(event.currentTarget);
+  };
+  const handleDistanceClose = () => {
+    setAnchorElSetDistance(null);
+  };
+
   const handleWouldReturnSearch = async () => {
     const queryParameters: QueryParameters = {
       wouldReturn: { ...wouldReturnFilter },
@@ -224,12 +241,63 @@ const ReviewsPage: React.FC = () => {
     });
   };
 
-  const getPlacesWithReviews = (): GooglePlaceResult[] => {
-    return googlePlaces.filter((place: GooglePlaceResult) => memoRappReviews.some((review: MemoRappReview) => review.place_id === place.place_id));
-  }
+  // const getPlacesWithReviews = (): GooglePlaceResult[] => {
+  //   return googlePlaces.filter((place: GooglePlaceResult) => memoRappReviews.some((review: MemoRappReview) => review.place_id === place.place_id));
+  // }
 
-  const getReviewsForPlace = (placeId: string): MemoRappReview[] => {
-    return memoRappReviews.filter((memoRappReview: MemoRappReview) => memoRappReview.place_id === placeId);
+  // const getReviewsForPlace = (placeId: string): MemoRappReview[] => {
+  //   return memoRappReviews.filter((memoRappReview: MemoRappReview) => memoRappReview.place_id === placeId);
+  // };
+
+  const getFilteredReviewsForPlace = (placeId: string): MemoRappReview[] => {
+    return filteredReviews.filter((memoRappReview: MemoRappReview) => memoRappReview.place_id === placeId);
+  };
+
+  const openDistance = Boolean(anchorElSetDistance);
+  const idDistance = openDistance ? 'distance-popover' : undefined;
+
+  const handleSearchByFilter = async () => {
+    console.log('handleSearchByFilter');
+
+    let lat: number | undefined = undefined;
+    let lng: number | undefined = undefined;
+
+    if (distanceFilterEnabled) {
+      if (fromLocation === 'current') {
+        lat = currentLocation!.lat;
+        lng = currentLocation!.lng;
+      } else {
+        lat = fromLocationLocation.lat;
+        lng = fromLocationLocation.lng;
+      }
+    }
+
+    const wouldReturn: WouldReturnQuery | undefined = wouldReturnFilter.yes || wouldReturnFilter.no || wouldReturnFilter.notSpecified ? wouldReturnFilter : undefined;
+
+    const filterQueryParams: FilterQueryParams = {
+      lat,
+      lng,
+      radius: fromLocationDistance, // units in miles.
+      wouldReturn,
+    };
+
+    try {
+      const apiResponse = await fetch('/api/reviews/filterReviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(filterQueryParams),
+      });
+      const data: FilterResponse = await apiResponse.json();
+      console.log('Filter query results:', data);
+      setFilteredPlaces(data.places);
+      setFilteredReviews(data.reviews);
+    } catch (error) {
+      console.error('Error handling query:', error);
+    }
+  };
+
+  const handleDistanceFilterToggle = () => {
+    setDistanceFilterEnabled((prev) => !prev);
   };
 
   const handlePlaceChanged = () => {
@@ -244,6 +312,22 @@ const ReviewsPage: React.FC = () => {
           }
         );
         console.log("Place changed:", place);
+      }
+    }
+  };
+
+  const handleFromLocationPlaceChanged = () => {
+    if (fromLocationAutocompleteRef.current) {
+      const place: google.maps.places.PlaceResult = fromLocationAutocompleteRef.current.getPlace();
+      if (place.geometry !== undefined) {
+        const geometry: google.maps.places.PlaceGeometry = place.geometry!;
+        setFromLocationLocation(
+          {
+            lat: geometry.location!.lat(),
+            lng: geometry.location!.lng(),
+          }
+        );
+        console.log("From location place changed:", place);
       }
     }
   };
@@ -296,7 +380,7 @@ const ReviewsPage: React.FC = () => {
 
   const renderReviewDetails = (review: MemoRappReview): JSX.Element => {
     return (
-      <Paper id='reviewDetails' className="review-details" style={{ marginTop: '16px', boxShadow: 'none'}}>
+      <Paper id='reviewDetails' className="review-details" style={{ marginTop: '16px', boxShadow: 'none' }}>
         <Typography><strong>Date of Visit:</strong> {review.structuredReviewProperties.dateOfVisit}</Typography>
         <Typography><strong>Would Return:</strong> {review.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
         <Typography><strong>Review Text:</strong> {review.freeformReviewProperties.reviewText}</Typography>
@@ -308,12 +392,12 @@ const ReviewsPage: React.FC = () => {
     if (selectedPlace === null) {
       return null;
     }
-    const reviewsForSelectedPlace: MemoRappReview[] = getReviewsForPlace(selectedPlace.place_id)
+    const reviewsForSelectedPlace: MemoRappReview[] = getFilteredReviewsForPlace(selectedPlace.place_id)
     const reviewDetails = reviewsForSelectedPlace.map((review: MemoRappReview) => {
       return renderReviewDetails(review);
     });
     return (
-      <Paper style={{ boxShadow: 'none'}}>
+      <Paper style={{ boxShadow: 'none' }}>
         <Typography variant="h6">Reviews for {selectedPlace.name}</Typography>
         {reviewDetails}
       </Paper>
@@ -348,6 +432,145 @@ const ReviewsPage: React.FC = () => {
     }
   }
 
+  const renderDistanceAwayFilterPopover = (): JSX.Element => {
+    return (
+      <Popover
+        id={idDistance}
+        open={openDistance}
+        anchorEl={anchorElSetDistance}
+        onClose={handleDistanceClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+      >
+        <div style={{ padding: '20px', minWidth: '200px' }}>
+          <Typography variant="subtitle1">Distance Away Filter</Typography>
+
+          <FormControlLabel
+            control={<Switch checked={distanceFilterEnabled} onChange={handleDistanceFilterToggle} />}
+            label="Enable Distance Filter"
+          />
+
+          {/* From Label and Radio Buttons */}
+          <Typography variant="body2" style={{ marginTop: '10px', marginBottom: '5px' }}>From</Typography>
+          <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '10px' }}>
+            <FormControlLabel
+              control={
+                <Radio
+                  checked={fromLocation === 'current'}
+                  onChange={() => setFromLocation('current')}
+                  disabled={!distanceFilterEnabled} // Disable when the filter is off
+                />
+              }
+              label="Current Location"
+            />
+            <FormControlLabel
+              control={
+                <Radio
+                  checked={fromLocation === 'specified'}
+                  onChange={() => setFromLocation('specified')}
+                  disabled={!distanceFilterEnabled} // Disable when the filter is off
+                />
+              }
+              label="Specify Location"
+            />
+          </div>
+
+          {/* Google Maps Autocomplete Element */}
+          {fromLocation === 'specified' && (
+            <Autocomplete
+              onLoad={(autocomplete) => (fromLocationAutocompleteRef.current = autocomplete)}
+              onPlaceChanged={handleFromLocationPlaceChanged}
+            >
+              <input
+                type="text"
+                placeholder="Enter a from location"
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  boxSizing: 'border-box',
+                  marginBottom: '10px',
+                }}
+                disabled={!distanceFilterEnabled} // Disable the input when filter is off
+              />
+            </Autocomplete>
+          )}
+
+          <Typography variant="body2" style={{ marginTop: '10px', marginBottom: '5px' }}>Distance</Typography>
+
+          {/* Slider */}
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Typography variant="body2">0 mi</Typography>
+            <Typography variant="body2">{fromLocationDistance} mi</Typography>
+          </div>
+          <Slider
+            value={fromLocationDistance}
+            onChange={handleDistanceSliderChange}
+            aria-labelledby="distance-slider"
+            min={0}
+            max={10}
+            step={0.5}
+            disabled={!distanceFilterEnabled} // Disable slider when filter is off
+            valueLabelDisplay="off"
+          />
+        </div>
+      </Popover>
+
+    );
+  }
+
+  const renderWouldReturnFilterPopover = (): JSX.Element => {
+    return (
+      <Popover
+        open={Boolean(anchorElWouldReturn)}
+        anchorEl={anchorElWouldReturn}
+        onClose={handleWouldReturnClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column' }}>
+          <Typography variant="subtitle1" gutterBottom>
+            Would Return
+          </Typography>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <FormControlLabel
+              control={<Checkbox checked={wouldReturnFilter.yes} onChange={() => handleWouldReturnChange('yes')} />}
+              label="Yes"
+            />
+            <FormControlLabel
+              control={<Checkbox checked={wouldReturnFilter.no} onChange={() => handleWouldReturnChange('no')} />}
+              label="No"
+            />
+            <FormControlLabel
+              control={<Checkbox checked={wouldReturnFilter.notSpecified} onChange={() => handleWouldReturnChange('notSpecified')} />}
+              label="Not Specified"
+            />
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={handleClearWouldReturnFilter}
+              style={{
+                color: 'black',
+                borderColor: 'black',
+                height: 'fit-content', // Adjusts height to match the checkbox labels
+              }}
+            >
+              Clear
+            </Button>
+          </div>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleWouldReturnClose} // Ensure you have this function defined to handle the search
+            style={{ alignSelf: 'flex-end', marginTop: '10px' }}
+          >
+            Close
+          </Button>
+        </div>
+      </Popover>
+    );
+  }
+
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY!} libraries={libraries}>
       <div className="page-container">
@@ -366,9 +589,19 @@ const ReviewsPage: React.FC = () => {
           </Button>
         </div>
 
+        {/* Filters */}
         <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <Button variant="outlined" aria-describedby={anchorElSetDistance ? 'set-distance-popover' : undefined} onClick={handleDistanceClick}>
+            Distance Away
+          </Button>
           <Button variant="outlined" aria-describedby={anchorElWouldReturn ? 'would-return-popover' : undefined} onClick={handleWouldReturnClick}>
             Would Return
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={handleSearchByFilter}
+          >
+            Search
           </Button>
           <Autocomplete
             onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
@@ -391,54 +624,12 @@ const ReviewsPage: React.FC = () => {
                 /> */}
           </Autocomplete>
 
-          <Popover
-            open={Boolean(anchorElWouldReturn)}
-            anchorEl={anchorElWouldReturn}
-            onClose={handleWouldReturnClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-          >
-            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column' }}>
-              <Typography variant="subtitle1" gutterBottom>
-                Would Return
-              </Typography>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <FormControlLabel
-                  control={<Checkbox checked={wouldReturnFilter.yes} onChange={() => handleWouldReturnChange('yes')} />}
-                  label="Yes"
-                />
-                <FormControlLabel
-                  control={<Checkbox checked={wouldReturnFilter.no} onChange={() => handleWouldReturnChange('no')} />}
-                  label="No"
-                />
-                <FormControlLabel
-                  control={<Checkbox checked={wouldReturnFilter.notSpecified} onChange={() => handleWouldReturnChange('notSpecified')} />}
-                  label="Not Specified"
-                />
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={handleClearWouldReturnFilter}
-                  style={{
-                    color: 'black',
-                    borderColor: 'black',
-                    height: 'fit-content', // Adjusts height to match the checkbox labels
-                  }}
-                >
-                  Clear
-                </Button>
-              </div>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleWouldReturnSearch} // Ensure you have this function defined to handle the search
-                style={{ alignSelf: 'flex-end', marginTop: '10px' }}
-              >
-                Search
-              </Button>
-            </div>
-          </Popover>
+          {renderDistanceAwayFilterPopover()}
+          {renderWouldReturnFilterPopover()}
+
         </div>
 
+        {/* Container for Places Table / Map */}
         <div className="table-and-details-container">
           <TableContainer component={Paper} className="scrollable-table-container">
             <Table stickyHeader>
@@ -454,7 +645,7 @@ const ReviewsPage: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {getPlacesWithReviews().map((place: GooglePlaceResult) => (
+                {filteredPlaces.map((place: GooglePlaceResult) => (
                   <React.Fragment key={place.place_id}>
                     <TableRow className="table-row-hover" onClick={() => handlePlaceClick(place)} >
                       <TableCell align="center" className="dimmed" style={smallColumnStyle}>

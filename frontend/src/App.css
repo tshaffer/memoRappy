@@ -91,3 +91,7 @@
 .table-row-hover:hover .dimmed {
   opacity: 1; /* Normal state */
 }
+
+.pac-container {
+  z-index: 2000 !important;
+}

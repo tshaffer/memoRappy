@@ -2,19 +2,12 @@ import { Request, Response } from 'express';
 import MongoPlace, { IMongoPlace } from "../models/MongoPlace";
 import { GoogleGeometry, GooglePlace, GooglePlaceResult, MongoGeometry, MongoPlaceEntity } from "../types";
 import { getMongoGeometryFromGoogleGeometry } from "./googlePlaces";
+import { convertMongoPlacesToGooglePlaces } from '../utilities';
 
 export const getPlaces = async (request: Request, response: Response, next: any) => {
   try {
     const mongoPlaces: IMongoPlace[] = await MongoPlace.find({}).exec();
-    const googlePlaces: GooglePlace[] = mongoPlaces.map((mongoPlace) => {
-      const mongoPlaceObject: MongoPlaceEntity = mongoPlace.toObject();
-      const googlePlace: GooglePlace = {
-        ...mongoPlaceObject,
-        geometry: convertMongoGeometryToGoogleGeometry(mongoPlace.geometry!)
-
-      };
-      return googlePlace;
-    });
+    const googlePlaces: GooglePlace[] = convertMongoPlacesToGooglePlaces(mongoPlaces);
     console.log('googlePlaces:', googlePlaces);
     response.status(200).json({ googlePlaces });
     return;

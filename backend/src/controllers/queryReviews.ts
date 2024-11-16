@@ -2,40 +2,20 @@ import { Request, Response } from 'express';
 import { IReview } from "../models";
 import Review from "../models/Review";
 import MongoPlace, { IMongoPlace } from '../models/MongoPlace';  
-
-
-interface QueryReviewBody {
-  fileName: string;
-}
-
-interface WouldReturnQuery {
-  yes: boolean;
-  no: boolean;
-  notSpecified: boolean;
-}
-
-interface QueryParameters {
-  lat?: number;
-  lng?: number;
-  radius?: number;
-  restaurantName?: string;
-  dateRange?: any;
-  wouldReturn?: WouldReturnQuery;
-  itemsOrdered?: any;
-}
+import { QueryParameters, WouldReturnQuery, WouldReturnQuerySpec } from '../types/queries';
 
 export const queryReviews = async (
   request: Request<{}, {}, QueryParameters>,
   response: Response
 ): Promise<void> => {
 
-  // const mongoPlaces: IMongoPlace[] = await performPlacesQuery(request.body);
-  // console.log('Query results:', mongoPlaces);
-  // response.json(mongoPlaces);
+  const mongoPlaces: IMongoPlace[] = await performPlacesQuery(request.body);
+  console.log('Query results:', mongoPlaces);
+  response.json(mongoPlaces);
 
-  const reviews: IReview[] = await performStructuredQuery(request.body);
-  console.log('Query results:', reviews);
-  response.json(reviews);
+  // const reviews: IReview[] = await performStructuredQuery(request.body);
+  // console.log('Query results:', reviews);
+  // response.json(reviews);
 }
 
 export const performPlacesQuery = async (parameters: QueryParameters): Promise<IMongoPlace[]> => {
@@ -64,17 +44,8 @@ export const performPlacesQuery = async (parameters: QueryParameters): Promise<I
 
 const buildLocationQuery = (lat: number, lng: number, radius: number | undefined): any => {
   const effectiveRadius = radius ?? 5000;
-  // const query = {
-  //   "place.geometry.location":
-  //   {
-  //     $near: {
-  //       $geometry: { type: 'Point', coordinates: [lng, lat] },
-  //       $maxDistance: effectiveRadius,
-  //     }
-  //   }
-  // };
   const query = {
-    "geometry.location": { // Use "geometry.location" instead of "place.geometry.location"
+    "geometry.location": {
       $near: {
         $geometry: { type: "Point", coordinates: [lng, lat] },
         $maxDistance: effectiveRadius // in meters
@@ -111,17 +82,17 @@ export const performStructuredQuery = async (parameters: QueryParameters): Promi
 };
 
 const buildWouldReturnQuery = (wouldReturn: WouldReturnQuery): any => {
-  const values: (boolean | null)[] = [];
+  const wouldReturnQuerySpec: WouldReturnQuerySpec = [];
 
-  if (wouldReturn.yes) values.push(true);
-  if (wouldReturn.no) values.push(false);
-  if (wouldReturn.notSpecified) values.push(null);
+  if (wouldReturn.yes) wouldReturnQuerySpec.push(true);
+  if (wouldReturn.no) wouldReturnQuerySpec.push(false);
+  if (wouldReturn.notSpecified) wouldReturnQuerySpec.push(null);
 
-  if (values.length === 0) {
+  if (wouldReturnQuerySpec.length === 0) {
     return {};
   }
 
-  return { "structuredReviewProperties.wouldReturn": { $in: values } };
+  return { "structuredReviewProperties.wouldReturn": { $in: wouldReturnQuerySpec } };
 };
 
 export const getCountsByWouldReturnHandler = async (

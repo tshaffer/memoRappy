@@ -5,7 +5,7 @@ import OpenAI from 'openai';
 import mongoose from 'mongoose';
 import express from 'express';
 
-import { addReviewsFromFileHandler, getPlaces, getReviews } from './controllers';
+import { addReviewsFromFileHandler, filterReviewsHandler, getPlaces, getReviews } from './controllers';
 import { getCountsByWouldReturnHandler, queryReviews } from './controllers/queryReviews';
 
 export let openai: OpenAI;
@@ -15,7 +15,7 @@ dotenv.config();
 console.log('environment variables:');
 console.log(process.env.OPENAI_API_KEY);
 console.log(process.env.MONGODB_URI);
-console.log(process.env.PORT);  
+console.log(process.env.PORT);
 
 const app: express.Application = express();
 
@@ -26,6 +26,7 @@ app.use(express.json());
 app.get('/api/places', getPlaces);
 app.get('/api/reviews', getReviews);
 app.post('/api/reviews/queryReviews', queryReviews);
+app.post('/api/reviews/filterReviews', filterReviewsHandler);
 app.post('/api/reviews/addReviewsFromFile', addReviewsFromFileHandler);
 
 app.post('/api/reviews/getCountsByWouldReview', getCountsByWouldReturnHandler);

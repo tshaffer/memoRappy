@@ -1,3 +1,4 @@
+export * from './filterQuery';
 export * from './manageReview';
 export * from './googlePlaces';
 export * from './loadReviews';

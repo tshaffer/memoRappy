@@ -1,4 +1,6 @@
-import { ItemReview } from "../types";
+import { convertMongoGeometryToGoogleGeometry } from "../controllers";
+import { IMongoPlace } from "../models";
+import { GooglePlace, ItemReview, MongoPlaceEntity } from "../types";
 
 // Extract a field from the response based on a keyword
 export const extractFieldFromResponse = (response: string, fieldName: string): string => {
@@ -38,4 +40,15 @@ export function extractItemReviews(responseText: string,): ItemReview[] {
 
 export function removeSquareBrackets(text: string): string {
   return text.replace(/^\[|\]$/g, '').trim();
+}
+
+export function convertMongoPlacesToGooglePlaces(mongoPlaces: IMongoPlace[]): GooglePlace[] {
+  return mongoPlaces.map((mongoPlace) => {
+    const mongoPlaceObject: MongoPlaceEntity = mongoPlace.toObject();
+    const googlePlace: GooglePlace = {
+      ...mongoPlaceObject,
+      geometry: convertMongoGeometryToGoogleGeometry(mongoPlace.geometry!)
+    };
+    return googlePlace;
+  });
 }
