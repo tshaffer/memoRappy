@@ -518,7 +518,10 @@ const ReviewsPage: React.FC = () => {
     );
   }
 
+  //               disabled={!wouldReturnFilter.yes && !wouldReturnFilter.no && !wouldReturnFilter.notSpecified}
+
   const renderWouldReturnFilterPopover = (): JSX.Element => {
+    const disableClearButton = !wouldReturnFilter.yes && !wouldReturnFilter.no && !wouldReturnFilter.notSpecified;
     return (
       <Popover
         open={Boolean(anchorElWouldReturn)}
@@ -552,6 +555,7 @@ const ReviewsPage: React.FC = () => {
                 borderColor: 'black',
                 height: 'fit-content', // Adjusts height to match the checkbox labels
               }}
+              disabled={disableClearButton}
             >
               Clear
             </Button>
