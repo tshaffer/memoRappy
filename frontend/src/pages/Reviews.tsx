@@ -186,27 +186,9 @@ const ReviewsPage: React.FC = () => {
   const handleDistanceClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElSetDistance(event.currentTarget);
   };
+
   const handleDistanceClose = () => {
     setAnchorElSetDistance(null);
-  };
-
-  const handleWouldReturnSearch = async () => {
-    const queryParameters: QueryParameters = {
-      wouldReturn: { ...wouldReturnFilter },
-    };
-    try {
-      const apiResponse = await fetch('/api/reviews/queryReviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(queryParameters), // Send the natural language query to your backend
-      });
-      const memoRappReviews: MemoRappReview[] = await apiResponse.json();
-      console.log('Query results:', memoRappReviews);
-      setMemoRappReviews(memoRappReviews);
-    } catch (error) {
-      console.error('Error handling query:', error);
-    }
-    handleWouldReturnClose();
   };
 
   const handleWouldReturnChange = (filter: keyof typeof wouldReturnFilter) => {
@@ -375,7 +357,7 @@ const ReviewsPage: React.FC = () => {
       />
     );
   };
-  
+
   const renderReviewDetails = (review: MemoRappReview): JSX.Element => {
     return (
       <Paper id='reviewDetails' className="review-details" style={{ marginTop: '16px', boxShadow: 'none' }}>
@@ -512,13 +494,19 @@ const ReviewsPage: React.FC = () => {
             disabled={!distanceFilterEnabled} // Disable slider when filter is off
             valueLabelDisplay="off"
           />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleDistanceClose}
+            >
+              Close
+            </Button>
+          </div>
         </div>
       </Popover>
-
     );
   }
-
-  //               disabled={!wouldReturnFilter.yes && !wouldReturnFilter.no && !wouldReturnFilter.notSpecified}
 
   const renderWouldReturnFilterPopover = (): JSX.Element => {
     const disableClearButton = !wouldReturnFilter.yes && !wouldReturnFilter.no && !wouldReturnFilter.notSpecified;
