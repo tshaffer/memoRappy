@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { GooglePlace } from '../types';
+import { Coordinates, GooglePlace } from '../types';
 import { AdvancedMarker, APIProvider, InfoWindow, Map, MapCameraChangedEvent } from '@vis.gl/react-google-maps';
 import { getLatLngFromPlace } from '../utilities';
 import '../App.css';
-
-interface Coordinates {
-  lat: number;
-  lng: number;
-}
 
 interface MapWithMarkersProps {
   initialCenter: Coordinates;

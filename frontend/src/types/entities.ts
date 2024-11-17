@@ -101,6 +101,11 @@ export interface PreviewRequestBody {
   sessionId: string;
 }
 
+export interface Coordinates {
+  lat: number;
+  lng: number;
+}
+
 
 
 

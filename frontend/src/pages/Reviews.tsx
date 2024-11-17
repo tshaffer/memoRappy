@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Button, Popover, FormControlLabel, Checkbox, TextField, ToggleButton, ToggleButtonGroup, Slider, Switch, Radio } from '@mui/material';
-import { FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlace, MemoRappReview, WouldReturnQuery } from '../types';
+import { Coordinates, FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlace, MemoRappReview, WouldReturnQuery } from '../types';
 import '../App.css';
 import { Autocomplete, Libraries, LoadScript } from '@react-google-maps/api';
 import MapWithMarkers from '../components/MapWIthMarkers';
@@ -11,18 +11,10 @@ import MapIcon from '@mui/icons-material/Map';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 
-interface Coordinates {
-  lat: number;
-  lng: number;
-}
-
-interface QueryParameters {
-  lat?: number; lng?: number;
-  radius?: number;
-  restaurantName?: string;
-  dateRange?: any;
-  wouldReturn?: WouldReturnQuery;
-  itemsOrdered?: any;
+interface WouldReturnCounts {
+  yesCount: number;
+  noCount: number;
+  nullCount: number;
 }
 
 const DEFAULT_CENTER: Coordinates = { lat: 37.3944829, lng: -122.0790619 };
@@ -42,11 +34,17 @@ const thumbsStyle: React.CSSProperties = {
 };
 
 const ReviewsPage: React.FC = () => {
+
+  const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
+
+  const [reviews, setReviews] = useState<MemoRappReview[]>([]);
+  const [places, setPlaces] = useState<GooglePlace[]>([]);
+
   const [filteredPlaces, setFilteredPlaces] = useState<GooglePlace[]>([]);
   const [filteredReviews, setFilteredReviews] = useState<MemoRappReview[]>([]);
 
-  const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
-  const [selectedReview, setSelectedReview] = useState<MemoRappReview | null>(null);
+
+
   const [selectedPlace, setSelectedPlace] = useState<GooglePlace | null>(null);
   const [wouldReturnFilter, setWouldReturnFilter] = useState<WouldReturnQuery>({
     yes: false,
@@ -56,14 +54,9 @@ const ReviewsPage: React.FC = () => {
   const [anchorElSetDistance, setAnchorElSetDistance] = useState<HTMLElement | null>(null);
   const [anchorElWouldReturn, setAnchorElWouldReturn] = useState<HTMLElement | null>(null);
   const [query, setQuery] = useState<string>("");
-  const [selectedPlaces, setSelectedPlaces] = useState<Set<string>>(new Set());
   const [showMap, setShowMap] = useState<boolean>(false);
 
-  const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
 
-  const [googlePlaces, setGooglePlaces] = useState<GooglePlace[]>([]);
-
-  const [memoRappReviews, setMemoRappReviews] = useState<MemoRappReview[]>([]);
 
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [specifiedLocation, setSpecifiedLocation] = useState<Coordinates>(DEFAULT_CENTER);
@@ -96,24 +89,22 @@ const ReviewsPage: React.FC = () => {
     const fetchPlaces = async () => {
       const response = await fetch('/api/places');
       const data = await response.json();
-      setGooglePlaces(data.googlePlaces);
+      setPlaces(data.googlePlaces);
       setFilteredPlaces(data.googlePlaces);
     };
     const fetchReviews = async () => {
       const response = await fetch('/api/reviews');
       const data = await response.json();
-      setMemoRappReviews(data.memoRappReviews);
+      setReviews(data.memoRappReviews);
       setFilteredReviews(data.memoRappReviews);
     };
     fetchPlaces();
     fetchReviews();
   }, []);
 
-  interface WouldReturnCounts {
-    yesCount: number;
-    noCount: number;
-    nullCount: number;
-  }
+  const getFilteredReviewsForPlace = (placeId: string): MemoRappReview[] => {
+    return filteredReviews.filter((memoRappReview: MemoRappReview) => memoRappReview.place_id === placeId);
+  };
 
   const getWouldReturnToPlaceCounts = (placeId: string): WouldReturnCounts => {
     const counts: WouldReturnCounts = {
@@ -122,7 +113,7 @@ const ReviewsPage: React.FC = () => {
       nullCount: 0,
     };
 
-    memoRappReviews.forEach((memoRappReview: MemoRappReview) => {
+    reviews.forEach((memoRappReview: MemoRappReview) => {
       if (memoRappReview.place_id === placeId) {
         const wouldReturn = memoRappReview.structuredReviewProperties.wouldReturn;
 
@@ -139,56 +130,48 @@ const ReviewsPage: React.FC = () => {
     return counts;
   };
 
-  const handleExpandClick = (placeId: string) => {
-    setExpandedPlaceId(expandedPlaceId === placeId ? null : placeId);
+  const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(event.target.value);
   };
-
-  const handleShowMap = (placeId: string) => {
-    const googlePlace: GooglePlace | undefined = googlePlaces.find(place => place.place_id === placeId);
-    if (googlePlace && googlePlace.geometry) {
-      const geometry: GoogleGeometry = googlePlace.geometry!;
-      setSpecifiedLocation(
-        {
-          lat: geometry.location.lat,
-          lng: geometry.location.lng,
-        }
-      );
-      setShowMap(true);
-    }
-  };
-
-  const handleShowDirections = (placeId: string) => {
-    const destination: GooglePlace | undefined = googlePlaces.find(place => place.place_id === placeId);
-    if (destination && currentLocation) {
-      const destinationLocation: google.maps.LatLngLiteral = destination.geometry!.location;
-      const destinationLatLng: google.maps.LatLngLiteral = { lat: destinationLocation.lat, lng: destinationLocation.lng };
-      const url = `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.lat},${currentLocation.lng}&destination=${destinationLatLng.lat},${destinationLatLng.lng}&destination_place_id=${destination.name}`;
-      window.open(url, '_blank');
-    }
-  };
-
-  const handleReviewClick = (review: MemoRappReview) => {
-    setSelectedReview(review);
-  };
-
-  const handlePlaceClick = (place: GooglePlace) => {
-    setSelectedPlace(place);
-  }
 
   const handleFreeformQuery = async () => {
     console.log('Query:', query);
   }
 
-  const handleDistanceSliderChange = (event: Event, newValue: number | number[]) => {
-    setFromLocationDistance(newValue as number);
-  };
-
   const handleDistanceClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElSetDistance(event.currentTarget);
   };
 
+  const handleDistanceFilterToggle = () => {
+    setDistanceFilterEnabled((prev) => !prev);
+  };
+
+  const handleDistanceSliderChange = (event: Event, newValue: number | number[]) => {
+    setFromLocationDistance(newValue as number);
+  };
+
+  const handleFromLocationPlaceChanged = () => {
+    if (fromLocationAutocompleteRef.current) {
+      const place: google.maps.places.PlaceResult = fromLocationAutocompleteRef.current.getPlace();
+      if (place.geometry !== undefined) {
+        const geometry: google.maps.places.PlaceGeometry = place.geometry!;
+        setFromLocationLocation(
+          {
+            lat: geometry.location!.lat(),
+            lng: geometry.location!.lng(),
+          }
+        );
+        console.log("From location place changed:", place);
+      }
+    }
+  };
+
   const handleDistanceClose = () => {
     setAnchorElSetDistance(null);
+  };
+
+  const handleWouldReturnClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElWouldReturn(event.currentTarget);
   };
 
   const handleWouldReturnChange = (filter: keyof typeof wouldReturnFilter) => {
@@ -199,44 +182,9 @@ const ReviewsPage: React.FC = () => {
     setWouldReturnFilter({ yes: false, no: false, notSpecified: false });
   };
 
-  const handleWouldReturnClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElWouldReturn(event.currentTarget);
-  };
-
   const handleWouldReturnClose = () => {
     setAnchorElWouldReturn(null);
   };
-
-  const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(event.target.value);
-  };
-
-  const handlePlaceSelect = (placeId: string) => {
-    setSelectedPlaces((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(placeId)) {
-        newSet.delete(placeId);
-      } else {
-        newSet.add(placeId);
-      }
-      return newSet;
-    });
-  };
-
-  // const getPlacesWithReviews = (): GooglePlaceResult[] => {
-  //   return googlePlaces.filter((place: GooglePlaceResult) => memoRappReviews.some((review: MemoRappReview) => review.place_id === place.place_id));
-  // }
-
-  // const getReviewsForPlace = (placeId: string): MemoRappReview[] => {
-  //   return memoRappReviews.filter((memoRappReview: MemoRappReview) => memoRappReview.place_id === placeId);
-  // };
-
-  const getFilteredReviewsForPlace = (placeId: string): MemoRappReview[] => {
-    return filteredReviews.filter((memoRappReview: MemoRappReview) => memoRappReview.place_id === placeId);
-  };
-
-  const openDistance = Boolean(anchorElSetDistance);
-  const idDistance = openDistance ? 'distance-popover' : undefined;
 
   const handleSearchByFilter = async () => {
     console.log('handleSearchByFilter');
@@ -276,8 +224,40 @@ const ReviewsPage: React.FC = () => {
     }
   };
 
-  const handleDistanceFilterToggle = () => {
-    setDistanceFilterEnabled((prev) => !prev);
+  const handlePlaceClick = (place: GooglePlace) => {
+    setSelectedPlace(place);
+  }
+
+  const handleShowMap = (placeId: string) => {
+    const googlePlace: GooglePlace | undefined = places.find(place => place.place_id === placeId);
+    if (googlePlace && googlePlace.geometry) {
+      const geometry: GoogleGeometry = googlePlace.geometry!;
+      setSpecifiedLocation(
+        {
+          lat: geometry.location.lat,
+          lng: geometry.location.lng,
+        }
+      );
+      setShowMap(true);
+    }
+  };
+
+  const handleShowDirections = (placeId: string) => {
+    const destination: GooglePlace | undefined = places.find(place => place.place_id === placeId);
+    if (destination && currentLocation) {
+      const destinationLocation: google.maps.LatLngLiteral = destination.geometry!.location;
+      const destinationLatLng: google.maps.LatLngLiteral = { lat: destinationLocation.lat, lng: destinationLocation.lng };
+      const url = `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.lat},${currentLocation.lng}&destination=${destinationLatLng.lat},${destinationLatLng.lng}&destination_place_id=${destination.name}`;
+      window.open(url, '_blank');
+    }
+  };
+
+  const handleTogglePanel = (_: React.MouseEvent<HTMLElement>, newView: string | null) => {
+    if (newView === "map") {
+      setShowMap(true);
+    } else if (newView === "details") {
+      setShowMap(false);
+    }
   };
 
   const handlePlaceChanged = () => {
@@ -291,22 +271,6 @@ const ReviewsPage: React.FC = () => {
         };
         setSpecifiedLocation(newCoordinates);
         console.log("Place changed:", place, newCoordinates);
-      }
-    }
-  };
-
-  const handleFromLocationPlaceChanged = () => {
-    if (fromLocationAutocompleteRef.current) {
-      const place: google.maps.places.PlaceResult = fromLocationAutocompleteRef.current.getPlace();
-      if (place.geometry !== undefined) {
-        const geometry: google.maps.places.PlaceGeometry = place.geometry!;
-        setFromLocationLocation(
-          {
-            lat: geometry.location!.lat(),
-            lng: geometry.location!.lng(),
-          }
-        );
-        console.log("From location place changed:", place);
       }
     }
   };
@@ -339,21 +303,12 @@ const ReviewsPage: React.FC = () => {
     }
   };
 
-  const togglePanel = (_: React.MouseEvent<HTMLElement>, newView: string | null) => {
-    if (newView === "map") {
-      setShowMap(true);
-    } else if (newView === "details") {
-      setShowMap(false);
-    }
-  };
-
-
   const renderMap = () => {
     return (
       <MapWithMarkers
-        key={JSON.stringify({ googlePlaces, specifiedLocation })} // Forces re-render on prop change
+        key={JSON.stringify({ googlePlaces: places, specifiedLocation })} // Forces re-render on prop change
         initialCenter={specifiedLocation}
-        locations={googlePlaces}
+        locations={places}
       />
     );
   };
@@ -415,8 +370,7 @@ const ReviewsPage: React.FC = () => {
   const renderDistanceAwayFilterPopover = (): JSX.Element => {
     return (
       <Popover
-        id={idDistance}
-        open={openDistance}
+        open={Boolean(anchorElSetDistance)}
         anchorEl={anchorElSetDistance}
         onClose={handleDistanceClose}
         anchorOrigin={{
@@ -568,7 +522,7 @@ const ReviewsPage: React.FC = () => {
           <ToggleButtonGroup
             value={showMap ? "map" : "details"}
             exclusive
-            onChange={togglePanel}
+            onChange={handleTogglePanel}
             style={{ marginBottom: '10px', display: 'flex', justifyContent: 'left' }}
           >
             <ToggleButton value="map" aria-label="Map">
@@ -669,7 +623,6 @@ const ReviewsPage: React.FC = () => {
                   <TableCell align="center"></TableCell>
                   <TableCell align="center"></TableCell>
                   <TableCell align="center"></TableCell>
-                  <TableCell align="center"></TableCell>
                   <TableCell>Place</TableCell>
                   <TableCell>Location</TableCell>
                 </TableRow>
@@ -678,12 +631,6 @@ const ReviewsPage: React.FC = () => {
                 {filteredPlaces.map((place: GooglePlace) => (
                   <React.Fragment key={place.place_id}>
                     <TableRow className="table-row-hover" onClick={() => handlePlaceClick(place)} >
-                      <TableCell align="center" className="dimmed" style={smallColumnStyle}>
-                        <Checkbox
-                          checked={selectedPlaces.has(place.place_id)}
-                          onChange={() => handlePlaceSelect(place.place_id)}
-                        />
-                      </TableCell>
                       <TableCell align="right" className="dimmed" style={smallColumnStyle}>
                         <IconButton onClick={() => handleShowMap(place.place_id)}>
                           <MapIcon />
