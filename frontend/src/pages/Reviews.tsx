@@ -303,13 +303,12 @@ const ReviewsPage: React.FC = () => {
       const place: google.maps.places.PlaceResult = autocompleteRef.current.getPlace();
       if (place.geometry !== undefined) {
         const geometry: google.maps.places.PlaceGeometry = place.geometry!;
-        setSpecifiedLocation(
-          {
-            lat: geometry.location!.lat(),
-            lng: geometry.location!.lng(),
-          }
-        );
-        console.log("Place changed:", place);
+        const newCoordinates: Coordinates = {
+          lat: geometry.location!.lat(),
+          lng: geometry.location!.lng(),
+        };
+        setSpecifiedLocation(newCoordinates);
+        console.log("Place changed:", place, newCoordinates);
       }
     }
   };
@@ -370,12 +369,13 @@ const ReviewsPage: React.FC = () => {
   const renderMap = () => {
     return (
       <MapWithMarkers
+        key={JSON.stringify({ googlePlaces, specifiedLocation })} // Forces re-render on prop change
         initialCenter={specifiedLocation}
         locations={googlePlaces}
       />
     );
-  }
-
+  };
+  
   const renderReviewDetails = (review: MemoRappReview): JSX.Element => {
     return (
       <Paper id='reviewDetails' className="review-details" style={{ marginTop: '16px', boxShadow: 'none' }}>
