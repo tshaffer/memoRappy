@@ -569,6 +569,66 @@ const ReviewsPage: React.FC = () => {
     );
   }
 
+  const renderElementIDontKnowHowToName = (): JSX.Element => {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div>
+          <ToggleButtonGroup
+            value={showMap ? "map" : "details"}
+            exclusive
+            onChange={togglePanel}
+            style={{ marginBottom: '10px', display: 'flex', justifyContent: 'left' }}
+          >
+            <ToggleButton value="map" aria-label="Map">
+              Map
+            </ToggleButton>
+            <ToggleButton value="details" aria-label="Review Details">
+              Reviews
+            </ToggleButton>
+          </ToggleButtonGroup>
+          {showMap ?
+            (
+              <Autocomplete
+                onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+                onPlaceChanged={handlePlaceChanged}
+              >
+                <input
+                  type="text"
+                  placeholder="Enter the location"
+                  onChange={handleInputChange} // Custom input handling
+                  style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}
+                />
+                {/* <TextField
+                  fullWidth
+                  label="Restaurant Name"
+                  value={restaurantLabel}
+                  onChange={(e) => setRestaurantLabel(e.target.value)}
+                  placeholder="Enter the restaurant name"
+                  required
+                  style={{ marginBottom: 20 }}
+                /> */}
+              </Autocomplete>
+            ) : null
+          }
+        </div>
+        <div
+          style={{ flex: 1 }}
+        >
+          {showMap ? (
+            <Paper id='mapContainer' className="map-container">
+              {renderMap()}
+            </Paper>
+          ) : (
+            <React.Fragment>
+              {renderReviewDetailsForSelectedPlace()}
+            </React.Fragment>
+          )
+          }
+        </div>
+      </div>
+    );
+  }
+
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY!} libraries={libraries}>
       <div className="page-container">
@@ -601,26 +661,6 @@ const ReviewsPage: React.FC = () => {
           >
             Search
           </Button>
-          <Autocomplete
-            onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
-            onPlaceChanged={handlePlaceChanged}
-          >
-            <input
-              type="text"
-              placeholder="Enter the location"
-              onChange={handleInputChange} // Custom input handling
-              style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}
-            />
-            {/* <TextField
-                  fullWidth
-                  label="Restaurant Name"
-                  value={restaurantLabel}
-                  onChange={(e) => setRestaurantLabel(e.target.value)}
-                  placeholder="Enter the restaurant name"
-                  required
-                  style={{ marginBottom: 20 }}
-                /> */}
-          </Autocomplete>
 
           {renderDistanceAwayFilterPopover()}
           {renderWouldReturnFilterPopover()}
@@ -676,38 +716,7 @@ const ReviewsPage: React.FC = () => {
               </TableBody>
             </Table>
           </TableContainer>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <div>
-              <ToggleButtonGroup
-                value={showMap ? "map" : "details"}
-                exclusive
-                onChange={togglePanel}
-                style={{ marginBottom: '10px', display: 'flex', justifyContent: 'left' }}
-              >
-                <ToggleButton value="map" aria-label="Map">
-                  Map
-                </ToggleButton>
-                <ToggleButton value="details" aria-label="Review Details">
-                  Reviews
-                </ToggleButton>
-              </ToggleButtonGroup>
-
-            </div>
-            <div
-              style={{ flex: 1 }}
-            >
-              {showMap ? (
-                <Paper id='mapContainer' className="map-container">
-                  {renderMap()}
-                </Paper>
-              ) : (
-                <React.Fragment>
-                  {renderReviewDetailsForSelectedPlace()}
-                </React.Fragment>
-              )
-              }
-            </div>
-          </div>
+          {renderElementIDontKnowHowToName()}
         </div>
       </div>
     </LoadScript>
