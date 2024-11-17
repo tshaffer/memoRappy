@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import DirectionsIcon from '@mui/icons-material/Directions';
 import EditIcon from '@mui/icons-material/Edit';
-import { GooglePlaceResult, ReviewEntityWithFullText } from '../types';
+import { GooglePlace, ReviewEntityWithFullText } from '../types';
 import MapWithMarkers from '../components/MapWIthMarkers';
 import { getCityNameFromPlace } from '../utilities';
 
@@ -156,7 +156,7 @@ const ViewReviews: React.FC = () => {
     );
   };
 
-  const locations: GooglePlaceResult[] = selectedReviews.map((review) => review.googlePlace);
+  const locations: GooglePlace[] = selectedReviews.map((review) => review.googlePlace);
 
   const handleEditReview = (review: ReviewEntityWithFullText) => {
     console.log('handleEditReview', review);
@@ -165,7 +165,7 @@ const ViewReviews: React.FC = () => {
 
   const handleShowDirections = (review: ReviewEntityWithFullText) => {
     if (currentLocation) {
-      const destination: GooglePlaceResult = review.googlePlace;
+      const destination: GooglePlace = review.googlePlace;
       const destinationLocation: google.maps.LatLngLiteral = destination.geometry!.location;
       const destinationLatLng: google.maps.LatLngLiteral = { lat: destinationLocation.lat, lng: destinationLocation.lng };
       const url = `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.lat},${currentLocation.lng}&destination=${destinationLatLng.lat},${destinationLatLng.lng}&destination_place_id=${destination.name}`;

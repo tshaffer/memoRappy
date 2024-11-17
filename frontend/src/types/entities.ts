@@ -20,7 +20,7 @@ export interface FreeformReviewProperties {
   reviewer?: string;
 }
 
-export interface GooglePlaceResult {
+export interface GooglePlace {
   place_id: string;
   name: string;
   address_components?: AddressComponent[];
@@ -39,7 +39,7 @@ export interface MongoPlace {
 }
 
 export interface StructuredReviewProperties {
-  googlePlace: GooglePlaceResult;
+  googlePlace: GooglePlace;
   dateOfVisit: string;
   wouldReturn: boolean | null;
 }
@@ -55,7 +55,7 @@ export interface ParsedReviewProperties {
 }
 
 export interface ReviewEntity {
-  googlePlace: GooglePlaceResult;
+  googlePlace: GooglePlace;
   dateOfVisit: string;
   wouldReturn: boolean | null;
   itemReviews: ItemReview[];

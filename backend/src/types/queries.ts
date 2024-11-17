@@ -20,10 +20,14 @@ export interface QueryParameters {
   itemsOrdered?: any;
 }
 
+export interface DistanceAwayQuery {
+  lat: number;
+  lng: number;
+  radius: number;
+}
+
 export interface FilterQueryParams {
-  lat?: number;
-  lng?: number;
-  radius?: number;
+  distanceAwayQuery?: DistanceAwayQuery;
   wouldReturn?: WouldReturnQuery;
 }
 

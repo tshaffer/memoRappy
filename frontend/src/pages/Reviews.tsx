@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Button, Popover, FormControlLabel, Checkbox, TextField, ToggleButton, ToggleButtonGroup, Slider, Switch, Radio } from '@mui/material';
-import { FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlaceResult, MemoRappReview, WouldReturnQuery } from '../types';
+import { FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlace, MemoRappReview, WouldReturnQuery } from '../types';
 import '../App.css';
 import { Autocomplete, Libraries, LoadScript } from '@react-google-maps/api';
 import MapWithMarkers from '../components/MapWIthMarkers';
@@ -42,12 +42,12 @@ const thumbsStyle: React.CSSProperties = {
 };
 
 const ReviewsPage: React.FC = () => {
-  const [filteredPlaces, setFilteredPlaces] = useState<GooglePlaceResult[]>([]);
+  const [filteredPlaces, setFilteredPlaces] = useState<GooglePlace[]>([]);
   const [filteredReviews, setFilteredReviews] = useState<MemoRappReview[]>([]);
 
   const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
   const [selectedReview, setSelectedReview] = useState<MemoRappReview | null>(null);
-  const [selectedPlace, setSelectedPlace] = useState<GooglePlaceResult | null>(null);
+  const [selectedPlace, setSelectedPlace] = useState<GooglePlace | null>(null);
   const [wouldReturnFilter, setWouldReturnFilter] = useState<WouldReturnQuery>({
     yes: false,
     no: false,
@@ -61,7 +61,7 @@ const ReviewsPage: React.FC = () => {
 
   const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
 
-  const [googlePlaces, setGooglePlaces] = useState<GooglePlaceResult[]>([]);
+  const [googlePlaces, setGooglePlaces] = useState<GooglePlace[]>([]);
 
   const [memoRappReviews, setMemoRappReviews] = useState<MemoRappReview[]>([]);
 
@@ -144,7 +144,7 @@ const ReviewsPage: React.FC = () => {
   };
 
   const handleShowMap = (placeId: string) => {
-    const googlePlace: GooglePlaceResult | undefined = googlePlaces.find(place => place.place_id === placeId);
+    const googlePlace: GooglePlace | undefined = googlePlaces.find(place => place.place_id === placeId);
     if (googlePlace && googlePlace.geometry) {
       const geometry: GoogleGeometry = googlePlace.geometry!;
       setSpecifiedLocation(
@@ -158,7 +158,7 @@ const ReviewsPage: React.FC = () => {
   };
 
   const handleShowDirections = (placeId: string) => {
-    const destination: GooglePlaceResult | undefined = googlePlaces.find(place => place.place_id === placeId);
+    const destination: GooglePlace | undefined = googlePlaces.find(place => place.place_id === placeId);
     if (destination && currentLocation) {
       const destinationLocation: google.maps.LatLngLiteral = destination.geometry!.location;
       const destinationLatLng: google.maps.LatLngLiteral = { lat: destinationLocation.lat, lng: destinationLocation.lng };
@@ -171,7 +171,7 @@ const ReviewsPage: React.FC = () => {
     setSelectedReview(review);
   };
 
-  const handlePlaceClick = (place: GooglePlaceResult) => {
+  const handlePlaceClick = (place: GooglePlace) => {
     setSelectedPlace(place);
   }
 
@@ -275,9 +275,7 @@ const ReviewsPage: React.FC = () => {
     const wouldReturn: WouldReturnQuery | undefined = wouldReturnFilter.yes || wouldReturnFilter.no || wouldReturnFilter.notSpecified ? wouldReturnFilter : undefined;
 
     const filterQueryParams: FilterQueryParams = {
-      lat,
-      lng,
-      radius: fromLocationDistance, // units in miles.
+      distanceAwayQuery: distanceFilterEnabled ? { lat: lat!, lng: lng!, radius: fromLocationDistance } : undefined,
       wouldReturn,
     };
 
@@ -645,7 +643,7 @@ const ReviewsPage: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredPlaces.map((place: GooglePlaceResult) => (
+                {filteredPlaces.map((place: GooglePlace) => (
                   <React.Fragment key={place.place_id}>
                     <TableRow className="table-row-hover" onClick={() => handlePlaceClick(place)} >
                       <TableCell align="center" className="dimmed" style={smallColumnStyle}>

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import MongoPlace, { IMongoPlace } from "../models/MongoPlace";
-import { GoogleGeometry, GooglePlace, GooglePlaceResult, MongoGeometry, MongoPlaceEntity } from "../types";
+import { GoogleGeometry, GooglePlace, MongoGeometry, MongoPlaceEntity } from "../types";
 import { getMongoGeometryFromGoogleGeometry } from "./googlePlaces";
 import { convertMongoPlacesToGooglePlaces } from '../utilities';
 
@@ -18,7 +18,7 @@ export const getPlaces = async (request: Request, response: Response, next: any)
   }
 }
 
-export const addPlace = async (googlePlace: GooglePlaceResult): Promise<IMongoPlace | null> => {
+export const addPlace = async (googlePlace: GooglePlace): Promise<IMongoPlace | null> => {
   // Convert Google geometry to MongoDB format
   const mongoGeometry: MongoGeometry = getMongoGeometryFromGoogleGeometry(googlePlace.geometry!);
   const mongoPlace: MongoPlaceEntity = { ...googlePlace, geometry: mongoGeometry };

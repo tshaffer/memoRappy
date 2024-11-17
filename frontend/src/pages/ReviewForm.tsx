@@ -18,7 +18,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { LoadScript, Autocomplete, Libraries } from '@react-google-maps/api';
-import { ReviewFormDisplayTabs, ChatResponse, GooglePlaceResult, ParsedReviewProperties, PreviewRequestBody, ReviewEntity, ReviewEntityWithFullText, SubmitReviewBody } from '../types';
+import { ReviewFormDisplayTabs, ChatResponse, GooglePlace, ParsedReviewProperties, PreviewRequestBody, ReviewEntity, ReviewEntityWithFullText, SubmitReviewBody } from '../types';
 import { pickGooglePlaceProperties } from '../utilities';
 const libraries = ['places'] as Libraries;
 
@@ -44,7 +44,7 @@ const ReviewForm: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const [googlePlace, setGooglePlace] = useState<GooglePlaceResult | null>(null);
+  const [googlePlace, setGooglePlace] = useState<GooglePlace | null>(null);
   const [restaurantLabel, setRestaurantLabel] = useState('');
   const [dateOfVisit, setDateOfVisit] = useState('');
   const [reviewText, setReviewText] = useState('');
@@ -100,7 +100,7 @@ const ReviewForm: React.FC = () => {
       console.log(geometry.viewport!.getSouthWest().lng());
 
       // setPlaceResult(place);
-      const googlePlace: GooglePlaceResult = pickGooglePlaceProperties(place);
+      const googlePlace: GooglePlace = pickGooglePlaceProperties(place);
       setGooglePlace(googlePlace);
 
       const restaurantLabel = googlePlace.name;
@@ -165,7 +165,7 @@ const ReviewForm: React.FC = () => {
       setIsLoading(true);
       const submitBody: SubmitReviewBody = {
         _id,
-        structuredReviewProperties: { googlePlace: googlePlace as GooglePlaceResult, dateOfVisit, wouldReturn },
+        structuredReviewProperties: { googlePlace: googlePlace as GooglePlace, dateOfVisit, wouldReturn },
         parsedReviewProperties,
         reviewText,
         sessionId: sessionId!,
@@ -200,7 +200,7 @@ const ReviewForm: React.FC = () => {
   const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
   const renderPreviewResponse = (parsedReviewProperties: ParsedReviewProperties) => {
-    const place: GooglePlaceResult = googlePlace!;
+    const place: GooglePlace = googlePlace!;
     const getReturnString = () => {
       if (wouldReturn === true) return 'Yes';
       if (wouldReturn === false) return 'No';

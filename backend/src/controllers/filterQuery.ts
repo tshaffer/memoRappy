@@ -26,7 +26,9 @@ export const filterReviewsHandler = async (
 }
 
 const getFilteredPlacesAndReviews = async (queryParams: FilterQueryParams): Promise<FilterQueryResponse> => {
-  const { lat, lng, radius, wouldReturn } = queryParams;
+  
+  const { distanceAwayQuery, wouldReturn } = queryParams;
+  const { lat, lng, radius } = distanceAwayQuery || {};
 
   try {
     // Step 0: Fetch all places and reviews

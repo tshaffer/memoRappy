@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GooglePlaceResult } from '../types';
+import { GooglePlace } from '../types';
 import { AdvancedMarker, APIProvider, InfoWindow, Map, MapCameraChangedEvent } from '@vis.gl/react-google-maps';
 import { getLatLngFromPlace } from '../utilities';
 import '../App.css';
@@ -11,7 +11,7 @@ interface Coordinates {
 
 interface MapWithMarkersProps {
   initialCenter: Coordinates;
-  locations: GooglePlaceResult[];
+  locations: GooglePlace[];
 }
 
 // const DEFAULT_CENTER = { lat: 37.3944829, lng: -122.0790619 };
@@ -20,7 +20,7 @@ const DEFAULT_ZOOM = 14;
 const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, locations }) => {
 
   const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<GooglePlaceResult | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<GooglePlace | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
   useEffect(() => {
@@ -78,7 +78,7 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
   //   }
   // }
 
-  const handleMarkerClick = (location: GooglePlaceResult) => {
+  const handleMarkerClick = (location: GooglePlace) => {
     setSelectedLocation(location);
   };
 

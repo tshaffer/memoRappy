@@ -1,4 +1,4 @@
-import { GooglePlaceResult, MemoRappReview } from "./entities";
+import { GooglePlace, MemoRappReview } from "./entities";
 
 export interface WouldReturnQuery {
   yes: boolean;
@@ -18,20 +18,19 @@ export interface QueryParameters {
   itemsOrdered?: any;
 }
 
+export interface DistanceAwayQuery {
+  lat: number;
+  lng: number;
+  radius: number;
+}
+
 export interface FilterQueryParams {
-  lat?: number;
-  lng?: number;
-  radius?: number;
+  distanceAwayQuery?: DistanceAwayQuery;
   wouldReturn?: { yes: boolean; no: boolean; notSpecified: boolean };
 }
 
-// export interface FilterQueryResponse {
-//   places: IMongoPlace[];
-//   reviews: IReview[];
-// }
-
 export interface FilterResponse {
-  places: GooglePlaceResult[];
+  places: GooglePlace[];
   reviews: MemoRappReview[];
 }
 

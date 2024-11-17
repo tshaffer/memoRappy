@@ -41,14 +41,3 @@ export interface GooglePlaceDetails {
   website?: string;
   // Additional fields can be added as needed
 }
-
-// Is this any different from GooglePlace?
-export interface GooglePlaceResult {
-  place_id: string;
-  name: string;
-  address_components?: AddressComponent[];
-  formatted_address: string;
-  geometry?: GoogleGeometry;
-  website: string;
-}
-

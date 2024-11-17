@@ -1,6 +1,6 @@
-import { GoogleGeometry, GooglePlaceResult } from "../types";
+import { GoogleGeometry, GooglePlace } from "../types";
 
-export const getCityNameFromPlace = (place: GooglePlaceResult): string => {
+export const getCityNameFromPlace = (place: GooglePlace): string => {
   const addressComponents = place.address_components;
   const cityComponent = addressComponents?.find((component: any) =>
     component.types.includes("locality")
@@ -9,7 +9,7 @@ export const getCityNameFromPlace = (place: GooglePlaceResult): string => {
   return cityName;
 }
 
-export const getLatLngFromPlace = (place: GooglePlaceResult): google.maps.LatLngLiteral => {
+export const getLatLngFromPlace = (place: GooglePlace): google.maps.LatLngLiteral => {
   const geometry: GoogleGeometry | undefined = place.geometry;
   const location: google.maps.LatLngLiteral = geometry?.location!;
   return location;
@@ -28,9 +28,9 @@ export const getLatLngFromPlace = (place: GooglePlaceResult): google.maps.LatLng
 //   website: '',
 // };
 
-export function pickGooglePlaceProperties(googlePlaceResult: google.maps.places.PlaceResult): GooglePlaceResult {
+export function pickGooglePlaceProperties(googlePlaceResult: google.maps.places.PlaceResult): GooglePlace {
 
-  const googlePlace: GooglePlaceResult = {
+  const googlePlace: GooglePlace = {
     place_id: googlePlaceResult.place_id!,
     name: googlePlaceResult.name!,
     address_components: googlePlaceResult.address_components,
