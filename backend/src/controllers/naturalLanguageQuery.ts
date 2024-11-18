@@ -165,13 +165,13 @@ const parseQueryWithChatGPT = async (query: string): Promise<ParsedQuery> => {
         - restaurantName: the name of a specific restaurant (e.g., "La Costena")
         - wouldReturn: whether the reviewer set Would Return (if it explicitly or implicitly indicates a return intent). The value can be true, false, or null.
         - itemsOrdered: specific items ordered, if mentioned (e.g., "Caesar Salad")
-        
+
         Determine the queryType based on the following:
-        - If the query can be fully answered by matching structured fields in the database (e.g., location, date, restaurant name, items ordered), set "queryType" to "structured".
-        - If the query requires searching full review text or user comments that are not part of structured fields, set "queryType" to "full-text".
-        - If the query could benefit from both structured search and full-text search, set "queryType" to "hybrid".
-        
-        For each query, return a JSON object with the following format:
+        - If the query only references structured fields (e.g., location, date, restaurant name, items ordered), set "queryType" to "structured".
+        - If the query only references full review text or user comments not part of structured fields, set "queryType" to "full-text".
+        - If the query references both structured fields and full review text, set "queryType" to "hybrid".
+
+        Return the results in the following JSON format:
         {
           "queryType": "structured" or "full-text" or "hybrid",
           "queryParameters": {
@@ -183,18 +183,21 @@ const parseQueryWithChatGPT = async (query: string): Promise<ParsedQuery> => {
             "itemsOrdered": ["Item1", "Item2", ...]
           }
         }
-        
-        If any field is missing, set its value to null. Return only the JSON data without additional text.
-        
+
+        If any field is missing, set its value to null. Pay close attention to queries that include both structured and full-text elements and classify them as "hybrid".
+
         Example inputs and outputs:
         Input: "Show me reviews for restaurants in Mountain View within the past month"
         Output: { "queryType": "structured", "queryParameters": { "location": "Mountain View", "radius": null, "dateRange": { "start": "YYYY-MM-01", "end": "YYYY-MM-DD" }, "restaurantName": null, "wouldReturn": null, "itemsOrdered": null } }
-        
+
         Input: "What did I say about the Caesar Salad at Doppio Zero?"
         Output: { "queryType": "structured", "queryParameters": { "location": null, "radius": null, "dateRange": null, "restaurantName": "Doppio Zero", "wouldReturn": null, "itemsOrdered": ["Caesar Salad"] } }
-        
+
         Input: "Would I return to La Costena for the tacos?"
         Output: { "queryType": "structured", "queryParameters": { "location": null, "radius": null, "dateRange": null, "restaurantName": "La Costena", "wouldReturn": true, "itemsOrdered": ["tacos"] } }
+        
+        Input: "Show me reviews from August 2024 where the reviewer mentioned that parking was difficult"
+        Output: { "queryType": "hybrid", "queryParameters": { "location": null, "radius": null, "dateRange": { "start": "2024-08-01", "end": "2024-08-31" }, "restaurantName": null, "wouldReturn": null, "itemsOrdered": null } }
         `
       },
       { role: "user", content: query },
