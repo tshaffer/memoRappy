@@ -5,10 +5,15 @@ import { getCoordinates } from './googlePlaces';
 import MongoPlace, { IMongoPlace } from '../models/MongoPlace';
 import { DistanceAwayQuery, FilterQueryParams, FilterQueryResponse, WouldReturnQuery } from '../types';
 
+interface DateRange {
+  start: string;
+  end: string;
+}
+
 interface QueryParameters {
   location?: string;
   radius?: number;
-  dateRange: any;
+  dateRange: DateRange;
   restaurantName?: string;
   wouldReturn: boolean | null;
   itemsOrdered: any;
@@ -49,6 +54,11 @@ interface QueryRequestBody {
   query: string;
 }
 
+interface ParsedQuery {
+  queryType: 'structured' | 'full-text' | 'hybrid';
+  queryParameters: QueryParameters;
+}
+
 export const naturalLanguageQueryHandler: any = async (
   req: Request<{}, {}, QueryRequestBody>,
   res: Response
@@ -60,18 +70,18 @@ export const naturalLanguageQueryHandler: any = async (
     const parsedQuery: ParsedQuery = await parseQueryWithChatGPT(query);
     const { queryType, queryParameters } = parsedQuery;
 
-    let reviews: IReview[] = [];
+    console.log('Query parameters:', queryParameters);
+    console.log('Parsed query:', parsedQuery);
+    // let reviews: IReview[] = [];
 
     if (queryType === "structured") {
       const structuredQueryParams: StructuredQueryParams = buildStructuredQueryParamsFromParsedQuery(parsedQuery);
-      console.log('Query parameters:', queryParameters);
+      console.log('Structured query params:', structuredQueryParams);
+      // res.status(200).json({ result: { queryParameters, structuredQueryParams }});
       const queryResponse: FilterQueryResponse = await structuredQuery(structuredQueryParams);
       console.log('Filter query response:', queryResponse);
       res.status(200).json({ result: queryResponse });
     }
-    // const queryResults = await structuredQuery(req.body);
-    // console.log(queryResults);
-    // res.status(200).json({ result: queryResults });
   } catch (error) {
     console.error('Error querying reviews:', error);
     res.status(500).json({ error: 'An error occurred while querying the reviews.' });
@@ -79,34 +89,28 @@ export const naturalLanguageQueryHandler: any = async (
 };
 
 
-interface ParsedQuery {
-  queryType: 'structured' | 'full-text' | 'hybrid';
-  queryParameters: QueryParameters;
-}
-
 const buildStructuredQueryParamsFromParsedQuery = (parsedQuery: ParsedQuery): StructuredQueryParams => {  
   const { queryParameters } = parsedQuery;
   const { location, radius, restaurantName, dateRange, wouldReturn, itemsOrdered } = queryParameters;
   const structuredQueryParams: StructuredQueryParams = {};
 
-  if (location) {
-    structuredQueryParams.distanceAwayQuery = { lat: 0, lng: 0, radius: 0 };
-  }
+  // if (location) {
+  //   structuredQueryParams.distanceAwayQuery = { lat: 0, lng: 0, radius: 0 };
+  // }
 
-  if (wouldReturn) {
-    structuredQueryParams.wouldReturn = { yes: false, no: false, notSpecified: false };
-  }
+  // if (wouldReturn) {
+  //   structuredQueryParams.wouldReturn = { yes: false, no: false, notSpecified: false };
+  // }
 
   if (restaurantName) {
     structuredQueryParams.placeName = restaurantName;
   }
 
   if (dateRange) {
-    structuredQueryParams.reviewDateRange = { start: '', end: '' };
+    structuredQueryParams.reviewDateRange = { start: dateRange.start, end: dateRange.end };
   }
 
   if (itemsOrdered) {
-    console.log('itemsOrdered:', itemsOrdered);
     structuredQueryParams.itemsOrdered = itemsOrdered;
   }
 
