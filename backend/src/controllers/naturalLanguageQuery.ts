@@ -70,6 +70,7 @@ export const naturalLanguageQueryHandler: any = async (
     const parsedQuery: ParsedQuery = await parseQueryWithChatGPT(query);
     const { queryType, queryParameters } = parsedQuery;
 
+    console.log('Query:', query);
     console.log('Query parameters:', queryParameters);
     console.log('Parsed query:', parsedQuery);
     let reviews: IReview[] = [];
@@ -80,11 +81,16 @@ export const naturalLanguageQueryHandler: any = async (
       const queryResponse: FilterQueryResponse = await structuredQuery(structuredQueryParams);
       console.log('Filter query response:', queryResponse);
       res.status(200).json({ result: queryResponse });
-
     } else if (queryType === "full-text") {
       const places = await MongoPlace.find({});
       const reviews = await Review.find({});
       const queryResponse: FilterQueryResponse = await performNaturalLanguageQuery(query, places, reviews);
+      console.log('Filter query response:', queryResponse);
+      res.status(200).json({ result: queryResponse });
+    } else {
+      const structuredQueryParams: StructuredQueryParams = buildStructuredQueryParamsFromParsedQuery(parsedQuery);
+      console.log('Structured query params:', structuredQueryParams);
+      const queryResponse: FilterQueryResponse = await performHybridQuery(query, structuredQueryParams);
       console.log('Filter query response:', queryResponse);
       res.status(200).json({ result: queryResponse });
     }
@@ -195,7 +201,7 @@ const parseQueryWithChatGPT = async (query: string): Promise<ParsedQuery> => {
 
         Input: "Would I return to La Costena for the tacos?"
         Output: { "queryType": "structured", "queryParameters": { "location": null, "radius": null, "dateRange": null, "restaurantName": "La Costena", "wouldReturn": true, "itemsOrdered": ["tacos"] } }
-        
+
         Input: "Show me reviews from August 2024 where the reviewer mentioned that parking was difficult"
         Output: { "queryType": "hybrid", "queryParameters": { "location": null, "radius": null, "dateRange": { "start": "2024-08-01", "end": "2024-08-31" }, "restaurantName": null, "wouldReturn": null, "itemsOrdered": null } }
         `
@@ -484,10 +490,159 @@ const performNaturalLanguageQuery = async (
   };
 };
 
-// const query = "Show me reviews for places near San Francisco where I would return.";
-// const places = await MongoPlace.find({});
-// const reviews = await Review.find({});
+const performHybridQuery = async (
+  query: string,
+  queryParams: StructuredQueryParams
+): Promise<FilterQueryResponse> => {
+  const {
+    distanceAwayQuery,
+    wouldReturn,
+    placeName,
+    reviewDateRange,
+    itemsOrdered,
+    additionalPlaceFilters,
+    additionalReviewFilters,
+  } = queryParams;
 
-// const result = await performNaturalLanguageQuery(query, places, reviews);
+  const { lat, lng, radius } = distanceAwayQuery || {};
 
-// console.log(result);
+  try {
+    // Step 1: Perform structured filtering on places and reviews
+    let placeQuery: any = {};
+    let reviewQuery: any = {};
+
+    // Would Return filter
+    if (wouldReturn) {
+      const returnFilter: (boolean | null)[] = [];
+      if (wouldReturn.yes) returnFilter.push(true);
+      if (wouldReturn.no) returnFilter.push(false);
+      if (wouldReturn.notSpecified) returnFilter.push(null);
+      reviewQuery['structuredReviewProperties.wouldReturn'] = { $in: returnFilter };
+    }
+
+    // Date range filter
+    if (reviewDateRange?.start || reviewDateRange?.end) {
+      reviewQuery['structuredReviewProperties.dateOfVisit'] = {};
+      if (reviewDateRange.start) {
+        reviewQuery['structuredReviewProperties.dateOfVisit'].$gte = reviewDateRange.start;
+      }
+      if (reviewDateRange.end) {
+        reviewQuery['structuredReviewProperties.dateOfVisit'].$lte = reviewDateRange.end;
+      }
+    }
+
+    // Items ordered filter
+    if (itemsOrdered && itemsOrdered.length > 0) {
+      reviewQuery["freeformReviewProperties.itemReviews"] = {
+        $elemMatch: { item: { $regex: new RegExp(itemsOrdered.join("|"), "i") } },
+      };
+    }
+
+    // Additional review filters
+    if (additionalReviewFilters) {
+      Object.assign(reviewQuery, additionalReviewFilters);
+    }
+
+    // Fetch structured reviews
+    let reviews: IReview[] = await Review.find(reviewQuery);
+
+    // Extract unique place IDs from the filtered reviews
+    const placeIdsWithReviews = Array.from(new Set(reviews.map((review) => review.place_id)));
+    if (placeIdsWithReviews.length === 0) {
+      return { places: [], reviews: [] };
+    }
+
+    // Construct place query
+    if (lat !== undefined && lng !== undefined && radius !== undefined) {
+      placeQuery['geometry.location'] = {
+        $near: {
+          $geometry: { type: 'Point', coordinates: [lng, lat] },
+          $maxDistance: radius * 1609.34, // Convert miles to meters
+        },
+      };
+    }
+
+    // Place name filter
+    if (placeName) {
+      placeQuery['name'] = { $regex: new RegExp(placeName, 'i') }; // Case-insensitive partial match
+    }
+
+    // Additional place filters
+    if (additionalPlaceFilters) {
+      Object.assign(placeQuery, additionalPlaceFilters);
+    }
+
+    // Restrict places to those with matching reviews
+    placeQuery['place_id'] = { $in: placeIdsWithReviews };
+
+    // Fetch structured places
+    let places: IMongoPlace[] = await MongoPlace.find(placeQuery);
+
+    // Refine reviews to those matching structured places
+    const filteredPlaceIds = places.map((place) => place.place_id);
+    reviews = reviews.filter((review) => filteredPlaceIds.includes(review.place_id));
+
+    // Step 2: Perform natural language query using OpenAI
+    const placeData = places.map((place) => ({
+      id: place.place_id,
+      name: place.name,
+      address: place.formatted_address,
+      location: place.geometry?.location,
+    }));
+
+    const reviewData = reviews.map((review) => ({
+      id: review._id,
+      text: review.freeformReviewProperties.reviewText,
+      dateOfVisit: review.structuredReviewProperties.dateOfVisit,
+      wouldReturn: review.structuredReviewProperties.wouldReturn,
+      place_id: review.place_id,
+    }));
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: `You are a helpful assistant that retrieves relevant places and reviews based on a natural language query. Respond with JSON data only, without additional commentary.`,
+        },
+        {
+          role: "user",
+          content: `Find relevant places and reviews for the query: "${query}". 
+          The places are: ${JSON.stringify(placeData)}. 
+          The reviews are: ${JSON.stringify(reviewData)}.
+
+          Return the results in the following JSON format:
+          {
+            "places": [
+              { "id": "place_id_1" },
+              { "id": "place_id_2" },
+              ...
+            ],
+            "reviews": [
+              { "id": "review_id_1" },
+              { "id": "review_id_2" },
+              ...
+            ]
+          }`,
+        },
+      ],
+    });
+
+    const result = JSON.parse(response.choices[0].message?.content || "{}");
+    const relevantPlaceIds = result.places?.map((place: { id: string }) => place.id) || [];
+    const relevantReviewIds = result.reviews?.map((review: { id: string }) => review.id) || [];
+
+    // Step 3: Combine structured and full-text results
+    const hybridPlaces = places.filter((place) => relevantPlaceIds.includes(place.place_id));
+    const hybridReviews = reviews.filter((review) => relevantReviewIds.includes(review._id!.toString()));
+
+    // Step 4: Return combined results
+    return {
+      places: hybridPlaces,
+      reviews: hybridReviews,
+    };
+  } catch (error) {
+    console.error("Error performing hybrid query:", error);
+    throw new Error("Failed to perform hybrid query.");
+  }
+};
