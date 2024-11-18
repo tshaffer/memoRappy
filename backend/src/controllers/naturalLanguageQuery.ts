@@ -603,14 +603,15 @@ const performHybridQuery = async (
       messages: [
         {
           role: "system",
-          content: `You are a helpful assistant that retrieves relevant places and reviews based on a natural language query. Respond with JSON data only, without additional commentary.`,
+          content: `You are a helpful assistant that retrieves relevant places and reviews based on a natural language query. Only include reviews that explicitly match the query. Respond with JSON data only, without additional commentary.`,
         },
         {
           role: "user",
           content: `Find relevant places and reviews for the query: "${query}". 
-          The places are: ${JSON.stringify(placeData)}. 
           The reviews are: ${JSON.stringify(reviewData)}.
-
+    
+          Only include reviews that explicitly contain the term "${query}" or closely match it contextually. Do not include reviews that do not mention "${query}". 
+    
           Return the results in the following JSON format:
           {
             "places": [
@@ -627,7 +628,7 @@ const performHybridQuery = async (
         },
       ],
     });
-
+    
     const result = JSON.parse(response.choices[0].message?.content || "{}");
     const relevantPlaceIds = result.places?.map((place: { id: string }) => place.id) || [];
     const relevantReviewIds = result.reviews?.map((review: { id: string }) => review.id) || [];
