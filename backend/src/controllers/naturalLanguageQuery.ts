@@ -23,14 +23,13 @@ interface ParsedQuery {
   queryParameters: QueryParameters;
 }
 
-export const not_naturalLanguageQueryHandler: any = async (
-  req: Request<{}, {}, QueryRequestBody>,
+export const naturalLanguageQueryHandler: any = async (
+  req: Request<{}, {}, NaturalLanguageQueryParams>,
   res: Response
 ): Promise<void> => {
-  const { query } = req.body;
 
   try {
-    const queryResults = await handleNaturalLanguageQuery(query);
+    const queryResults = await naturalLanguageQuery(req.body);
     console.log(queryResults);
     res.status(200).json({ result: queryResults });
   } catch (error) {
@@ -262,32 +261,12 @@ interface NaturalLanguageQueryParams {
     start?: string; // ISO date string
     end?: string;   // ISO date string
   };
-  additionalPlaceFilters?: Record<string, any>; // Additional Mongo filters for places
-  additionalReviewFilters?: Record<string, any>; // Additional Mongo filters for reviews
-}
-
-interface FilterQueryParams {
-  distanceAwayQuery?: {
-    lat: number;
-    lng: number;
-    radius: number; // in miles
-  };
-  wouldReturn?: {
-    yes: boolean;
-    no: boolean;
-    notSpecified: boolean;
-  };
-  placeName?: string; // Partial name match for places
-  reviewDateRange?: {
-    start?: string; // ISO date string
-    end?: string;   // ISO date string
-  };
   itemsOrdered?: string[]; // Array of item names for filtering reviews
   additionalPlaceFilters?: Record<string, any>; // Additional Mongo filters for places
   additionalReviewFilters?: Record<string, any>; // Additional Mongo filters for reviews
 }
 
-const getFilteredPlacesAndReviews = async (queryParams: FilterQueryParams): Promise<FilterQueryResponse> => {
+export const naturalLanguageQuery = async (queryParams: NaturalLanguageQueryParams): Promise<FilterQueryResponse> => {
   const { 
     distanceAwayQuery, 
     wouldReturn, 
