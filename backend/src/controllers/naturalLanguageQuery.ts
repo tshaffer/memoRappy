@@ -266,12 +266,34 @@ interface NaturalLanguageQueryParams {
   additionalReviewFilters?: Record<string, any>; // Additional Mongo filters for reviews
 }
 
-export const naturalLanguageQueryHandler = async (queryParams: NaturalLanguageQueryParams): Promise<FilterQueryResponse> => {
+interface FilterQueryParams {
+  distanceAwayQuery?: {
+    lat: number;
+    lng: number;
+    radius: number; // in miles
+  };
+  wouldReturn?: {
+    yes: boolean;
+    no: boolean;
+    notSpecified: boolean;
+  };
+  placeName?: string; // Partial name match for places
+  reviewDateRange?: {
+    start?: string; // ISO date string
+    end?: string;   // ISO date string
+  };
+  itemsOrdered?: string[]; // Array of item names for filtering reviews
+  additionalPlaceFilters?: Record<string, any>; // Additional Mongo filters for places
+  additionalReviewFilters?: Record<string, any>; // Additional Mongo filters for reviews
+}
+
+const getFilteredPlacesAndReviews = async (queryParams: FilterQueryParams): Promise<FilterQueryResponse> => {
   const { 
     distanceAwayQuery, 
     wouldReturn, 
     placeName, 
     reviewDateRange, 
+    itemsOrdered, 
     additionalPlaceFilters, 
     additionalReviewFilters 
   } = queryParams;
@@ -302,7 +324,14 @@ export const naturalLanguageQueryHandler = async (queryParams: NaturalLanguageQu
       }
     }
 
-    // Step 3: Apply additional review filters if provided
+    // Step 3: Add itemsOrdered filter if provided
+    if (itemsOrdered && itemsOrdered.length > 0) {
+      reviewQuery["freeformReviewProperties.itemReviews"] = {
+        $elemMatch: { item: { $regex: new RegExp(itemsOrdered.join("|"), "i") } },
+      };
+    }
+
+    // Step 4: Apply additional review filters if provided
     if (additionalReviewFilters) {
       Object.assign(reviewQuery, additionalReviewFilters);
     }
@@ -310,13 +339,13 @@ export const naturalLanguageQueryHandler = async (queryParams: NaturalLanguageQu
     // Fetch reviews matching reviewQuery
     let reviews: IReview[] = await Review.find(reviewQuery);
 
-    // Step 4: Extract unique place IDs from the filtered reviews
+    // Step 5: Extract unique place IDs from the filtered reviews
     const placeIdsWithReviews = Array.from(new Set(reviews.map((review) => review.place_id)));
     if (placeIdsWithReviews.length === 0) {
       return { places: [], reviews: [] };
     }
 
-    // Step 5: Construct the Place query
+    // Step 6: Construct the Place query
     if (lat !== undefined && lng !== undefined && radius !== undefined) {
       placeQuery['geometry.location'] = {
         $near: {
@@ -342,7 +371,7 @@ export const naturalLanguageQueryHandler = async (queryParams: NaturalLanguageQu
     // Fetch places matching placeQuery
     let places: IMongoPlace[] = await MongoPlace.find(placeQuery);
 
-    // Step 6: Refine reviews to only those belonging to filtered places
+    // Step 7: Refine reviews to only those belonging to filtered places
     const filteredPlaceIds = places.map((place) => place.place_id);
     reviews = reviews.filter((review) => filteredPlaceIds.includes(review.place_id));
 
