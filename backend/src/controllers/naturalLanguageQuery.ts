@@ -5,38 +5,84 @@ import { getCoordinates } from './googlePlaces';
 import MongoPlace, { IMongoPlace } from '../models/MongoPlace';
 import { DistanceAwayQuery, FilterQueryParams, FilterQueryResponse, WouldReturnQuery } from '../types';
 
+interface QueryParameters {
+  location?: string;
+  radius?: number;
+  dateRange: any;
+  restaurantName?: string;
+  wouldReturn: boolean | null;
+  itemsOrdered: any;
+}
+/*
+
+          "queryParameters": {
+            "location": "Location Name",
+            "radius": Distance in meters,
+            "dateRange": { "start": "YYYY-MM-DD", "end": "YYYY-MM-DD" },
+            "restaurantName": "Restaurant Name",
+            "wouldReturn": true or false or null,
+            "itemsOrdered": ["Item1", "Item2", ...]
+          }
+*/
+interface StructuredQueryParams {
+  distanceAwayQuery?: {
+    lat: number;
+    lng: number;
+    radius: number; // in miles
+  };
+  wouldReturn?: {
+    yes: boolean;
+    no: boolean;
+    notSpecified: boolean;
+  };
+  placeName?: string; // Partial name match for places
+  reviewDateRange?: {
+    start?: string; // ISO date string
+    end?: string;   // ISO date string
+  };
+  itemsOrdered?: string[]; // Array of item names for filtering reviews
+  additionalPlaceFilters?: Record<string, any>; // Additional Mongo filters for places
+  additionalReviewFilters?: Record<string, any>; // Additional Mongo filters for reviews
+}
+
 interface QueryRequestBody {
   query: string;
 }
 
-interface QueryParameters {
-  location?: string;
-  radius?: number;
-  restaurantName?: string;
-  dateRange: any;
-  wouldReturn: boolean | null;
-  itemsOrdered: any;
-}
-
-interface ParsedQuery {
-  queryType: 'structured' | 'full-text' | 'hybrid';
-  queryParameters: QueryParameters;
-}
-
 export const naturalLanguageQueryHandler: any = async (
-  req: Request<{}, {}, NaturalLanguageQueryParams>,
+  req: Request<{}, {}, QueryRequestBody>,
   res: Response
 ): Promise<void> => {
 
+  const query = req.body.query;
+
   try {
-    const queryResults = await naturalLanguageQuery(req.body);
-    console.log(queryResults);
-    res.status(200).json({ result: queryResults });
+    const parsedQuery: ParsedQuery = await parseQueryWithChatGPT(query);
+    const { queryType, queryParameters } = parsedQuery;
+
+    let reviews: IReview[] = [];
+
+    if (queryType === "structured") {
+      const structuredQueryParams: StructuredQueryParams = {};
+      console.log('Query parameters:', queryParameters);
+      // const filterQueryResponse: FilterQueryResponse = await structuredQuery(structuredQueryParams);
+      // console.log('Filter query response:', filterQueryResponse);
+      res.send({ result: 'success' });
+    }
+    // const queryResults = await structuredQuery(req.body);
+    // console.log(queryResults);
+    // res.status(200).json({ result: queryResults });
   } catch (error) {
     console.error('Error querying reviews:', error);
     res.status(500).json({ error: 'An error occurred while querying the reviews.' });
   }
 };
+
+
+interface ParsedQuery {
+  queryType: 'structured' | 'full-text' | 'hybrid';
+  queryParameters: QueryParameters;
+}
 
 const handleNaturalLanguageQuery = async (query: string): Promise<IReview[]> => {
   try {
@@ -227,46 +273,7 @@ const performFullTextSearch = async (query: string, reviews: IReview[]): Promise
   return reviews.filter(review => review._id && relevantReviewIds.includes(review._id.toString()));
 };
 
-// interface NaturalLanguageQueryParams {
-//   location?: string;
-//   radius?: number;
-//   restaurantName?: string;
-//   dateRange?: any;
-//   wouldReturn?: boolean | null;
-//   itemsOrdered?: any;
-// };
-
-// interface NaturalLanguageQueryParams {
-//   distanceAwayQuery?: DistanceAwayQuery;
-//   wouldReturn?: WouldReturnQuery;
-//   placeName?: string; 
-//   reviewDateRange?: any;
-//   additionalPlaceFilters?: any; 
-//   additionalReviewFilters?: any;
-// };
-
-interface NaturalLanguageQueryParams {
-  distanceAwayQuery?: {
-    lat: number;
-    lng: number;
-    radius: number; // in miles
-  };
-  wouldReturn?: {
-    yes: boolean;
-    no: boolean;
-    notSpecified: boolean;
-  };
-  placeName?: string; // Partial name match for places
-  reviewDateRange?: {
-    start?: string; // ISO date string
-    end?: string;   // ISO date string
-  };
-  itemsOrdered?: string[]; // Array of item names for filtering reviews
-  additionalPlaceFilters?: Record<string, any>; // Additional Mongo filters for places
-  additionalReviewFilters?: Record<string, any>; // Additional Mongo filters for reviews
-}
-
-export const naturalLanguageQuery = async (queryParams: NaturalLanguageQueryParams): Promise<FilterQueryResponse> => {
+const structuredQuery = async (queryParams: StructuredQueryParams): Promise<FilterQueryResponse> => {
   const { 
     distanceAwayQuery, 
     wouldReturn, 
