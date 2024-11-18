@@ -63,10 +63,10 @@ export const naturalLanguageQueryHandler: any = async (
     let reviews: IReview[] = [];
 
     if (queryType === "structured") {
-      const structuredQueryParams: StructuredQueryParams = {};
+      const structuredQueryParams: StructuredQueryParams = buildStructuredQueryParamsFromParsedQuery(parsedQuery);
       console.log('Query parameters:', queryParameters);
-      // const filterQueryResponse: FilterQueryResponse = await structuredQuery(structuredQueryParams);
-      // console.log('Filter query response:', filterQueryResponse);
+      const filterQueryResponse: FilterQueryResponse = await structuredQuery(structuredQueryParams);
+      console.log('Filter query response:', filterQueryResponse);
       res.send({ result: 'success' });
     }
     // const queryResults = await structuredQuery(req.body);
@@ -83,6 +83,34 @@ interface ParsedQuery {
   queryType: 'structured' | 'full-text' | 'hybrid';
   queryParameters: QueryParameters;
 }
+
+const buildStructuredQueryParamsFromParsedQuery = (parsedQuery: ParsedQuery): StructuredQueryParams => {  
+  const { queryParameters } = parsedQuery;
+  const { location, radius, restaurantName, dateRange, wouldReturn, itemsOrdered } = queryParameters;
+  const structuredQueryParams: StructuredQueryParams = {};
+
+  if (location) {
+    structuredQueryParams.distanceAwayQuery = { lat: 0, lng: 0, radius: 0 };
+  }
+
+  if (wouldReturn) {
+    structuredQueryParams.wouldReturn = { yes: false, no: false, notSpecified: false };
+  }
+
+  if (restaurantName) {
+    structuredQueryParams.placeName = restaurantName;
+  }
+
+  if (dateRange) {
+    structuredQueryParams.reviewDateRange = { start: '', end: '' };
+  }
+
+  if (itemsOrdered) {
+    structuredQueryParams.itemsOrdered = [];
+  }
+
+  return structuredQueryParams;
+} 
 
 const handleNaturalLanguageQuery = async (query: string): Promise<IReview[]> => {
   try {
