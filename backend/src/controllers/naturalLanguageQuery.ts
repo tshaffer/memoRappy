@@ -65,9 +65,9 @@ export const naturalLanguageQueryHandler: any = async (
     if (queryType === "structured") {
       const structuredQueryParams: StructuredQueryParams = buildStructuredQueryParamsFromParsedQuery(parsedQuery);
       console.log('Query parameters:', queryParameters);
-      const filterQueryResponse: FilterQueryResponse = await structuredQuery(structuredQueryParams);
-      console.log('Filter query response:', filterQueryResponse);
-      res.send({ result: 'success' });
+      const queryResponse: FilterQueryResponse = await structuredQuery(structuredQueryParams);
+      console.log('Filter query response:', queryResponse);
+      res.status(200).json({ result: queryResponse });
     }
     // const queryResults = await structuredQuery(req.body);
     // console.log(queryResults);
@@ -106,7 +106,8 @@ const buildStructuredQueryParamsFromParsedQuery = (parsedQuery: ParsedQuery): St
   }
 
   if (itemsOrdered) {
-    structuredQueryParams.itemsOrdered = [];
+    console.log('itemsOrdered:', itemsOrdered);
+    structuredQueryParams.itemsOrdered = itemsOrdered;
   }
 
   return structuredQueryParams;
