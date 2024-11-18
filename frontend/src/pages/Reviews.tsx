@@ -134,8 +134,32 @@ const ReviewsPage: React.FC = () => {
     setQuery(event.target.value);
   };
 
-  const handleFreeformQuery = async () => {
+  interface QueryRequestBody {
+    query: string;
+  }
+  
+  const handleNaturalLanguageQuery = async () => {
+
     console.log('Query:', query);
+
+    const queryRequestBody: QueryRequestBody = {
+      query,
+    };
+
+    try {
+      const apiResponse = await fetch('/api/reviews/naturalLanguageQuery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(queryRequestBody),
+      });
+      const data: any = await apiResponse.json();
+      console.log('Natural language query results:', data);
+      // setFilteredPlaces(data.places);
+      // setFilteredReviews(data.reviews);
+    } catch (error) {
+      console.error('Error handling query:', error);
+    }
+
   }
 
   const handleDistanceClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -588,7 +612,7 @@ const ReviewsPage: React.FC = () => {
             size="small"
             style={{ flex: 1 }}
           />
-          <Button variant="contained" color="primary" onClick={handleFreeformQuery}>
+          <Button variant="contained" color="primary" onClick={handleNaturalLanguageQuery}>
             Search
           </Button>
         </div>

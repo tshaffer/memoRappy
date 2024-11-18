@@ -7,6 +7,7 @@ import express from 'express';
 
 import { addReviewsFromFileHandler, filterReviewsHandler, getPlaces, getReviews } from './controllers';
 import { getCountsByWouldReturnHandler, queryReviews } from './controllers/queryReviews';
+import { naturalLanguageQueryHandler } from './controllers/naturalLanguageQuery';
 
 export let openai: OpenAI;
 
@@ -25,6 +26,7 @@ app.use(express.json());
 // routes
 app.get('/api/places', getPlaces);
 app.get('/api/reviews', getReviews);
+app.post('/api/reviews/naturalLanguageQuery', naturalLanguageQueryHandler);
 app.post('/api/reviews/queryReviews', queryReviews);
 app.post('/api/reviews/filterReviews', filterReviewsHandler);
 app.post('/api/reviews/addReviewsFromFile', addReviewsFromFileHandler);
