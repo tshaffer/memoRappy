@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Button, Popover, FormControlLabel, Checkbox, TextField, ToggleButton, ToggleButtonGroup, Slider, Switch, Radio } from '@mui/material';
-import { Coordinates, FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlace, MemoRappReview, WouldReturnQuery } from '../types';
+import { Coordinates, FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlace, MemoRappReview, QueryRequestBody, WouldReturnQuery } from '../types';
 import '../App.css';
 import { Autocomplete, Libraries, LoadScript } from '@react-google-maps/api';
 import MapWithMarkers from '../components/MapWIthMarkers';
@@ -43,30 +43,27 @@ const ReviewsPage: React.FC = () => {
   const [filteredPlaces, setFilteredPlaces] = useState<GooglePlace[]>([]);
   const [filteredReviews, setFilteredReviews] = useState<MemoRappReview[]>([]);
 
+  const [query, setQuery] = useState<string>("");
 
+  const [anchorElSetDistance, setAnchorElSetDistance] = useState<HTMLElement | null>(null);
+  const [distanceFilterEnabled, setDistanceFilterEnabled] = useState(false);
+  const [fromLocation, setFromLocation] = useState<'current' | 'specified'>('current');
+  const [fromLocationLocation, setFromLocationLocation] = useState<Coordinates>(DEFAULT_CENTER);
+  const [fromLocationDistance, setFromLocationDistance] = useState(5);
+  const fromLocationAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
-  const [selectedPlace, setSelectedPlace] = useState<GooglePlace | null>(null);
+  const [anchorElWouldReturn, setAnchorElWouldReturn] = useState<HTMLElement | null>(null);
   const [wouldReturnFilter, setWouldReturnFilter] = useState<WouldReturnQuery>({
     yes: false,
     no: false,
     notSpecified: false,
   });
-  const [anchorElSetDistance, setAnchorElSetDistance] = useState<HTMLElement | null>(null);
-  const [anchorElWouldReturn, setAnchorElWouldReturn] = useState<HTMLElement | null>(null);
-  const [query, setQuery] = useState<string>("");
-  const [showMap, setShowMap] = useState<boolean>(false);
 
-
-
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const [specifiedLocation, setSpecifiedLocation] = useState<Coordinates>(DEFAULT_CENTER);
-
-  const [distanceFilterEnabled, setDistanceFilterEnabled] = useState(false);
-  const [fromLocation, setFromLocation] = useState<'current' | 'specified'>('current');
-  const [fromLocationLocation, setFromLocationLocation] = useState<Coordinates>(DEFAULT_CENTER);
-  const [fromLocationDistance, setFromLocationDistance] = useState(5);
-
-  const fromLocationAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const [selectedPlace, setSelectedPlace] = useState<GooglePlace | null>(null);
+  
+  const [areaMapLocation, setAreaMapLocation] = useState<Coordinates>(DEFAULT_CENTER);
+  const [showAreaMap, setShowAreaMap] = useState<boolean>(false);
+  const areaMapAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   const libraries = ['places'] as Libraries;
 
@@ -134,8 +131,30 @@ const ReviewsPage: React.FC = () => {
     setQuery(event.target.value);
   };
 
-  const handleFreeformQuery = async () => {
+  const handleNaturalLanguageQuery = async () => {
+
     console.log('Query:', query);
+
+    const queryRequestBody: QueryRequestBody = {
+      query,
+    };
+
+    try {
+      const apiResponse = await fetch('/api/reviews/naturalLanguageQuery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(queryRequestBody),
+      });
+      const data  = await apiResponse.json();
+      console.log('Natural language query results:', data);
+      const { places, reviews } = data.result;
+      setPlaces(places);
+      setFilteredPlaces(places);
+      setReviews(reviews);
+      setFilteredReviews(reviews);
+    } catch (error) {
+      console.error('Error handling query:', error);
+    }
   }
 
   const handleDistanceClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -232,13 +251,13 @@ const ReviewsPage: React.FC = () => {
     const googlePlace: GooglePlace | undefined = places.find(place => place.place_id === placeId);
     if (googlePlace && googlePlace.geometry) {
       const geometry: GoogleGeometry = googlePlace.geometry!;
-      setSpecifiedLocation(
+      setAreaMapLocation(
         {
           lat: geometry.location.lat,
           lng: geometry.location.lng,
         }
       );
-      setShowMap(true);
+      setShowAreaMap(true);
     }
   };
 
@@ -254,22 +273,22 @@ const ReviewsPage: React.FC = () => {
 
   const handleTogglePanel = (_: React.MouseEvent<HTMLElement>, newView: string | null) => {
     if (newView === "map") {
-      setShowMap(true);
+      setShowAreaMap(true);
     } else if (newView === "details") {
-      setShowMap(false);
+      setShowAreaMap(false);
     }
   };
 
   const handlePlaceChanged = () => {
-    if (autocompleteRef.current) {
-      const place: google.maps.places.PlaceResult = autocompleteRef.current.getPlace();
+    if (areaMapAutocompleteRef.current) {
+      const place: google.maps.places.PlaceResult = areaMapAutocompleteRef.current.getPlace();
       if (place.geometry !== undefined) {
         const geometry: google.maps.places.PlaceGeometry = place.geometry!;
         const newCoordinates: Coordinates = {
           lat: geometry.location!.lat(),
           lng: geometry.location!.lng(),
         };
-        setSpecifiedLocation(newCoordinates);
+        setAreaMapLocation(newCoordinates);
         console.log("Place changed:", place, newCoordinates);
       }
     }
@@ -283,7 +302,7 @@ const ReviewsPage: React.FC = () => {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
-            setSpecifiedLocation(
+            setAreaMapLocation(
               {
                 lat: latitude,
                 lng: longitude,
@@ -306,8 +325,8 @@ const ReviewsPage: React.FC = () => {
   const renderMap = () => {
     return (
       <MapWithMarkers
-        key={JSON.stringify({ googlePlaces: places, specifiedLocation })} // Forces re-render on prop change
-        initialCenter={specifiedLocation}
+        key={JSON.stringify({ googlePlaces: places, specifiedLocation: areaMapLocation })} // Forces re-render on prop change
+        initialCenter={areaMapLocation}
         locations={places}
       />
     );
@@ -520,7 +539,7 @@ const ReviewsPage: React.FC = () => {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div>
           <ToggleButtonGroup
-            value={showMap ? "map" : "details"}
+            value={showAreaMap ? "map" : "details"}
             exclusive
             onChange={handleTogglePanel}
             style={{ marginBottom: '10px', display: 'flex', justifyContent: 'left' }}
@@ -532,10 +551,10 @@ const ReviewsPage: React.FC = () => {
               Reviews
             </ToggleButton>
           </ToggleButtonGroup>
-          {showMap ?
+          {showAreaMap ?
             (
               <Autocomplete
-                onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+                onLoad={(autocomplete) => (areaMapAutocompleteRef.current = autocomplete)}
                 onPlaceChanged={handlePlaceChanged}
               >
                 <input
@@ -560,7 +579,7 @@ const ReviewsPage: React.FC = () => {
         <div
           style={{ flex: 1 }}
         >
-          {showMap ? (
+          {showAreaMap ? (
             <Paper id='mapContainer' className="map-container">
               {renderMap()}
             </Paper>
@@ -588,7 +607,7 @@ const ReviewsPage: React.FC = () => {
             size="small"
             style={{ flex: 1 }}
           />
-          <Button variant="contained" color="primary" onClick={handleFreeformQuery}>
+          <Button variant="contained" color="primary" onClick={handleNaturalLanguageQuery}>
             Search
           </Button>
         </div>
