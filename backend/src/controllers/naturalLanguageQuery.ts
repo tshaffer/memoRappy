@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { openai } from '../index';
 import Review, { IReview } from '../models/Review';
 import { getCoordinates } from './googlePlaces';
+import MongoPlace, { IMongoPlace } from '../models/MongoPlace';
+import { DistanceAwayQuery, FilterQueryParams, FilterQueryResponse, WouldReturnQuery } from '../types';
 
 interface QueryRequestBody {
   query: string;
@@ -21,7 +23,7 @@ interface ParsedQuery {
   queryParameters: QueryParameters;
 }
 
-export const naturalLanguageQueryHandler: any = async (
+export const not_naturalLanguageQueryHandler: any = async (
   req: Request<{}, {}, QueryRequestBody>,
   res: Response
 ): Promise<void> => {
@@ -226,3 +228,131 @@ const performFullTextSearch = async (query: string, reviews: IReview[]): Promise
   return reviews.filter(review => review._id && relevantReviewIds.includes(review._id.toString()));
 };
 
+// interface NaturalLanguageQueryParams {
+//   location?: string;
+//   radius?: number;
+//   restaurantName?: string;
+//   dateRange?: any;
+//   wouldReturn?: boolean | null;
+//   itemsOrdered?: any;
+// };
+
+// interface NaturalLanguageQueryParams {
+//   distanceAwayQuery?: DistanceAwayQuery;
+//   wouldReturn?: WouldReturnQuery;
+//   placeName?: string; 
+//   reviewDateRange?: any;
+//   additionalPlaceFilters?: any; 
+//   additionalReviewFilters?: any;
+// };
+
+interface NaturalLanguageQueryParams {
+  distanceAwayQuery?: {
+    lat: number;
+    lng: number;
+    radius: number; // in miles
+  };
+  wouldReturn?: {
+    yes: boolean;
+    no: boolean;
+    notSpecified: boolean;
+  };
+  placeName?: string; // Partial name match for places
+  reviewDateRange?: {
+    start?: string; // ISO date string
+    end?: string;   // ISO date string
+  };
+  additionalPlaceFilters?: Record<string, any>; // Additional Mongo filters for places
+  additionalReviewFilters?: Record<string, any>; // Additional Mongo filters for reviews
+}
+
+export const naturalLanguageQueryHandler = async (queryParams: NaturalLanguageQueryParams): Promise<FilterQueryResponse> => {
+  const { 
+    distanceAwayQuery, 
+    wouldReturn, 
+    placeName, 
+    reviewDateRange, 
+    additionalPlaceFilters, 
+    additionalReviewFilters 
+  } = queryParams;
+  const { lat, lng, radius } = distanceAwayQuery || {};
+
+  try {
+    // Step 0: Initialize queries
+    let placeQuery: any = {};
+    let reviewQuery: any = {};
+
+    // Step 1: Construct the Would Return filter for reviews
+    if (wouldReturn) {
+      const returnFilter: (boolean | null)[] = [];
+      if (wouldReturn.yes) returnFilter.push(true);
+      if (wouldReturn.no) returnFilter.push(false);
+      if (wouldReturn.notSpecified) returnFilter.push(null);
+      reviewQuery['structuredReviewProperties.wouldReturn'] = { $in: returnFilter };
+    }
+
+    // Step 2: Add reviewDateRange filter if provided
+    if (reviewDateRange?.start || reviewDateRange?.end) {
+      reviewQuery['structuredReviewProperties.dateOfVisit'] = {};
+      if (reviewDateRange.start) {
+        reviewQuery['structuredReviewProperties.dateOfVisit'].$gte = reviewDateRange.start;
+      }
+      if (reviewDateRange.end) {
+        reviewQuery['structuredReviewProperties.dateOfVisit'].$lte = reviewDateRange.end;
+      }
+    }
+
+    // Step 3: Apply additional review filters if provided
+    if (additionalReviewFilters) {
+      Object.assign(reviewQuery, additionalReviewFilters);
+    }
+
+    // Fetch reviews matching reviewQuery
+    let reviews: IReview[] = await Review.find(reviewQuery);
+
+    // Step 4: Extract unique place IDs from the filtered reviews
+    const placeIdsWithReviews = Array.from(new Set(reviews.map((review) => review.place_id)));
+    if (placeIdsWithReviews.length === 0) {
+      return { places: [], reviews: [] };
+    }
+
+    // Step 5: Construct the Place query
+    if (lat !== undefined && lng !== undefined && radius !== undefined) {
+      placeQuery['geometry.location'] = {
+        $near: {
+          $geometry: { type: 'Point', coordinates: [lng, lat] },
+          $maxDistance: radius * 1609.34, // Convert miles to meters
+        },
+      };
+    }
+
+    // Add name filter if provided
+    if (placeName) {
+      placeQuery['name'] = { $regex: new RegExp(placeName, 'i') }; // Case-insensitive partial match
+    }
+
+    // Add additional place filters if provided
+    if (additionalPlaceFilters) {
+      Object.assign(placeQuery, additionalPlaceFilters);
+    }
+
+    // Restrict to places that have matching reviews
+    placeQuery['place_id'] = { $in: placeIdsWithReviews };
+
+    // Fetch places matching placeQuery
+    let places: IMongoPlace[] = await MongoPlace.find(placeQuery);
+
+    // Step 6: Refine reviews to only those belonging to filtered places
+    const filteredPlaceIds = places.map((place) => place.place_id);
+    reviews = reviews.filter((review) => filteredPlaceIds.includes(review.place_id));
+
+    // Combine results
+    return {
+      places,
+      reviews,
+    };
+  } catch (error) {
+    console.error('Error retrieving filtered places and reviews:', error);
+    throw new Error('Failed to retrieve filtered data.');
+  }
+};
