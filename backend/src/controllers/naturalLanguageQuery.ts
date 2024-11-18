@@ -72,13 +72,19 @@ export const naturalLanguageQueryHandler: any = async (
 
     console.log('Query parameters:', queryParameters);
     console.log('Parsed query:', parsedQuery);
-    // let reviews: IReview[] = [];
+    let reviews: IReview[] = [];
 
     if (queryType === "structured") {
       const structuredQueryParams: StructuredQueryParams = buildStructuredQueryParamsFromParsedQuery(parsedQuery);
       console.log('Structured query params:', structuredQueryParams);
-      // res.status(200).json({ result: { queryParameters, structuredQueryParams }});
       const queryResponse: FilterQueryResponse = await structuredQuery(structuredQueryParams);
+      console.log('Filter query response:', queryResponse);
+      res.status(200).json({ result: queryResponse });
+
+    } else if (queryType === "full-text") {
+      const places = await MongoPlace.find({});
+      const reviews = await Review.find({});
+      const queryResponse: FilterQueryResponse = await performNaturalLanguageQuery(query, places, reviews);
       console.log('Filter query response:', queryResponse);
       res.status(200).json({ result: queryResponse });
     }
@@ -89,7 +95,7 @@ export const naturalLanguageQueryHandler: any = async (
 };
 
 
-const buildStructuredQueryParamsFromParsedQuery = (parsedQuery: ParsedQuery): StructuredQueryParams => {  
+const buildStructuredQueryParamsFromParsedQuery = (parsedQuery: ParsedQuery): StructuredQueryParams => {
   const { queryParameters } = parsedQuery;
   const { location, radius, restaurantName, dateRange, wouldReturn, itemsOrdered } = queryParameters;
   const structuredQueryParams: StructuredQueryParams = {};
@@ -115,7 +121,7 @@ const buildStructuredQueryParamsFromParsedQuery = (parsedQuery: ParsedQuery): St
   }
 
   return structuredQueryParams;
-} 
+}
 
 const handleNaturalLanguageQuery = async (query: string): Promise<IReview[]> => {
   try {
@@ -238,7 +244,7 @@ const performStructuredQuery = async (parameters: QueryParameters): Promise<IRev
       $elemMatch: { item: { $regex: new RegExp(itemsOrdered.join("|"), "i") } }
     };
   }
-  
+
   if (dateRange) {
     const { start, end } = dateRange;
 
@@ -258,7 +264,7 @@ const performStructuredQuery = async (parameters: QueryParameters): Promise<IRev
   } else {
     query.wouldReturn = null;
   }
-    
+
   console.log('Structured query:', query);
   const results: IReview[] = await Review.find(query);
   console.log('Structured results:', results);
@@ -307,14 +313,14 @@ const performFullTextSearch = async (query: string, reviews: IReview[]): Promise
 };
 
 const structuredQuery = async (queryParams: StructuredQueryParams): Promise<FilterQueryResponse> => {
-  const { 
-    distanceAwayQuery, 
-    wouldReturn, 
-    placeName, 
-    reviewDateRange, 
-    itemsOrdered, 
-    additionalPlaceFilters, 
-    additionalReviewFilters 
+  const {
+    distanceAwayQuery,
+    wouldReturn,
+    placeName,
+    reviewDateRange,
+    itemsOrdered,
+    additionalPlaceFilters,
+    additionalReviewFilters
   } = queryParams;
   const { lat, lng, radius } = distanceAwayQuery || {};
 
@@ -404,3 +410,81 @@ const structuredQuery = async (queryParams: StructuredQueryParams): Promise<Filt
     throw new Error('Failed to retrieve filtered data.');
   }
 };
+
+const performNaturalLanguageQuery = async (
+  query: string,
+  places: IMongoPlace[],
+  reviews: IReview[]
+): Promise<FilterQueryResponse> => {
+  console.log("performNaturalLanguageQuery:", query);
+
+  // Step 1: Prepare data for OpenAI query
+  const placeData = places.map(place => ({
+    id: place.place_id,
+    name: place.name,
+    address: place.formatted_address,
+    location: place.geometry?.location,
+  }));
+
+  const reviewData = reviews.map(review => ({
+    id: review._id,
+    text: review.freeformReviewProperties.reviewText,
+    dateOfVisit: review.structuredReviewProperties.dateOfVisit,
+    wouldReturn: review.structuredReviewProperties.wouldReturn,
+    place_id: review.place_id,
+  }));
+
+  // Step 2: Call OpenAI API
+  const response = await openai.chat.completions.create({
+    model: "gpt-4",
+    messages: [
+      {
+        role: "system",
+        content: `You are a helpful assistant that retrieves relevant places and reviews based on a natural language query. Respond with JSON data only, without additional commentary.`,
+      },
+      {
+        role: "user",
+        content: `Find relevant places and reviews for the query: "${query}". 
+        The places are: ${JSON.stringify(placeData)}. 
+        The reviews are: ${JSON.stringify(reviewData)}.
+
+        Return the results in the following JSON format:
+        {
+          "places": [
+            { "id": "place_id_1" },
+            { "id": "place_id_2" },
+            ...
+          ],
+          "reviews": [
+            { "id": "review_id_1" },
+            { "id": "review_id_2" },
+            ...
+          ]
+        }`,
+      },
+    ],
+  });
+
+  // Step 3: Parse the JSON response
+  const result = JSON.parse(response.choices[0].message?.content || "{}");
+  const relevantPlaceIds = result.places?.map((place: { id: string }) => place.id) || [];
+  const relevantReviewIds = result.reviews?.map((review: { id: string }) => review.id) || [];
+
+  // Step 4: Filter places and reviews based on IDs
+  const filteredPlaces = places.filter(place => relevantPlaceIds.includes(place.place_id));
+  const filteredReviews = reviews.filter(review => relevantReviewIds.includes(review._id!.toString()));
+
+  // Step 5: Return the filtered data
+  return {
+    places: filteredPlaces,
+    reviews: filteredReviews,
+  };
+};
+
+// const query = "Show me reviews for places near San Francisco where I would return.";
+// const places = await MongoPlace.find({});
+// const reviews = await Review.find({});
+
+// const result = await performNaturalLanguageQuery(query, places, reviews);
+
+// console.log(result);
