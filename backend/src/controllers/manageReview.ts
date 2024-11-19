@@ -3,7 +3,7 @@ import { openai } from '../index';
 import { Request, Response } from 'express';
 import Review, { IReview } from "../models/Review";
 import { extractFieldFromResponse, extractItemReviews, removeSquareBrackets } from '../utilities';
-import { FreeformReviewProperties, ItemReview, MemoRappReview, PreviewRequestBody, SubmitReviewBody } from '../types';
+import { FreeformReviewProperties, ItemReview, MemoRappReview, PreviewRequestBody, PreviewResponse, SubmitReviewBody } from '../types';
 import { addPlace, getPlace } from './places';
 import { IMongoPlace } from '../models';
 import { addReview } from './reviews';
@@ -24,16 +24,15 @@ export const previewReviewHandler = async (
   const { reviewText, sessionId } = req.body;
 
   try {
-    const parsedReviewProperties: FreeformReviewProperties = await parsePreview(sessionId, reviewText);
-    console.log('parsedReviewProperties:', parsedReviewProperties); // Debugging log
-    // return res.sendStatus(200);
-    return res.json({ parsedReviewProperties });
+    const freeformReviewProperties: FreeformReviewProperties = await parsePreview(sessionId, reviewText);
+    console.log('freeformReviewProperties:', freeformReviewProperties); // Debugging log
+    const previewResponse: PreviewResponse = { freeformReviewProperties };
+    return res.json({ previewResponse });
   } catch (error) {
     console.error('Error processing review preview:', error);
     return res.status(500).json({ error: 'An error occurred while processing the review preview.' });
   }
 };
-
 
 export const parsePreview = async (sessionId: string, reviewText: string): Promise<FreeformReviewProperties> => {
 

@@ -49,3 +49,7 @@ export interface MemoRappPlace {
 export interface QueryRequestBody {
   query: string;
 }
+
+export interface PreviewResponse {
+  freeformReviewProperties: FreeformReviewProperties;
+}

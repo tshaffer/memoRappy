@@ -18,31 +18,45 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { LoadScript, Autocomplete, Libraries } from '@react-google-maps/api';
-import { ReviewFormDisplayTabs, ChatResponse, GooglePlace, FreeformReviewProperties, PreviewRequestBody, ReviewEntity, SubmitReviewBody, StructuredReviewProperties, MemoRappReview, EditableReview } from '../types';
+import { ReviewFormDisplayTabs, ChatResponse, GooglePlace, FreeformReviewProperties, PreviewRequestBody, ReviewEntity, SubmitReviewBody, StructuredReviewProperties, MemoRappReview, EditableReview, PreviewResponse } from '../types';
 import { pickGooglePlaceProperties } from '../utilities';
+
+interface LocationState {
+  editableReview: EditableReview;
+}
+
+type ChatMessage = {
+  role: 'user' | 'ai';
+  message: string | FreeformReviewProperties;
+};
+
 const libraries = ['places'] as Libraries;
 
 const ReviewForm: React.FC = () => {
 
   const { _id } = useParams<{ _id: string }>();
+
   const location = useLocation();
+  const locationState = location.state as LocationState | null;
 
   let editableReview: EditableReview | null = null;
   let place: GooglePlace | null = null;
   let review: MemoRappReview | null = null;
-  if (location.state) {
-    editableReview = location.state as EditableReview;
+  if (locationState) {
+    editableReview = locationState.editableReview;
     place = editableReview.place;
     review = editableReview.review;
   }
 
-  const formatDateToMMDDYYYY = (dateString: string) => {
+  const generateSessionId = (): string => Math.random().toString(36).substring(2) + Date.now().toString(36);
+
+  const formatDateToMMDDYYYY = (dateString: string): string => {
     if (!dateString) return '';
     const [year, month, day] = dateString.split('-');
     return `${month}/${day}/${year}`;
   };
 
-  const getFormattedDate = () => {
+  const getFormattedDate = (): string => {
     const today = new Date();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
@@ -60,7 +74,7 @@ const ReviewForm: React.FC = () => {
   const [freeformReviewProperties, setFreeformReviewProperties] = useState<FreeformReviewProperties | null>(null);
   const [displayTab, setDisplayTab] = useState(ReviewFormDisplayTabs.ReviewText);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | FreeformReviewProperties }[]>([]);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
@@ -87,7 +101,7 @@ const ReviewForm: React.FC = () => {
   }, [place, review]);
 
 
-  const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setDisplayTab(newValue);
   };
 
@@ -138,9 +152,9 @@ const ReviewForm: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(previewBody),
       });
-      const data = await response.json();
-      setFreeformReviewProperties(data.parsedReviewProperties);
-      setChatHistory([...chatHistory, { role: 'user', message: reviewText }, { role: 'ai', message: data.parsedReviewProperties }]);
+      const data: PreviewResponse = await response.json();
+      setFreeformReviewProperties(data.freeformReviewProperties);
+      setChatHistory([...chatHistory, { role: 'user', message: reviewText }, { role: 'ai', message: data.freeformReviewProperties }]);
       setDisplayTab(1);
     } catch (error) {
       console.error('Error previewing review:', error);
@@ -152,17 +166,17 @@ const ReviewForm: React.FC = () => {
     if (!sessionId || !chatInput) return;
     try {
       setIsLoading(true);
-      const response = await fetch('/api/reviews/chat', {
+      const response: Response = await fetch('/api/reviews/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userInput: chatInput, sessionId, reviewText }),
       });
-      const chatResponse: ChatResponse = await response.json();
-      const { parsedReviewProperties, updatedReviewText } = chatResponse;
+      const chatResponse: ChatResponse = (await response.json()) as ChatResponse;
+      const { freeformReviewProperties, updatedReviewText } = chatResponse;
 
-      setFreeformReviewProperties(parsedReviewProperties);
+      setFreeformReviewProperties(freeformReviewProperties);
       setReviewText(updatedReviewText);
-      setChatHistory([...chatHistory, { role: 'user', message: chatInput }, { role: 'ai', message: parsedReviewProperties }]);
+      setChatHistory([...chatHistory, { role: 'user', message: chatInput }, { role: 'ai', message: freeformReviewProperties }]);
       setChatInput('');
       setDisplayTab(2);
     } catch (error) {
@@ -209,9 +223,7 @@ const ReviewForm: React.FC = () => {
     setIsLoading(false);
   };
 
-  const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
-
-  const renderPreviewResponse = (parsedReviewProperties: FreeformReviewProperties) => {
+  const renderPreviewResponse = (freeformReviewProperties: FreeformReviewProperties): JSX.Element => {
     const place: GooglePlace = googlePlace!;
     const getReturnString = () => {
       if (wouldReturn === true) return 'Yes';
@@ -225,14 +237,14 @@ const ReviewForm: React.FC = () => {
         <Typography><strong>Would Return:</strong> {getReturnString()}</Typography>
         <Typography><strong>Items Ordered:</strong></Typography>
         <ul>
-          {parsedReviewProperties.itemReviews.map((itemReview, idx) => (
+          {freeformReviewProperties.itemReviews.map((itemReview, idx) => (
             <li key={idx}>
               {itemReview.item} - {itemReview.review || 'No rating provided'}
             </li>
           ))}
         </ul>
         <Typography><strong>Retrieved Location:</strong>{place?.formatted_address}</Typography>
-        <Typography><strong>Reviewer:</strong> {parsedReviewProperties.reviewer || 'Not provided'}</Typography>
+        <Typography><strong>Reviewer:</strong> {freeformReviewProperties.reviewer || 'Not provided'}</Typography>
       </Box>
     )
   };
