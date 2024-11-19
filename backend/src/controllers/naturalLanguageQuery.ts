@@ -2,7 +2,7 @@ import { Request, response, Response } from 'express';
 import { openai } from '../index';
 import Review, { IReview } from '../models/Review';
 import MongoPlace, { IMongoPlace } from '../models/MongoPlace';
-import { FilterResponse, GooglePlace, MemoRappReview, QueryResponse } from '../types';
+import { FilterResponse, GooglePlace, MemoRappReview, QueryRequestBody, QueryResponse } from '../types';
 import { convertMongoPlacesToGooglePlaces } from '../utilities';
 
 interface DateRange {
@@ -38,10 +38,6 @@ interface StructuredQueryParams {
   itemsOrdered?: string[]; // Array of item names for filtering reviews
   additionalPlaceFilters?: Record<string, any>; // Additional Mongo filters for places
   additionalReviewFilters?: Record<string, any>; // Additional Mongo filters for reviews
-}
-
-interface QueryRequestBody {
-  query: string;
 }
 
 interface ParsedQuery {

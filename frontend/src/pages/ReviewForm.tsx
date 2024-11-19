@@ -18,23 +18,43 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { LoadScript, Autocomplete, Libraries } from '@react-google-maps/api';
-import { ReviewFormDisplayTabs, ChatResponse, GooglePlace, ParsedReviewProperties, PreviewRequestBody, ReviewEntity, ReviewEntityWithFullText, SubmitReviewBody } from '../types';
+import { ReviewFormDisplayTabs, ChatResponse, GooglePlace, FreeformReviewProperties, PreviewRequestBody, ReviewEntity, SubmitReviewBody, StructuredReviewProperties, MemoRappReview, EditableReview, PreviewResponse } from '../types';
 import { pickGooglePlaceProperties } from '../utilities';
+
+interface LocationState {
+  editableReview: EditableReview;
+}
+
+type ChatMessage = {
+  role: 'user' | 'ai';
+  message: string | FreeformReviewProperties;
+};
+
 const libraries = ['places'] as Libraries;
 
 const ReviewForm: React.FC = () => {
 
   const { _id } = useParams<{ _id: string }>();
-  const location = useLocation();
-  const review: ReviewEntityWithFullText = location.state?.review;
 
-  const formatDateToMMDDYYYY = (dateString: string) => {
+  const location = useLocation();
+  const editableReview = location.state as EditableReview | null;
+
+  let place: GooglePlace | null = null;
+  let review: MemoRappReview | null = null;
+  if (editableReview) {
+    place = editableReview.place;
+    review = editableReview.review;
+  }
+
+  const generateSessionId = (): string => Math.random().toString(36).substring(2) + Date.now().toString(36);
+
+  const formatDateToMMDDYYYY = (dateString: string): string => {
     if (!dateString) return '';
     const [year, month, day] = dateString.split('-');
     return `${month}/${day}/${year}`;
   };
 
-  const getFormattedDate = () => {
+  const getFormattedDate = (): string => {
     const today = new Date();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
@@ -49,10 +69,10 @@ const ReviewForm: React.FC = () => {
   const [dateOfVisit, setDateOfVisit] = useState('');
   const [reviewText, setReviewText] = useState('');
   const [wouldReturn, setWouldReturn] = useState<boolean | null>(null); // New state
-  const [parsedReviewProperties, setParsedReviewProperties] = useState<ParsedReviewProperties | null>(null);
+  const [freeformReviewProperties, setFreeformReviewProperties] = useState<FreeformReviewProperties | null>(null);
   const [displayTab, setDisplayTab] = useState(ReviewFormDisplayTabs.ReviewText);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | ParsedReviewProperties }[]>([]);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
@@ -64,18 +84,22 @@ const ReviewForm: React.FC = () => {
   }, [sessionId]);
 
   useEffect(() => {
-    if (review) {
-      setGooglePlace(review.googlePlace);
-      setRestaurantLabel(review.googlePlace.name);
-      setDateOfVisit(review.dateOfVisit);
-      setReviewText(review.reviewText);
-      setWouldReturn(review.wouldReturn);
-      setParsedReviewProperties({ itemReviews: review.itemReviews, reviewer: review.reviewer });
+    if (place && review) {
+      setGooglePlace(place);
+      setRestaurantLabel(place.name);
+      setDateOfVisit(review.structuredReviewProperties.dateOfVisit);
+      setReviewText(review.freeformReviewProperties.reviewText);
+      setWouldReturn(review.structuredReviewProperties.wouldReturn);
+      setFreeformReviewProperties({
+        itemReviews: review.freeformReviewProperties.itemReviews,
+        reviewer: review.freeformReviewProperties.reviewer,
+        reviewText: review.freeformReviewProperties.reviewText
+      });
     }
-  }, [review]);
+  }, [place, review]);
 
 
-  const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setDisplayTab(newValue);
   };
 
@@ -126,9 +150,9 @@ const ReviewForm: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(previewBody),
       });
-      const data = await response.json();
-      setParsedReviewProperties(data.parsedReviewProperties);
-      setChatHistory([...chatHistory, { role: 'user', message: reviewText }, { role: 'ai', message: data.parsedReviewProperties }]);
+      const data: PreviewResponse = await response.json();
+      setFreeformReviewProperties(data.freeformReviewProperties);
+      setChatHistory([...chatHistory, { role: 'user', message: reviewText }, { role: 'ai', message: data.freeformReviewProperties }]);
       setDisplayTab(1);
     } catch (error) {
       console.error('Error previewing review:', error);
@@ -140,17 +164,17 @@ const ReviewForm: React.FC = () => {
     if (!sessionId || !chatInput) return;
     try {
       setIsLoading(true);
-      const response = await fetch('/api/reviews/chat', {
+      const response: Response = await fetch('/api/reviews/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userInput: chatInput, sessionId, reviewText }),
       });
-      const chatResponse: ChatResponse = await response.json();
-      const { parsedReviewProperties, updatedReviewText } = chatResponse;
+      const chatResponse: ChatResponse = (await response.json()) as ChatResponse;
+      const { freeformReviewProperties, updatedReviewText } = chatResponse;
 
-      setParsedReviewProperties(parsedReviewProperties);
+      setFreeformReviewProperties(freeformReviewProperties);
       setReviewText(updatedReviewText);
-      setChatHistory([...chatHistory, { role: 'user', message: chatInput }, { role: 'ai', message: parsedReviewProperties }]);
+      setChatHistory([...chatHistory, { role: 'user', message: chatInput }, { role: 'ai', message: freeformReviewProperties }]);
       setChatInput('');
       setDisplayTab(2);
     } catch (error) {
@@ -160,16 +184,27 @@ const ReviewForm: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!parsedReviewProperties) return;
+    if (!freeformReviewProperties) return;
     try {
       setIsLoading(true);
+
+      console.log('googlePlace', googlePlace);
+      console.log('freeformReviewProperties', freeformReviewProperties);
+      console.log('wouldReturn', wouldReturn);
+      console.log('sessionId', sessionId);
+      console.log('reviewText', reviewText);
+      const structuredReviewProperties: StructuredReviewProperties = { dateOfVisit, wouldReturn };
+      console.log('structuredReviewProperties:', structuredReviewProperties);
+
       const submitBody: SubmitReviewBody = {
         _id,
-        structuredReviewProperties: { googlePlace: googlePlace as GooglePlace, dateOfVisit, wouldReturn },
-        parsedReviewProperties,
+        place: googlePlace!,
+        structuredReviewProperties,
+        freeformReviewProperties,
         reviewText,
         sessionId: sessionId!,
       };
+      console.log('submitBody:', submitBody);
 
       const response = await fetch('/api/reviews/submit', {
         method: 'POST',
@@ -180,26 +215,13 @@ const ReviewForm: React.FC = () => {
       });
       const data = await response.json();
       console.log('Review submitted:', data);
-      // resetForm();
     } catch (error) {
       console.error('Error submitting review:', error);
     }
     setIsLoading(false);
   };
 
-  // const resetForm = () => {
-  //   setRestaurantName('');
-  //   setReviewText('');
-  //   setParsedDetails(null);
-  //   setPlaceVerified(null);
-  //   setGoogleLocation(null);
-  //   setSessionId(generateSessionId());
-  //   setChatHistory([]);
-  // };
-
-  const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
-
-  const renderPreviewResponse = (parsedReviewProperties: ParsedReviewProperties) => {
+  const renderPreviewResponse = (freeformReviewProperties: FreeformReviewProperties): JSX.Element => {
     const place: GooglePlace = googlePlace!;
     const getReturnString = () => {
       if (wouldReturn === true) return 'Yes';
@@ -213,14 +235,14 @@ const ReviewForm: React.FC = () => {
         <Typography><strong>Would Return:</strong> {getReturnString()}</Typography>
         <Typography><strong>Items Ordered:</strong></Typography>
         <ul>
-          {parsedReviewProperties.itemReviews.map((itemReview, idx) => (
+          {freeformReviewProperties.itemReviews.map((itemReview, idx) => (
             <li key={idx}>
               {itemReview.item} - {itemReview.review || 'No rating provided'}
             </li>
           ))}
         </ul>
         <Typography><strong>Retrieved Location:</strong>{place?.formatted_address}</Typography>
-        <Typography><strong>Reviewer:</strong> {parsedReviewProperties.reviewer || 'Not provided'}</Typography>
+        <Typography><strong>Reviewer:</strong> {freeformReviewProperties.reviewer || 'Not provided'}</Typography>
       </Box>
     )
   };
@@ -312,7 +334,7 @@ const ReviewForm: React.FC = () => {
               />
             </Box>
           )}
-          {displayTab === ReviewFormDisplayTabs.ExtractedInformation && parsedReviewProperties && renderPreviewResponse(parsedReviewProperties)}
+          {displayTab === ReviewFormDisplayTabs.ExtractedInformation && freeformReviewProperties && renderPreviewResponse(freeformReviewProperties)}
           {displayTab === ReviewFormDisplayTabs.ChatHistory && (
             <Box>
               {chatHistory.map((msg, idx) => (
@@ -382,7 +404,7 @@ const ReviewForm: React.FC = () => {
               color="primary"
               fullWidth
               onClick={handleSubmit}
-              disabled={!parsedReviewProperties}
+              disabled={!freeformReviewProperties}
             >
               Submit
             </Button>

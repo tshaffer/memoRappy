@@ -5,8 +5,7 @@ import OpenAI from 'openai';
 import mongoose from 'mongoose';
 import express from 'express';
 
-import { addReviewsFromFileHandler, filterReviewsHandler, getPlaces, getReviews } from './controllers';
-import { getCountsByWouldReturnHandler, queryReviews } from './controllers/queryReviews';
+import { addReviewsFromFileHandler, filterReviewsHandler, getPlaces, getReviews, previewReviewHandler, submitReviewHandler } from './controllers';
 import { naturalLanguageQueryHandler } from './controllers/naturalLanguageQuery';
 
 export let openai: OpenAI;
@@ -26,12 +25,11 @@ app.use(express.json());
 // routes
 app.get('/api/places', getPlaces);
 app.get('/api/reviews', getReviews);
+app.post('/api/reviews/preview', previewReviewHandler);
+app.post('/api/reviews/submit', submitReviewHandler);
 app.post('/api/reviews/naturalLanguageQuery', naturalLanguageQueryHandler);
-app.post('/api/reviews/queryReviews', queryReviews);
 app.post('/api/reviews/filterReviews', filterReviewsHandler);
 app.post('/api/reviews/addReviewsFromFile', addReviewsFromFileHandler);
-
-app.post('/api/reviews/getCountsByWouldReview', getCountsByWouldReturnHandler);
 
 // Serve static files from the frontend build directory, adjusted for production
 const frontendPath = process.env.NODE_ENV === 'production'

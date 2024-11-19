@@ -1,16 +1,38 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import { openai } from '../index';
-// import { FreeformReviewProperties, SubmitReviewBody, ItemReview, MongoGeometry, MongoPlace, MongoReviewEntityWithFullText } from '../types';
+import { Request, Response } from 'express';
 import Review, { IReview } from "../models/Review";
 import { extractFieldFromResponse, extractItemReviews, removeSquareBrackets } from '../utilities';
-import { getMongoGeometryFromGoogleGeometry } from './googlePlaces';
-import { FreeformReviewProperties, ItemReview } from '../types';
+import { FreeformReviewProperties, ItemReview, MemoRappReview, PreviewRequestBody, PreviewResponse, SubmitReviewBody } from '../types';
+import { addPlace, getPlace } from './places';
+import { IMongoPlace } from '../models';
+import { addReview } from './reviews';
 
 // Store conversations for each session
 interface ReviewConversations {
   [sessionId: string]: ChatCompletionMessageParam[];
 }
 const reviewConversations: ReviewConversations = {};
+
+export const previewReviewHandler = async (
+  req: Request<{}, {}, PreviewRequestBody>,
+  res: Response
+): Promise<any> => {
+
+  console.log('Preview review request:', req.body); // Debugging log
+
+  const { reviewText, sessionId } = req.body;
+
+  try {
+    const freeformReviewProperties: FreeformReviewProperties = await parsePreview(sessionId, reviewText);
+    console.log('freeformReviewProperties:', freeformReviewProperties); // Debugging log
+    const previewResponse: PreviewResponse = { freeformReviewProperties };
+    return res.json(previewResponse);
+  } catch (error) {
+    console.error('Error processing review preview:', error);
+    return res.status(500).json({ error: 'An error occurred while processing the review preview.' });
+  }
+};
 
 export const parsePreview = async (sessionId: string, reviewText: string): Promise<FreeformReviewProperties> => {
 
@@ -67,54 +89,60 @@ export const parsePreview = async (sessionId: string, reviewText: string): Promi
   }
 }
 
-// export const submitReview = async (body: SubmitReviewBody) => {
-//   const { _id, structuredReviewProperties, parsedReviewProperties, reviewText, sessionId } = body;
+export const submitReviewHandler = async (req: Request, res: Response): Promise<any> => {
 
-//   if (!structuredReviewProperties || !parsedReviewProperties || !reviewText || !sessionId) {
-//     throw new Error('Incomplete review data.');
-//   }
+  const body: SubmitReviewBody = req.body;
 
-//   const { googlePlace, dateOfVisit, wouldReturn } = structuredReviewProperties;
-//   const { itemReviews, reviewer } = parsedReviewProperties;
+  try {
+    const newReview = await submitReview(body);
+    return res.status(201).json({ message: 'Review saved successfully!', review: newReview });
+  } catch (error) {
+    console.error('Error saving review:', error);
+    return res.status(500).json({ error: 'An error occurred while saving the review.' });
+  }
+};
 
-//   // Convert geometry from Google format to Mongoose format
-//   const mongoGeometry: MongoGeometry = getMongoGeometryFromGoogleGeometry(googlePlace.geometry!);
-//   const mongoPlace: MongoPlace = { ...googlePlace, geometry: mongoGeometry };
+export const submitReview = async (memoRappReview: SubmitReviewBody): Promise<IReview | null> => {
 
-//   try {
-//     const reviewData: MongoReviewEntityWithFullText = {
-//       mongoPlace,
-//       dateOfVisit,
-//       wouldReturn,
-//       itemReviews,
-//       reviewer,
-//       reviewText
-//     };
+  const { _id, place, structuredReviewProperties, freeformReviewProperties, sessionId } = memoRappReview;
+  const place_id = place.place_id;
 
-//     let savedReview: IReview | null;
+  let mongoPlace: IMongoPlace | null = await getPlace(place_id);
+  console.log('place:', place);
+  if (!mongoPlace) {
+    mongoPlace = await addPlace(place);
+    if (!place) {
+      throw new Error('Error saving place.');
+    }
+  }
 
-//     if (_id) {
-//       // If _id is provided, update the existing document
-//       savedReview = await Review.findByIdAndUpdate(_id, reviewData, {
-//         new: true,    // Return the updated document
-//         runValidators: true // Ensure the updated data complies with schema validation
-//       });
+  const addReviewBody: MemoRappReview = {
+    place_id: place.place_id,
+    structuredReviewProperties,
+    freeformReviewProperties,
+  };
 
-//       if (!savedReview) {
-//         throw new Error('Review not found for update.');
-//       }
-//     } else {
-//       // If no _id, create a new document
-//       const newReview = new Review(reviewData);
-//       savedReview = await newReview.save();
-//     }
+  let savedReview: IReview | null;
 
-//     // Clear conversation history for the session after submission
-//     delete reviewConversations[sessionId];
+  if (_id) {
+    // If _id is provided, update the existing document
+    savedReview = await Review.findByIdAndUpdate(_id, addReviewBody, {
+      new: true,    // Return the updated document
+      runValidators: true // Ensure the updated data complies with schema validation
+    });
 
-//     return savedReview;
-//   } catch (error) {
-//     console.error('Error saving review:', error);
-//     throw new Error('An error occurred while saving the review.');
-//   }
-// };
+    if (!savedReview) {
+      throw new Error('Review not found for update.');
+    }
+  } else {
+    const newReview: IReview | null = await addReview(addReviewBody);
+    console.log('newReview:', newReview?.toObject());
+  }
+
+  // Clear conversation history for the session after submission
+  delete reviewConversations[sessionId];
+
+  return null;
+  // const newReview: IReview = new Review(memoRappReview);
+
+}

@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Button, Popover, FormControlLabel, Checkbox, TextField, ToggleButton, ToggleButtonGroup, Slider, Switch, Radio } from '@mui/material';
-import { Coordinates, FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlace, MemoRappReview, QueryRequestBody, WouldReturnQuery } from '../types';
+import { useNavigate } from 'react-router-dom';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Button, Popover, FormControlLabel, Checkbox, TextField, ToggleButton, ToggleButtonGroup, Slider, Switch, Radio, Tooltip } from '@mui/material';
+
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+
+import { FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlace, MemoRappReview, QueryRequestBody, WouldReturnQuery } from '../types';
 import '../App.css';
 import { Autocomplete, Libraries, LoadScript } from '@react-google-maps/api';
 import MapWithMarkers from '../components/MapWIthMarkers';
@@ -17,7 +22,7 @@ interface WouldReturnCounts {
   nullCount: number;
 }
 
-const DEFAULT_CENTER: Coordinates = { lat: 37.3944829, lng: -122.0790619 };
+const DEFAULT_CENTER: google.maps.LatLngLiteral = { lat: 37.3944829, lng: -122.0790619 };
 
 const smallColumnStyle: React.CSSProperties = {
   width: '35px',
@@ -35,7 +40,9 @@ const thumbsStyle: React.CSSProperties = {
 
 const ReviewsPage: React.FC = () => {
 
-  const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
+  const navigate = useNavigate();
+
+  const [currentLocation, setCurrentLocation] = useState<google.maps.LatLngLiteral | null>(null);
 
   const [reviews, setReviews] = useState<MemoRappReview[]>([]);
   const [places, setPlaces] = useState<GooglePlace[]>([]);
@@ -48,7 +55,7 @@ const ReviewsPage: React.FC = () => {
   const [anchorElSetDistance, setAnchorElSetDistance] = useState<HTMLElement | null>(null);
   const [distanceFilterEnabled, setDistanceFilterEnabled] = useState(false);
   const [fromLocation, setFromLocation] = useState<'current' | 'specified'>('current');
-  const [fromLocationLocation, setFromLocationLocation] = useState<Coordinates>(DEFAULT_CENTER);
+  const [fromLocationLocation, setFromLocationLocation] = useState<google.maps.LatLngLiteral>(DEFAULT_CENTER);
   const [fromLocationDistance, setFromLocationDistance] = useState(5);
   const fromLocationAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
@@ -60,8 +67,8 @@ const ReviewsPage: React.FC = () => {
   });
 
   const [selectedPlace, setSelectedPlace] = useState<GooglePlace | null>(null);
-  
-  const [areaMapLocation, setAreaMapLocation] = useState<Coordinates>(DEFAULT_CENTER);
+
+  const [areaMapLocation, setAreaMapLocation] = useState<google.maps.LatLngLiteral>(DEFAULT_CENTER);
   const [showAreaMap, setShowAreaMap] = useState<boolean>(false);
   const areaMapAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
@@ -98,6 +105,10 @@ const ReviewsPage: React.FC = () => {
     fetchPlaces();
     fetchReviews();
   }, []);
+
+  const getPlaceById = (placeId: string): GooglePlace | undefined => {
+    return places.find((place: GooglePlace) => place.place_id === placeId);
+  }
 
   const getFilteredReviewsForPlace = (placeId: string): MemoRappReview[] => {
     return filteredReviews.filter((memoRappReview: MemoRappReview) => memoRappReview.place_id === placeId);
@@ -145,7 +156,7 @@ const ReviewsPage: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(queryRequestBody),
       });
-      const data  = await apiResponse.json();
+      const data = await apiResponse.json();
       console.log('Natural language query results:', data);
       const { places, reviews } = data.result;
       setPlaces(places);
@@ -279,12 +290,26 @@ const ReviewsPage: React.FC = () => {
     }
   };
 
+  const handleEditReview = (review: MemoRappReview) => {
+    console.log('handleEditReview', review);
+    const place: GooglePlace | undefined = getPlaceById(review.place_id);
+    if (!place) {
+      console.error('Place not found for review:', review);
+      return;
+    }
+    navigate(`/add-review/${review._id}`, { state: { place, review } });
+  }
+
+  const handleDeleteReview = (review: MemoRappReview) => {
+    console.log('handleDeleteReview', review);
+  }
+
   const handlePlaceChanged = () => {
     if (areaMapAutocompleteRef.current) {
       const place: google.maps.places.PlaceResult = areaMapAutocompleteRef.current.getPlace();
       if (place.geometry !== undefined) {
         const geometry: google.maps.places.PlaceGeometry = place.geometry!;
-        const newCoordinates: Coordinates = {
+        const newCoordinates: google.maps.LatLngLiteral = {
           lat: geometry.location!.lat(),
           lng: geometry.location!.lng(),
         };
@@ -308,7 +333,7 @@ const ReviewsPage: React.FC = () => {
                 lng: longitude,
               }
             );
-            console.log("Current Location Coordinates:", { latitude, longitude });
+            console.log("Current Location google.maps.LatLngLiteral:", { latitude, longitude });
 
             // Optionally, you can use reverse geocoding here to convert coordinates to an address
           },
@@ -334,9 +359,21 @@ const ReviewsPage: React.FC = () => {
 
   const renderReviewDetails = (review: MemoRappReview): JSX.Element => {
     return (
-      <Paper id='reviewDetails' className="review-details" style={{ marginTop: '16px', boxShadow: 'none' }}>
+      <Paper id='reviewDetails' key={review._id} className="review-details" style={{ marginTop: '16px', boxShadow: 'none' }}>
+        <Typography>
+          <Tooltip title="Edit Review">
+            <IconButton onClick={() => handleEditReview(review)}>
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete" arrow>
+            <IconButton onClick={() => handleDeleteReview(review)}>
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Typography>
         <Typography><strong>Date of Visit:</strong> {review.structuredReviewProperties.dateOfVisit}</Typography>
-        <Typography><strong>Would Return:</strong> {review.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
+        <Typography><strong>Would Return:</strong> {(review.structuredReviewProperties.wouldReturn === true) ? 'Yes' : (review.structuredReviewProperties.wouldReturn === false) ? 'No' : 'Unspecified'}</Typography>
         <Typography><strong>Review Text:</strong> {review.freeformReviewProperties.reviewText}</Typography>
       </Paper>
     );

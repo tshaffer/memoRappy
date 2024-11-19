@@ -33,16 +33,16 @@ const addTestReview = async (restaurantName: string, dateOfVisit: string, wouldR
   console.log('newMongoPlace:', newMongoPlace?.toObject());
 
   const placeId: string = place.place_id;
-  const addReviewBody: MemoRappReview = {
-    place_id: placeId,
-    structuredReviewProperties: {
-      dateOfVisit,
-      wouldReturn,
-    },
-    freeformReviewProperties: freeformReviewProperties,
-  };
-  const newReview: IReview | null = await addReview(addReviewBody);
-  console.log('newReview:', newReview?.toObject());
+  // const addReviewBody: MemoRappReview = {
+  //   place_id: placeId,
+  //   structuredReviewProperties: {
+  //     dateOfVisit,
+  //     wouldReturn,
+  //   },
+  //   freeformReviewProperties: freeformReviewProperties,
+  // };
+  // const newReview: IReview | null = await addReview(addReviewBody);
+  // console.log('newReview:', newReview?.toObject());
 
   return Promise.resolve();
 }

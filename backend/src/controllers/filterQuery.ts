@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import MongoPlace, { IMongoPlace } from '../models/MongoPlace';
 import Review, { IReview } from '../models/Review';
-import { FilterQueryParams, QueryResponse, FilterResponse, GooglePlace, MemoRappReview, WouldReturnQuerySpec } from '../types';
+import { FilterQueryParams, QueryResponse, FilterResponse, GooglePlace, MemoRappReview } from '../types';
 import { convertMongoPlacesToGooglePlaces } from '../utilities';
 
 export const filterReviewsHandler = async (
