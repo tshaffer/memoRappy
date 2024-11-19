@@ -1,6 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Button, Popover, FormControlLabel, Checkbox, TextField, ToggleButton, ToggleButtonGroup, Slider, Switch, Radio } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Button, Popover, FormControlLabel, Checkbox, TextField, ToggleButton, ToggleButtonGroup, Slider, Switch, Radio, Tooltip } from '@mui/material';
+
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+
 import { FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlace, MemoRappReview, QueryRequestBody, WouldReturnQuery } from '../types';
 import '../App.css';
 import { Autocomplete, Libraries, LoadScript } from '@react-google-maps/api';
@@ -296,6 +300,10 @@ const ReviewsPage: React.FC = () => {
     navigate(`/add-review/${review._id}`, { state: { place, review } });
   }
 
+  const handleDeleteReview = (review: MemoRappReview) => {
+    console.log('handleDeleteReview', review);
+  }
+
   const handlePlaceChanged = () => {
     if (areaMapAutocompleteRef.current) {
       const place: google.maps.places.PlaceResult = areaMapAutocompleteRef.current.getPlace();
@@ -352,16 +360,21 @@ const ReviewsPage: React.FC = () => {
   const renderReviewDetails = (review: MemoRappReview): JSX.Element => {
     return (
       <Paper id='reviewDetails' key={review._id} className="review-details" style={{ marginTop: '16px', boxShadow: 'none' }}>
+        <Typography>
+          <Tooltip title="Edit Review">
+            <IconButton onClick={() => handleEditReview(review)}>
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete" arrow>
+            <IconButton onClick={() => handleDeleteReview(review)}>
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Typography>
         <Typography><strong>Date of Visit:</strong> {review.structuredReviewProperties.dateOfVisit}</Typography>
-        <Typography><strong>Would Return:</strong> {(review.structuredReviewProperties.wouldReturn === true) ? 'Yes' : (review.structuredReviewProperties.wouldReturn === false) ? 'No': 'Unspecified'}</Typography>
+        <Typography><strong>Would Return:</strong> {(review.structuredReviewProperties.wouldReturn === true) ? 'Yes' : (review.structuredReviewProperties.wouldReturn === false) ? 'No' : 'Unspecified'}</Typography>
         <Typography><strong>Review Text:</strong> {review.freeformReviewProperties.reviewText}</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => handleEditReview(review)}
-        >
-          Edit Review
-        </Button>
       </Paper>
     );
   }
