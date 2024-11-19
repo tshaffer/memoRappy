@@ -106,14 +106,13 @@ export const submitReviewHandler = async (req: Request, res: Response): Promise<
 
 export const submitReview = async (memoRappReview: SubmitReviewBody): Promise<IReview | null> => {
 
-  const { structuredReviewProperties, freeformReviewProperties, sessionId } = memoRappReview;
-  const { googlePlace } = structuredReviewProperties;
-  const { place_id } = googlePlace;
+  const { place, structuredReviewProperties, freeformReviewProperties, sessionId } = memoRappReview;
+  const place_id = place.place_id;
 
-  let place: IMongoPlace | null = await getPlace(place_id);
+  let mongoPlace: IMongoPlace | null = await getPlace(place_id);
   console.log('place:', place);
-  if (!place) {
-    place = await addPlace(googlePlace);
+  if (!mongoPlace) {
+    mongoPlace = await addPlace(place);
     if (!place) {
       throw new Error('Error saving place.');
     }

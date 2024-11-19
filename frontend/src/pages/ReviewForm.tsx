@@ -18,7 +18,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { LoadScript, Autocomplete, Libraries } from '@react-google-maps/api';
-import { ReviewFormDisplayTabs, ChatResponse, GooglePlace, FreeformReviewProperties, PreviewRequestBody, ReviewEntity, ReviewEntityWithFullText, SubmitReviewBody, StructuredReviewProperties } from '../types';
+import { ReviewFormDisplayTabs, ChatResponse, GooglePlace, FreeformReviewProperties, PreviewRequestBody, ReviewEntity, SubmitReviewBody, StructuredReviewProperties, MemoRappReview, EditableReview } from '../types';
 import { pickGooglePlaceProperties } from '../utilities';
 const libraries = ['places'] as Libraries;
 
@@ -26,7 +26,15 @@ const ReviewForm: React.FC = () => {
 
   const { _id } = useParams<{ _id: string }>();
   const location = useLocation();
-  const review: ReviewEntityWithFullText = location.state?.review;
+
+  let editableReview: EditableReview | null = null;
+  let place: GooglePlace | null = null;
+  let review: MemoRappReview | null = null;
+  if (location.state) {
+    editableReview = location.state as EditableReview;
+    place = editableReview.place;
+    review = editableReview.review;
+  }
 
   const formatDateToMMDDYYYY = (dateString: string) => {
     if (!dateString) return '';
@@ -64,15 +72,19 @@ const ReviewForm: React.FC = () => {
   }, [sessionId]);
 
   useEffect(() => {
-    if (review) {
-      setGooglePlace(review.googlePlace);
-      setRestaurantLabel(review.googlePlace.name);
-      setDateOfVisit(review.dateOfVisit);
-      setReviewText(review.reviewText);
-      setWouldReturn(review.wouldReturn);
-      setFreeformReviewProperties({ itemReviews: review.itemReviews, reviewer: review.reviewer, reviewText: review.reviewText });
+    if (place && review) {
+      setGooglePlace(place);
+      setRestaurantLabel(place.name);
+      setDateOfVisit(review.structuredReviewProperties.dateOfVisit);
+      setReviewText(review.freeformReviewProperties.reviewText);
+      setWouldReturn(review.structuredReviewProperties.wouldReturn);
+      setFreeformReviewProperties({
+        itemReviews: review.freeformReviewProperties.itemReviews,
+        reviewer: review.freeformReviewProperties.reviewer,
+        reviewText: review.freeformReviewProperties.reviewText
+      });
     }
-  }, [review]);
+  }, [place, review]);
 
 
   const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
@@ -169,11 +181,12 @@ const ReviewForm: React.FC = () => {
       console.log('wouldReturn', wouldReturn);
       console.log('sessionId', sessionId);
       console.log('reviewText', reviewText);
-      const structuredReviewProperties: StructuredReviewProperties = { googlePlace: googlePlace as GooglePlace, dateOfVisit, wouldReturn };
+      const structuredReviewProperties: StructuredReviewProperties = { dateOfVisit, wouldReturn };
       console.log('structuredReviewProperties:', structuredReviewProperties);
 
       const submitBody: SubmitReviewBody = {
         _id,
+        place: place!,
         structuredReviewProperties,
         freeformReviewProperties,
         reviewText,
@@ -223,6 +236,8 @@ const ReviewForm: React.FC = () => {
       </Box>
     )
   };
+
+  console.log('ReviewForm render');
 
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY!} libraries={libraries}>

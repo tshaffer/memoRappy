@@ -19,6 +19,7 @@ export interface MemoRappReview {
 
 export interface SubmitReviewBody {
   _id?: string;
+  place: GooglePlace;
   structuredReviewProperties: StructuredReviewProperties;
   freeformReviewProperties: FreeformReviewProperties
   reviewText: string;
@@ -27,7 +28,6 @@ export interface SubmitReviewBody {
 
 
 export interface StructuredReviewProperties {
-  googlePlace: GooglePlace;
   dateOfVisit: string;
   wouldReturn: boolean | null;
 }

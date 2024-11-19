@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Button, Popover, FormControlLabel, Checkbox, TextField, ToggleButton, ToggleButtonGroup, Slider, Switch, Radio } from '@mui/material';
 import { Coordinates, FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlace, MemoRappReview, QueryRequestBody, WouldReturnQuery } from '../types';
 import '../App.css';
@@ -35,6 +36,8 @@ const thumbsStyle: React.CSSProperties = {
 
 const ReviewsPage: React.FC = () => {
 
+  const navigate = useNavigate();
+
   const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
 
   const [reviews, setReviews] = useState<MemoRappReview[]>([]);
@@ -60,7 +63,7 @@ const ReviewsPage: React.FC = () => {
   });
 
   const [selectedPlace, setSelectedPlace] = useState<GooglePlace | null>(null);
-  
+
   const [areaMapLocation, setAreaMapLocation] = useState<Coordinates>(DEFAULT_CENTER);
   const [showAreaMap, setShowAreaMap] = useState<boolean>(false);
   const areaMapAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
@@ -98,6 +101,10 @@ const ReviewsPage: React.FC = () => {
     fetchPlaces();
     fetchReviews();
   }, []);
+
+  const getPlaceById = (placeId: string): GooglePlace | undefined => {
+    return places.find((place: GooglePlace) => place.place_id === placeId);
+  }
 
   const getFilteredReviewsForPlace = (placeId: string): MemoRappReview[] => {
     return filteredReviews.filter((memoRappReview: MemoRappReview) => memoRappReview.place_id === placeId);
@@ -145,7 +152,7 @@ const ReviewsPage: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(queryRequestBody),
       });
-      const data  = await apiResponse.json();
+      const data = await apiResponse.json();
       console.log('Natural language query results:', data);
       const { places, reviews } = data.result;
       setPlaces(places);
@@ -279,6 +286,17 @@ const ReviewsPage: React.FC = () => {
     }
   };
 
+  const handleEditReview = (review: MemoRappReview) => {
+    debugger;
+    console.log('handleEditReview', review);
+    const place: GooglePlace | undefined = getPlaceById(review.place_id);
+    if (!place) {
+      console.error('Place not found for review:', review);
+      return;
+    }
+    navigate(`/add-review/${review._id}`, { state: { place, review } });
+  }
+
   const handlePlaceChanged = () => {
     if (areaMapAutocompleteRef.current) {
       const place: google.maps.places.PlaceResult = areaMapAutocompleteRef.current.getPlace();
@@ -338,6 +356,13 @@ const ReviewsPage: React.FC = () => {
         <Typography><strong>Date of Visit:</strong> {review.structuredReviewProperties.dateOfVisit}</Typography>
         <Typography><strong>Would Return:</strong> {review.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
         <Typography><strong>Review Text:</strong> {review.freeformReviewProperties.reviewText}</Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => handleEditReview(review)}
+        >
+          Edit Review
+        </Button>
       </Paper>
     );
   }

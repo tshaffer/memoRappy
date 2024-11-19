@@ -1,6 +1,11 @@
 import { GoogleGeometry } from "./GooglePlacesAPI";
 import { AddressComponent } from "./PlacesAPI";
 
+export interface EditableReview {
+  place: GooglePlace;
+  review: MemoRappReview;
+}
+
 export interface MemoRappReview {
   _id?: any;
   place_id: string;
@@ -28,12 +33,6 @@ export interface GooglePlace {
   website: string;
 }
 
-export interface StructuredReviewProperties {
-  googlePlace: GooglePlace;
-  dateOfVisit: string;
-  wouldReturn: boolean | null;
-}
-
 export interface ItemReview {
   item: string;
   review: string;
@@ -48,11 +47,6 @@ export interface ReviewEntity {
   reviewText: string;
 }
 
-export interface ReviewEntityWithFullText extends ReviewEntity {
-  _id?: string;
-  reviewText: string;
-}
-
 export interface ChatResponse {
   parsedReviewProperties: FreeformReviewProperties;
   updatedReviewText: string;
@@ -60,6 +54,7 @@ export interface ChatResponse {
 
 export interface SubmitReviewBody {
   _id?: string;
+  place: GooglePlace
   structuredReviewProperties: StructuredReviewProperties;
   freeformReviewProperties: FreeformReviewProperties
   reviewText: string;
