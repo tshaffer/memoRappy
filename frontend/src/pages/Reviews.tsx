@@ -351,7 +351,7 @@ const ReviewsPage: React.FC = () => {
 
   const renderReviewDetails = (review: MemoRappReview): JSX.Element => {
     return (
-      <Paper id='reviewDetails' className="review-details" style={{ marginTop: '16px', boxShadow: 'none' }}>
+      <Paper id='reviewDetails' key={review._id} className="review-details" style={{ marginTop: '16px', boxShadow: 'none' }}>
         <Typography><strong>Date of Visit:</strong> {review.structuredReviewProperties.dateOfVisit}</Typography>
         <Typography><strong>Would Return:</strong> {review.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
         <Typography><strong>Review Text:</strong> {review.freeformReviewProperties.reviewText}</Typography>
