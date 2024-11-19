@@ -37,13 +37,11 @@ const ReviewForm: React.FC = () => {
   const { _id } = useParams<{ _id: string }>();
 
   const location = useLocation();
-  const locationState = location.state as LocationState | null;
+  const editableReview = location.state as EditableReview | null;
 
-  let editableReview: EditableReview | null = null;
   let place: GooglePlace | null = null;
   let review: MemoRappReview | null = null;
-  if (locationState) {
-    editableReview = locationState.editableReview;
+  if (editableReview) {
     place = editableReview.place;
     review = editableReview.review;
   }

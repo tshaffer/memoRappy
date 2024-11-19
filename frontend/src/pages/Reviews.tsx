@@ -353,7 +353,7 @@ const ReviewsPage: React.FC = () => {
     return (
       <Paper id='reviewDetails' key={review._id} className="review-details" style={{ marginTop: '16px', boxShadow: 'none' }}>
         <Typography><strong>Date of Visit:</strong> {review.structuredReviewProperties.dateOfVisit}</Typography>
-        <Typography><strong>Would Return:</strong> {review.structuredReviewProperties.wouldReturn ? 'Yes' : 'No'}</Typography>
+        <Typography><strong>Would Return:</strong> {(review.structuredReviewProperties.wouldReturn === true) ? 'Yes' : (review.structuredReviewProperties.wouldReturn === false) ? 'No': 'Unspecified'}</Typography>
         <Typography><strong>Review Text:</strong> {review.freeformReviewProperties.reviewText}</Typography>
         <Button
           variant="contained"
