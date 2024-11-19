@@ -8,7 +8,7 @@ export interface WouldReturnQuery {
   notSpecified: boolean;
 }
 
-export type WouldReturnQuerySpec =  (boolean | null)[];
+export type WouldReturnQuerySpec = (boolean | null)[];
 
 export interface QueryParameters {
   lat?: number;
@@ -31,7 +31,7 @@ export interface FilterQueryParams {
   wouldReturn?: WouldReturnQuery;
 }
 
-export interface FilterQueryResponse {
+export interface QueryResponse {
   places: IMongoPlace[];
   reviews: IReview[];
 }

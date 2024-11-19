@@ -1,9 +1,9 @@
-import { Request, Response } from 'express';
+import { Request, response, Response } from 'express';
 import { openai } from '../index';
 import Review, { IReview } from '../models/Review';
-import { getCoordinates } from './googlePlaces';
 import MongoPlace, { IMongoPlace } from '../models/MongoPlace';
-import { DistanceAwayQuery, FilterQueryParams, FilterQueryResponse, WouldReturnQuery } from '../types';
+import { FilterResponse, GooglePlace, MemoRappReview, QueryResponse } from '../types';
+import { convertMongoPlacesToGooglePlaces } from '../utilities';
 
 interface DateRange {
   start: string;
@@ -18,17 +18,7 @@ interface QueryParameters {
   wouldReturn: boolean | null;
   itemsOrdered: any;
 }
-/*
 
-          "queryParameters": {
-            "location": "Location Name",
-            "radius": Distance in meters,
-            "dateRange": { "start": "YYYY-MM-DD", "end": "YYYY-MM-DD" },
-            "restaurantName": "Restaurant Name",
-            "wouldReturn": true or false or null,
-            "itemsOrdered": ["Item1", "Item2", ...]
-          }
-*/
 interface StructuredQueryParams {
   distanceAwayQuery?: {
     lat: number;
@@ -65,6 +55,10 @@ export const naturalLanguageQueryHandler: any = async (
 ): Promise<void> => {
 
   const query = req.body.query;
+  let queryResponse: QueryResponse = {
+    places: [],
+    reviews: [],
+  };
 
   try {
     const parsedQuery: ParsedQuery = await parseQueryWithChatGPT(query);
@@ -73,31 +67,37 @@ export const naturalLanguageQueryHandler: any = async (
     console.log('Query:', query);
     console.log('Query parameters:', queryParameters);
     console.log('Parsed query:', parsedQuery);
-    let reviews: IReview[] = [];
 
     if (queryType === "structured") {
       const structuredQueryParams: StructuredQueryParams = buildStructuredQueryParamsFromParsedQuery(parsedQuery);
       console.log('Structured query params:', structuredQueryParams);
-      const queryResponse: FilterQueryResponse = await structuredQuery(structuredQueryParams);
-      console.log('Filter query response:', queryResponse);
-      res.status(200).json({ result: queryResponse });
+      queryResponse = await structuredQuery(structuredQueryParams);
     } else if (queryType === "full-text") {
       const places = await MongoPlace.find({});
       const reviews = await Review.find({});
-      const queryResponse: FilterQueryResponse = await performNaturalLanguageQuery(query, places, reviews);
-      console.log('Filter query response:', queryResponse);
-      res.status(200).json({ result: queryResponse });
+      queryResponse = await performNaturalLanguageQuery(query, places, reviews);
     } else {
       const structuredQueryParams: StructuredQueryParams = buildStructuredQueryParamsFromParsedQuery(parsedQuery);
       console.log('Structured query params:', structuredQueryParams);
-      const queryResponse: FilterQueryResponse = await performHybridQuery(query, structuredQueryParams);
-      console.log('Filter query response:', queryResponse);
-      res.status(200).json({ result: queryResponse });
+      queryResponse = await performHybridQuery(query, structuredQueryParams);
     }
   } catch (error) {
     console.error('Error querying reviews:', error);
     res.status(500).json({ error: 'An error occurred while querying the reviews.' });
   }
+  console.log('Filter query response:', queryResponse);
+
+  const { places, reviews } = queryResponse;
+  const googlePlaces: GooglePlace[] = convertMongoPlacesToGooglePlaces(places);
+  const memoRappReviews: MemoRappReview[] = reviews.map((review: IReview) => {
+    return review.toObject();
+  });
+
+  const result: FilterResponse = {
+    places: googlePlaces,
+    reviews: memoRappReviews,
+  };
+  res.status(200).json({ result });
 };
 
 
@@ -128,31 +128,6 @@ const buildStructuredQueryParamsFromParsedQuery = (parsedQuery: ParsedQuery): St
 
   return structuredQueryParams;
 }
-
-const handleNaturalLanguageQuery = async (query: string): Promise<IReview[]> => {
-  try {
-    const parsedQuery: ParsedQuery = await parseQueryWithChatGPT(query);
-    const { queryType, queryParameters } = parsedQuery;
-
-    let reviews: IReview[] = [];
-
-    if (queryType === "structured") {
-      reviews = await performStructuredQuery(queryParameters);
-    } else if (queryType === "full-text") {
-      reviews = await performFullTextSearch(query, await Review.find());
-    } else if (queryType === "hybrid") {
-      const structuredResults = await performStructuredQuery(queryParameters);
-      const fullTextResults = await performFullTextSearch(query, await Review.find());
-
-      reviews = [...new Set([...structuredResults, ...fullTextResults])];
-    }
-
-    return reviews;
-  } catch (error) {
-    console.error("Error parsing query or fetching reviews:", error);
-    return [];
-  }
-};
 
 const parseQueryWithChatGPT = async (query: string): Promise<ParsedQuery> => {
   const response = await openai.chat.completions.create({
@@ -214,114 +189,7 @@ const parseQueryWithChatGPT = async (query: string): Promise<ParsedQuery> => {
   return JSON.parse(parsedContent) as ParsedQuery;
 };
 
-const performStructuredQuery = async (parameters: QueryParameters): Promise<IReview[]> => {
-  const {
-    location,
-    radius,
-    restaurantName,
-    dateRange,
-    wouldReturn,
-    itemsOrdered,
-  } = parameters;
-
-  console.log('Query parameters:', parameters);
-
-  const query: any = {};
-
-  // Geospatial search for location and radius
-  // Set default radius to 5000 if radius is null
-  // radius units are meters
-  const effectiveRadius = radius ?? 5000;
-  if (location) {
-    const coordinates = await getCoordinates(location); // Assume getCoordinates returns { lat: number; lng: number }
-    if (coordinates) {
-      query['place.geometry.location'] = {
-        $near: {
-          $geometry: { type: 'Point', coordinates: [coordinates.lng, coordinates.lat] },
-          $maxDistance: effectiveRadius,
-        },
-      };
-    }
-  }
-
-  if (restaurantName) {
-    query.restaurantName = { $regex: restaurantName, $options: 'i' }; // 'i' for case-insensitive
-  }
-
-  if (itemsOrdered) {
-    query["freeformReviewProperties.itemReviews"] = {
-      $elemMatch: { item: { $regex: new RegExp(itemsOrdered.join("|"), "i") } }
-    };
-  }
-
-  if (dateRange) {
-    const { start, end } = dateRange;
-
-    if (start && end) {
-      query.dateOfVisit = { $gte: start, $lte: end };
-    } else if (end) {
-      query.dateOfVisit = { $lte: end };
-    } else if (start) {
-      query.dateOfVisit = { $gte: start };
-    }
-  }
-
-  if (wouldReturn === true) {
-    query.wouldReturn = true;
-  } else if (wouldReturn === false) {
-    query.wouldReturn = false;
-  } else {
-    query.wouldReturn = null;
-  }
-
-  console.log('Structured query:', query);
-  const results: IReview[] = await Review.find(query);
-  console.log('Structured results:', results);
-  return results;
-};
-
-const performFullTextSearch = async (query: string, reviews: IReview[]): Promise<IReview[]> => {
-
-  console.log('performFullTextSearch:', query, reviews);
-
-  const reviewData = reviews.map(review => ({
-    id: review._id,
-    text: review.toObject().reviewText
-  }));
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-4",
-    messages: [
-      {
-        role: "system",
-        content: `You are a helpful assistant that retrieves relevant reviews based on full-text search. Only respond with JSON data, without any additional commentary.`,
-      },
-      {
-        role: "user",
-        content: `Find relevant reviews for: "${query}" in the following reviews: ${JSON.stringify(reviewData)}. 
-        
-        Return the results in the following JSON format:
-  
-        [
-          { "_id": "review_id_1", "text": "review_text_1" },
-          { "_id": "review_id_2", "text": "review_text_2" },
-          ...
-        ]`
-      },
-    ],
-  });
-
-  // Parse the JSON response as an array of objects
-  const relevantReviews = JSON.parse(response.choices[0].message?.content || "[]");
-
-  // Extract only the IDs if you need them in a separate array
-  const relevantReviewIds: string[] = relevantReviews.map((review: { _id: string; text: string }) => review._id);
-
-  // Filter out the relevant reviews based on IDs provided by ChatGPT
-  return reviews.filter(review => review._id && relevantReviewIds.includes(review._id.toString()));
-};
-
-const structuredQuery = async (queryParams: StructuredQueryParams): Promise<FilterQueryResponse> => {
+const structuredQuery = async (queryParams: StructuredQueryParams): Promise<QueryResponse> => {
   const {
     distanceAwayQuery,
     wouldReturn,
@@ -424,7 +292,7 @@ const performNaturalLanguageQuery = async (
   query: string,
   places: IMongoPlace[],
   reviews: IReview[]
-): Promise<FilterQueryResponse> => {
+): Promise<QueryResponse> => {
   console.log("performNaturalLanguageQuery:", query);
 
   // Step 1: Prepare data for OpenAI query
@@ -493,7 +361,7 @@ const performNaturalLanguageQuery = async (
 const performHybridQuery = async (
   query: string,
   queryParams: StructuredQueryParams
-): Promise<FilterQueryResponse> => {
+): Promise<QueryResponse> => {
   const {
     distanceAwayQuery,
     wouldReturn,
@@ -628,7 +496,7 @@ const performHybridQuery = async (
         },
       ],
     });
-    
+
     const result = JSON.parse(response.choices[0].message?.content || "{}");
     const relevantPlaceIds = result.places?.map((place: { id: string }) => place.id) || [];
     const relevantReviewIds = result.reviews?.map((review: { id: string }) => review.id) || [];

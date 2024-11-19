@@ -1,14 +1,14 @@
 import { Request, Response } from 'express';
 import MongoPlace, { IMongoPlace } from '../models/MongoPlace';
 import Review, { IReview } from '../models/Review';
-import { FilterQueryParams, FilterQueryResponse, FilterResponse, GooglePlace, MemoRappReview, WouldReturnQuerySpec } from '../types';
+import { FilterQueryParams, QueryResponse, FilterResponse, GooglePlace, MemoRappReview, WouldReturnQuerySpec } from '../types';
 import { convertMongoPlacesToGooglePlaces } from '../utilities';
 
 export const filterReviewsHandler = async (
   request: Request<{}, {}, FilterQueryParams>,
   response: Response
 ): Promise<void> => {
-  const filterQueryResponse: FilterQueryResponse = await getFilteredPlacesAndReviews(request.body);
+  const filterQueryResponse: QueryResponse = await getFilteredPlacesAndReviews(request.body);
   console.log('filterQueryResponse');
   console.log(filterQueryResponse);
 
@@ -25,8 +25,8 @@ export const filterReviewsHandler = async (
   response.json(filterResponse);
 }
 
-const getFilteredPlacesAndReviews = async (queryParams: FilterQueryParams): Promise<FilterQueryResponse> => {
-  
+const getFilteredPlacesAndReviews = async (queryParams: FilterQueryParams): Promise<QueryResponse> => {
+
   const { distanceAwayQuery, wouldReturn } = queryParams;
   const { lat, lng, radius } = distanceAwayQuery || {};
 
@@ -43,7 +43,7 @@ const getFilteredPlacesAndReviews = async (queryParams: FilterQueryParams): Prom
       if (wouldReturn.no) returnFilter.push(false);
       if (wouldReturn.notSpecified) returnFilter.push(null);
       reviewQuery['structuredReviewProperties.wouldReturn'] = { $in: returnFilter };
-      
+
       // Step 2: Fetch reviews that match the Would Return filter
       reviews = await Review.find(reviewQuery);
     }
