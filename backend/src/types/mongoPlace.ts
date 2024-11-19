@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { MemoRappPlace } from "./entities";
+import { IMongoPlace, IReview } from "../models";
 
 export interface MongoPlaceEntity extends MemoRappPlace{
   _id?: mongoose.Types.ObjectId;
@@ -20,4 +21,9 @@ export interface MongoViewport {
 export interface GeoJSONPoint {
   type: 'Point';
   coordinates: [number, number]; // [longitude, latitude]
+}
+
+export interface QueryResponse {
+  places: IMongoPlace[];
+  reviews: IReview[];
 }

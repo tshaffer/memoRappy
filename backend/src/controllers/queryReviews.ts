@@ -8,14 +8,9 @@ export const queryReviews = async (
   request: Request<{}, {}, QueryParameters>,
   response: Response
 ): Promise<void> => {
-
   const mongoPlaces: IMongoPlace[] = await performPlacesQuery(request.body);
   console.log('Query results:', mongoPlaces);
   response.json(mongoPlaces);
-
-  // const reviews: IReview[] = await performStructuredQuery(request.body);
-  // console.log('Query results:', reviews);
-  // response.json(reviews);
 }
 
 export const performPlacesQuery = async (parameters: QueryParameters): Promise<IMongoPlace[]> => {

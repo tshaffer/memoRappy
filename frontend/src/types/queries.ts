@@ -27,7 +27,7 @@ export interface DistanceAwayQuery {
 
 export interface FilterQueryParams {
   distanceAwayQuery?: DistanceAwayQuery;
-  wouldReturn?: { yes: boolean; no: boolean; notSpecified: boolean };
+  wouldReturn?: WouldReturnQuery;
 }
 
 export interface FilterResponse {

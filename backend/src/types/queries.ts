@@ -1,4 +1,3 @@
-import { IMongoPlace, IReview } from "../models";
 import { MemoRappReview } from "./entities";
 import { GooglePlace } from "./googlePlace";
 
@@ -29,11 +28,6 @@ export interface DistanceAwayQuery {
 export interface FilterQueryParams {
   distanceAwayQuery?: DistanceAwayQuery;
   wouldReturn?: WouldReturnQuery;
-}
-
-export interface QueryResponse {
-  places: IMongoPlace[];
-  reviews: IReview[];
 }
 
 export interface FilterResponse {
