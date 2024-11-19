@@ -17,6 +17,15 @@ export interface MemoRappReview {
   freeformReviewProperties: FreeformReviewProperties;
 }
 
+export interface SubmitReviewBody {
+  _id?: string;
+  structuredReviewProperties: StructuredReviewProperties;
+  freeformReviewProperties: FreeformReviewProperties
+  reviewText: string;
+  sessionId: string;
+}
+
+
 export interface StructuredReviewProperties {
   googlePlace: GooglePlace;
   dateOfVisit: string;
@@ -34,12 +43,12 @@ export interface ItemReview {
   review: string;
 }
 
-export interface SubmitReviewBody {
-  _id?: string;
-  structuredReviewProperties: StructuredReviewProperties;
-  parsedReviewProperties: FreeformReviewProperties;
-  sessionId: string;
-}
+// export interface SubmitReviewBody {
+//   _id?: string;
+//   structuredReviewProperties: StructuredReviewProperties;
+//   parsedReviewProperties: FreeformReviewProperties;
+//   sessionId: string;
+// }
 
 export interface PreviewRequestBody {
   reviewText: string;

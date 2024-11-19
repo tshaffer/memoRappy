@@ -172,9 +172,12 @@ const ReviewForm: React.FC = () => {
       const structuredReviewProperties: StructuredReviewProperties = { googlePlace: googlePlace as GooglePlace, dateOfVisit, wouldReturn };
       console.log('structuredReviewProperties:', structuredReviewProperties);
 
-      const submitBody: any = {
+      const submitBody: SubmitReviewBody = {
+        _id,
         structuredReviewProperties,
         freeformReviewProperties,
+        reviewText,
+        sessionId: sessionId!,
       };
       console.log('submitBody:', submitBody);
 
@@ -185,41 +188,13 @@ const ReviewForm: React.FC = () => {
           ...submitBody,
         }),
       });
-      console.log('response:', response);
-
-      // const submitBody: SubmitReviewBody = {
-      //   _id,
-      //   structuredReviewProperties: { googlePlace: googlePlace as GooglePlace, dateOfVisit, wouldReturn },
-      //   parsedReviewProperties: freeformReviewProperties,
-      //   reviewText,
-      //   sessionId: sessionId!,
-      // };
-
-      // const response = await fetch('/api/reviews/submit', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     ...submitBody,
-      //   }),
-      // });
-      // const data = await response.json();
-      // console.log('Review submitted:', data);
-      // resetForm();
+      const data = await response.json();
+      console.log('Review submitted:', data);
     } catch (error) {
       console.error('Error submitting review:', error);
     }
     setIsLoading(false);
   };
-
-  // const resetForm = () => {
-  //   setRestaurantName('');
-  //   setReviewText('');
-  //   setParsedDetails(null);
-  //   setPlaceVerified(null);
-  //   setGoogleLocation(null);
-  //   setSessionId(generateSessionId());
-  //   setChatHistory([]);
-  // };
 
   const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
