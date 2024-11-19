@@ -186,7 +186,7 @@ const ReviewForm: React.FC = () => {
 
       const submitBody: SubmitReviewBody = {
         _id,
-        place: place!,
+        place: googlePlace!,
         structuredReviewProperties,
         freeformReviewProperties,
         reviewText,

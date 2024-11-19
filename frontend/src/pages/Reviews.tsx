@@ -287,7 +287,6 @@ const ReviewsPage: React.FC = () => {
   };
 
   const handleEditReview = (review: MemoRappReview) => {
-    debugger;
     console.log('handleEditReview', review);
     const place: GooglePlace | undefined = getPlaceById(review.place_id);
     if (!place) {

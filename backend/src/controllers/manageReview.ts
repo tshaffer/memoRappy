@@ -106,7 +106,7 @@ export const submitReviewHandler = async (req: Request, res: Response): Promise<
 
 export const submitReview = async (memoRappReview: SubmitReviewBody): Promise<IReview | null> => {
 
-  const { place, structuredReviewProperties, freeformReviewProperties, sessionId } = memoRappReview;
+  const { _id, place, structuredReviewProperties, freeformReviewProperties, sessionId } = memoRappReview;
   const place_id = place.place_id;
 
   let mongoPlace: IMongoPlace | null = await getPlace(place_id);
@@ -123,8 +123,23 @@ export const submitReview = async (memoRappReview: SubmitReviewBody): Promise<IR
     structuredReviewProperties,
     freeformReviewProperties,
   };
-  const newReview: IReview | null = await addReview(addReviewBody);
-  console.log('newReview:', newReview?.toObject());
+
+  let savedReview: IReview | null;
+
+  if (_id) {
+    // If _id is provided, update the existing document
+    savedReview = await Review.findByIdAndUpdate(_id, addReviewBody, {
+      new: true,    // Return the updated document
+      runValidators: true // Ensure the updated data complies with schema validation
+    });
+
+    if (!savedReview) {
+      throw new Error('Review not found for update.');
+    }
+  } else {
+    const newReview: IReview | null = await addReview(addReviewBody);
+    console.log('newReview:', newReview?.toObject());
+  }
 
   // Clear conversation history for the session after submission
   delete reviewConversations[sessionId];
@@ -133,55 +148,3 @@ export const submitReview = async (memoRappReview: SubmitReviewBody): Promise<IR
   // const newReview: IReview = new Review(memoRappReview);
 
 }
-
-// export const old_submitReview = async (body: any) => {
-// const { _id, structuredReviewProperties, parsedReviewProperties, reviewText, sessionId } = body;
-
-// if (!structuredReviewProperties || !parsedReviewProperties || !reviewText || !sessionId) {
-//   throw new Error('Incomplete review data.');
-// }
-
-// const { googlePlace, dateOfVisit, wouldReturn } = structuredReviewProperties;
-// const { itemReviews, reviewer } = parsedReviewProperties;
-
-// // Convert geometry from Google format to Mongoose format
-// const mongoGeometry: MongoGeometry = getMongoGeometryFromGoogleGeometry(googlePlace.geometry!);
-// const mongoPlace: MongoPlace = { ...googlePlace, geometry: mongoGeometry };
-
-// try {
-//   const reviewData: MongoReviewEntityWithFullText = {
-//     mongoPlace,
-//     dateOfVisit,
-//     wouldReturn,
-//     itemReviews,
-//     reviewer,
-//     reviewText
-//   };
-
-//   let savedReview: IReview | null;
-
-//   if (_id) {
-//     // If _id is provided, update the existing document
-//     savedReview = await Review.findByIdAndUpdate(_id, reviewData, {
-//       new: true,    // Return the updated document
-//       runValidators: true // Ensure the updated data complies with schema validation
-//     });
-
-//     if (!savedReview) {
-//       throw new Error('Review not found for update.');
-//     }
-//   } else {
-//     // If no _id, create a new document
-//     const newReview = new Review(reviewData);
-//     savedReview = await newReview.save();
-//   }
-
-//   // Clear conversation history for the session after submission
-//   delete reviewConversations[sessionId];
-
-//   return savedReview;
-// } catch (error) {
-//   console.error('Error saving review:', error);
-//   throw new Error('An error occurred while saving the review.');
-// }
-// };
