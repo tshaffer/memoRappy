@@ -1,9 +1,8 @@
 import { GoogleGeometry } from "./GooglePlacesAPI";
-import { MongoGeometry } from "./MongoPlacesAPI";
 import { AddressComponent } from "./PlacesAPI";
 
 export interface MemoRappReview {
-  _id?: any; // mongoose.Types.ObjectId;
+  _id?: any;
   place_id: string;
   structuredReviewProperties: StructuredReviewProperties;
   freeformReviewProperties: FreeformReviewProperties;
@@ -26,15 +25,6 @@ export interface GooglePlace {
   address_components?: AddressComponent[];
   formatted_address: string;
   geometry?: GoogleGeometry;
-  website: string;
-}
-
-export interface MongoPlace {
-  place_id: string;
-  name: string;
-  address_components?: AddressComponent[];
-  formatted_address: string;
-  geometry?: MongoGeometry;
   website: string;
 }
 
@@ -64,18 +54,6 @@ export interface ReviewEntity {
 
 export interface ReviewEntityWithFullText extends ReviewEntity {
   _id?: string;
-  reviewText: string;
-}
-
-export interface MongoReviewEntity {
-  mongoPlace: MongoPlace;
-  dateOfVisit: string;
-  wouldReturn: boolean | null;
-  itemReviews: ItemReview[]
-  reviewer: string;
-}
-
-export interface MongoReviewEntityWithFullText extends MongoReviewEntity {
   reviewText: string;
 }
 
