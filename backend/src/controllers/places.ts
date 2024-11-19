@@ -4,6 +4,15 @@ import { GoogleGeometry, GooglePlace, MongoGeometry, MongoPlaceEntity } from "..
 import { getMongoGeometryFromGoogleGeometry } from "./googlePlaces";
 import { convertMongoPlacesToGooglePlaces } from '../utilities';
 
+export const getPlace = async (placeId: any): Promise<IMongoPlace | null> => {
+  try {
+    const existingPlace: IMongoPlace | null = await MongoPlace.findOne({ place_id: placeId }).exec();
+    return existingPlace;
+  } catch (error) {
+    throw new Error('An error occurred while retrieving the place.');
+  }
+}
+
 export const getPlaces = async (request: Request, response: Response, next: any) => {
   try {
     const mongoPlaces: IMongoPlace[] = await MongoPlace.find({}).exec();

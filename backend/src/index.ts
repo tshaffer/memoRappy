@@ -5,7 +5,7 @@ import OpenAI from 'openai';
 import mongoose from 'mongoose';
 import express from 'express';
 
-import { addReviewsFromFileHandler, filterReviewsHandler, getPlaces, getReviews, previewReviewHandler } from './controllers';
+import { addReviewsFromFileHandler, filterReviewsHandler, getPlaces, getReviews, previewReviewHandler, submitReviewHandler } from './controllers';
 import { getCountsByWouldReturnHandler, queryReviews } from './controllers/queryReviews';
 import { naturalLanguageQueryHandler } from './controllers/naturalLanguageQuery';
 
@@ -27,6 +27,7 @@ app.use(express.json());
 app.get('/api/places', getPlaces);
 app.get('/api/reviews', getReviews);
 app.post('/api/reviews/preview', previewReviewHandler);
+app.post('/api/reviews/submit', submitReviewHandler);
 app.post('/api/reviews/naturalLanguageQuery', naturalLanguageQueryHandler);
 app.post('/api/reviews/queryReviews', queryReviews);
 app.post('/api/reviews/filterReviews', filterReviewsHandler);

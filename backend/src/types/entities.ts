@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { AddressComponent } from "./place";
+import { GooglePlace } from "./googlePlace";
 
 export interface MemoRappPlace {
   place_id: string;
@@ -17,6 +18,7 @@ export interface MemoRappReview {
 }
 
 export interface StructuredReviewProperties {
+  googlePlace: GooglePlace;
   dateOfVisit: string;
   wouldReturn: boolean | null;
 }

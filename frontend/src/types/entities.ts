@@ -39,17 +39,13 @@ export interface ItemReview {
   review: string;
 }
 
-export interface ParsedReviewProperties {
-  itemReviews: ItemReview[];
-  reviewer: string;
-}
-
 export interface ReviewEntity {
   googlePlace: GooglePlace;
   dateOfVisit: string;
   wouldReturn: boolean | null;
   itemReviews: ItemReview[];
   reviewer: string;
+  reviewText: string;
 }
 
 export interface ReviewEntityWithFullText extends ReviewEntity {
@@ -58,14 +54,14 @@ export interface ReviewEntityWithFullText extends ReviewEntity {
 }
 
 export interface ChatResponse {
-  parsedReviewProperties: ParsedReviewProperties;
+  parsedReviewProperties: FreeformReviewProperties;
   updatedReviewText: string;
 }
 
 export interface SubmitReviewBody {
   _id?: string;
   structuredReviewProperties: StructuredReviewProperties;
-  parsedReviewProperties: ParsedReviewProperties
+  parsedReviewProperties: FreeformReviewProperties
   reviewText: string;
   sessionId: string;
 }

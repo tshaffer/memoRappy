@@ -18,7 +18,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { LoadScript, Autocomplete, Libraries } from '@react-google-maps/api';
-import { ReviewFormDisplayTabs, ChatResponse, GooglePlace, ParsedReviewProperties, PreviewRequestBody, ReviewEntity, ReviewEntityWithFullText, SubmitReviewBody } from '../types';
+import { ReviewFormDisplayTabs, ChatResponse, GooglePlace, FreeformReviewProperties, PreviewRequestBody, ReviewEntity, ReviewEntityWithFullText, SubmitReviewBody, StructuredReviewProperties } from '../types';
 import { pickGooglePlaceProperties } from '../utilities';
 const libraries = ['places'] as Libraries;
 
@@ -49,10 +49,10 @@ const ReviewForm: React.FC = () => {
   const [dateOfVisit, setDateOfVisit] = useState('');
   const [reviewText, setReviewText] = useState('');
   const [wouldReturn, setWouldReturn] = useState<boolean | null>(null); // New state
-  const [parsedReviewProperties, setParsedReviewProperties] = useState<ParsedReviewProperties | null>(null);
+  const [freeformReviewProperties, setFreeformReviewProperties] = useState<FreeformReviewProperties | null>(null);
   const [displayTab, setDisplayTab] = useState(ReviewFormDisplayTabs.ReviewText);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | ParsedReviewProperties }[]>([]);
+  const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; message: string | FreeformReviewProperties }[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
@@ -70,7 +70,7 @@ const ReviewForm: React.FC = () => {
       setDateOfVisit(review.dateOfVisit);
       setReviewText(review.reviewText);
       setWouldReturn(review.wouldReturn);
-      setParsedReviewProperties({ itemReviews: review.itemReviews, reviewer: review.reviewer });
+      setFreeformReviewProperties({ itemReviews: review.itemReviews, reviewer: review.reviewer, reviewText: review.reviewText });
     }
   }, [review]);
 
@@ -127,7 +127,7 @@ const ReviewForm: React.FC = () => {
         body: JSON.stringify(previewBody),
       });
       const data = await response.json();
-      setParsedReviewProperties(data.parsedReviewProperties);
+      setFreeformReviewProperties(data.parsedReviewProperties);
       setChatHistory([...chatHistory, { role: 'user', message: reviewText }, { role: 'ai', message: data.parsedReviewProperties }]);
       setDisplayTab(1);
     } catch (error) {
@@ -148,7 +148,7 @@ const ReviewForm: React.FC = () => {
       const chatResponse: ChatResponse = await response.json();
       const { parsedReviewProperties, updatedReviewText } = chatResponse;
 
-      setParsedReviewProperties(parsedReviewProperties);
+      setFreeformReviewProperties(parsedReviewProperties);
       setReviewText(updatedReviewText);
       setChatHistory([...chatHistory, { role: 'user', message: chatInput }, { role: 'ai', message: parsedReviewProperties }]);
       setChatInput('');
@@ -160,16 +160,23 @@ const ReviewForm: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!parsedReviewProperties) return;
+    if (!freeformReviewProperties) return;
     try {
       setIsLoading(true);
-      const submitBody: SubmitReviewBody = {
-        _id,
-        structuredReviewProperties: { googlePlace: googlePlace as GooglePlace, dateOfVisit, wouldReturn },
-        parsedReviewProperties,
-        reviewText,
-        sessionId: sessionId!,
+
+      console.log('googlePlace', googlePlace);
+      console.log('freeformReviewProperties', freeformReviewProperties);
+      console.log('wouldReturn', wouldReturn);
+      console.log('sessionId', sessionId);
+      console.log('reviewText', reviewText);
+      const structuredReviewProperties: StructuredReviewProperties = { googlePlace: googlePlace as GooglePlace, dateOfVisit, wouldReturn };
+      console.log('structuredReviewProperties:', structuredReviewProperties);
+
+      const submitBody: any = {
+        structuredReviewProperties,
+        freeformReviewProperties,
       };
+      console.log('submitBody:', submitBody);
 
       const response = await fetch('/api/reviews/submit', {
         method: 'POST',
@@ -178,8 +185,25 @@ const ReviewForm: React.FC = () => {
           ...submitBody,
         }),
       });
-      const data = await response.json();
-      console.log('Review submitted:', data);
+      console.log('response:', response);
+
+      // const submitBody: SubmitReviewBody = {
+      //   _id,
+      //   structuredReviewProperties: { googlePlace: googlePlace as GooglePlace, dateOfVisit, wouldReturn },
+      //   parsedReviewProperties: freeformReviewProperties,
+      //   reviewText,
+      //   sessionId: sessionId!,
+      // };
+
+      // const response = await fetch('/api/reviews/submit', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     ...submitBody,
+      //   }),
+      // });
+      // const data = await response.json();
+      // console.log('Review submitted:', data);
       // resetForm();
     } catch (error) {
       console.error('Error submitting review:', error);
@@ -199,7 +223,7 @@ const ReviewForm: React.FC = () => {
 
   const generateSessionId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
-  const renderPreviewResponse = (parsedReviewProperties: ParsedReviewProperties) => {
+  const renderPreviewResponse = (parsedReviewProperties: FreeformReviewProperties) => {
     const place: GooglePlace = googlePlace!;
     const getReturnString = () => {
       if (wouldReturn === true) return 'Yes';
@@ -312,7 +336,7 @@ const ReviewForm: React.FC = () => {
               />
             </Box>
           )}
-          {displayTab === ReviewFormDisplayTabs.ExtractedInformation && parsedReviewProperties && renderPreviewResponse(parsedReviewProperties)}
+          {displayTab === ReviewFormDisplayTabs.ExtractedInformation && freeformReviewProperties && renderPreviewResponse(freeformReviewProperties)}
           {displayTab === ReviewFormDisplayTabs.ChatHistory && (
             <Box>
               {chatHistory.map((msg, idx) => (
@@ -382,7 +406,7 @@ const ReviewForm: React.FC = () => {
               color="primary"
               fullWidth
               onClick={handleSubmit}
-              disabled={!parsedReviewProperties}
+              disabled={!freeformReviewProperties}
             >
               Submit
             </Button>
