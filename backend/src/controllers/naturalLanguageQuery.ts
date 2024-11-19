@@ -85,7 +85,7 @@ export const naturalLanguageQueryHandler: any = async (
     console.error('Error querying reviews:', error);
     res.status(500).json({ error: 'An error occurred while querying the reviews.' });
   }
-  console.log('Filter query response:', queryResponse);
+  console.log('Natural Language query response:', queryResponse);
 
   const { places, reviews } = queryResponse;
   const googlePlaces: GooglePlace[] = convertMongoPlacesToGooglePlaces(places);

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Button, Popover, FormControlLabel, Checkbox, TextField, ToggleButton, ToggleButtonGroup, Slider, Switch, Radio } from '@mui/material';
-import { Coordinates, FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlace, MemoRappReview, WouldReturnQuery } from '../types';
+import { Coordinates, FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlace, MemoRappReview, QueryRequestBody, WouldReturnQuery } from '../types';
 import '../App.css';
 import { Autocomplete, Libraries, LoadScript } from '@react-google-maps/api';
 import MapWithMarkers from '../components/MapWIthMarkers';
@@ -134,10 +134,6 @@ const ReviewsPage: React.FC = () => {
     setQuery(event.target.value);
   };
 
-  interface QueryRequestBody {
-    query: string;
-  }
-  
   const handleNaturalLanguageQuery = async () => {
 
     console.log('Query:', query);
@@ -152,14 +148,16 @@ const ReviewsPage: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(queryRequestBody),
       });
-      const data: any = await apiResponse.json();
+      const data  = await apiResponse.json();
       console.log('Natural language query results:', data);
-      // setFilteredPlaces(data.places);
-      // setFilteredReviews(data.reviews);
+      const { places, reviews } = data.result;
+      setPlaces(places);
+      setFilteredPlaces(places);
+      setReviews(reviews);
+      setFilteredReviews(reviews);
     } catch (error) {
       console.error('Error handling query:', error);
     }
-
   }
 
   const handleDistanceClick = (event: React.MouseEvent<HTMLElement>) => {
