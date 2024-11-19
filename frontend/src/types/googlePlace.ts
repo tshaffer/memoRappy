@@ -1,14 +1,13 @@
-// types/GooglePlacesAPI.ts
+import { MemoRappPlace } from "./entities";
+import { AddressComponent, PlacePhoto, PlaceReview } from "./place";
 
-import { AddressComponent, PlacePhoto, PlaceReview } from "./PlacesAPI";
-
-export interface GooglePlace {
-  place_id: string;
-  name: string;
-  address_components?: AddressComponent[];
-  formatted_address: string;
+export interface GooglePlace extends MemoRappPlace {
   geometry?: GoogleGeometry;
-  website: string;
+}
+
+export interface GoogleGeometry {
+  location: google.maps.LatLngLiteral;
+  viewport: google.maps.LatLngBoundsLiteral;
 }
 
 export interface GooglePlacesResponse {
@@ -17,7 +16,6 @@ export interface GooglePlacesResponse {
   status: google.maps.places.PlacesServiceStatus;
 }
 
-// Define the main response type for Place Details
 export interface GooglePlaceDetailsResponse {
   html_attributions: string[];
   result: GooglePlaceDetails;
@@ -43,9 +41,3 @@ export interface GooglePlaceDetails {
   website?: string;
   // Additional fields can be added as needed
 }
-
-export interface GoogleGeometry {
-  location: google.maps.LatLngLiteral;
-  viewport: google.maps.LatLngBoundsLiteral;
-}
-

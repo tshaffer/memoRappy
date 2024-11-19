@@ -1,5 +1,5 @@
-import { GooglePlace } from "./GooglePlacesAPI";
-import { AddressComponent } from "./PlacesAPI";
+import { GooglePlace } from "./googlePlace";
+import { AddressComponent } from "./place";
 
 export interface MemoRappReview {
   _id?: any;

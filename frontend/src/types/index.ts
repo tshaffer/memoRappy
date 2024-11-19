@@ -1,6 +1,7 @@
 export * from './entities';
 export * from './enums';
 export * from './frontEndEntities';
-export * from './GooglePlacesAPI'
+export * from './place';
+export * from './googlePlace';
 export * from './queries';
 
