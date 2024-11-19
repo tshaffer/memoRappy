@@ -1,4 +1,5 @@
-import { GooglePlace, MemoRappReview } from "./entities";
+import { MemoRappReview } from "./entities";
+import { GooglePlace } from "./GooglePlacesAPI";
 
 export interface WouldReturnQuery {
   yes: boolean;

@@ -2,6 +2,15 @@
 
 import { AddressComponent, PlacePhoto, PlaceReview } from "./PlacesAPI";
 
+export interface GooglePlace {
+  place_id: string;
+  name: string;
+  address_components?: AddressComponent[];
+  formatted_address: string;
+  geometry?: GoogleGeometry;
+  website: string;
+}
+
 export interface GooglePlacesResponse {
   html_attributions: string[];
   results: google.maps.places.PlaceResult[];

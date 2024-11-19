@@ -3,7 +3,6 @@ import { openai } from '../index';
 import { Request, Response } from 'express';
 import Review, { IReview } from "../models/Review";
 import { extractFieldFromResponse, extractItemReviews, removeSquareBrackets } from '../utilities';
-import { getMongoGeometryFromGoogleGeometry } from './googlePlaces';
 import { FreeformReviewProperties, ItemReview, MemoRappReview, PreviewRequestBody, SubmitReviewBody } from '../types';
 import { addPlace, getPlace } from './places';
 import { IMongoPlace } from '../models';

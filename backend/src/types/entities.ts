@@ -1,31 +1,12 @@
-import mongoose from "mongoose";
-import { AddressComponent } from "./place";
 import { GooglePlace } from "./googlePlace";
-
-export interface MemoRappPlace {
-  place_id: string;
-  name: string;
-  address_components?: AddressComponent[];
-  formatted_address: string;
-  website: string;
-}
+import { AddressComponent } from "./place";
 
 export interface MemoRappReview {
-  _id?: mongoose.Types.ObjectId;
+  _id?: any;
   place_id: string;
   structuredReviewProperties: StructuredReviewProperties;
   freeformReviewProperties: FreeformReviewProperties;
 }
-
-export interface SubmitReviewBody {
-  _id?: string;
-  place: GooglePlace;
-  structuredReviewProperties: StructuredReviewProperties;
-  freeformReviewProperties: FreeformReviewProperties
-  reviewText: string;
-  sessionId: string;
-}
-
 
 export interface StructuredReviewProperties {
   dateOfVisit: string;
@@ -43,14 +24,29 @@ export interface ItemReview {
   review: string;
 }
 
-// export interface SubmitReviewBody {
-//   _id?: string;
-//   structuredReviewProperties: StructuredReviewProperties;
-//   parsedReviewProperties: FreeformReviewProperties;
-//   sessionId: string;
-// }
+export interface SubmitReviewBody {
+  _id?: string;
+  place: GooglePlace;
+  structuredReviewProperties: StructuredReviewProperties;
+  freeformReviewProperties: FreeformReviewProperties;
+  reviewText: string;
+  sessionId: string;
+}
 
 export interface PreviewRequestBody {
   reviewText: string;
   sessionId: string;
 }
+
+export interface MemoRappPlace {
+  place_id: string;
+  name: string;
+  address_components?: AddressComponent[];
+  formatted_address: string;
+  website: string;
+}
+
+export interface QueryRequestBody {
+  query: string;
+}
+

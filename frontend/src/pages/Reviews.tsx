@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Button, Popover, FormControlLabel, Checkbox, TextField, ToggleButton, ToggleButtonGroup, Slider, Switch, Radio } from '@mui/material';
-import { Coordinates, FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlace, MemoRappReview, QueryRequestBody, WouldReturnQuery } from '../types';
+import { FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlace, MemoRappReview, QueryRequestBody, WouldReturnQuery } from '../types';
 import '../App.css';
 import { Autocomplete, Libraries, LoadScript } from '@react-google-maps/api';
 import MapWithMarkers from '../components/MapWIthMarkers';
@@ -18,7 +18,7 @@ interface WouldReturnCounts {
   nullCount: number;
 }
 
-const DEFAULT_CENTER: Coordinates = { lat: 37.3944829, lng: -122.0790619 };
+const DEFAULT_CENTER: google.maps.LatLngLiteral = { lat: 37.3944829, lng: -122.0790619 };
 
 const smallColumnStyle: React.CSSProperties = {
   width: '35px',
@@ -38,7 +38,7 @@ const ReviewsPage: React.FC = () => {
 
   const navigate = useNavigate();
 
-  const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<google.maps.LatLngLiteral | null>(null);
 
   const [reviews, setReviews] = useState<MemoRappReview[]>([]);
   const [places, setPlaces] = useState<GooglePlace[]>([]);
@@ -51,7 +51,7 @@ const ReviewsPage: React.FC = () => {
   const [anchorElSetDistance, setAnchorElSetDistance] = useState<HTMLElement | null>(null);
   const [distanceFilterEnabled, setDistanceFilterEnabled] = useState(false);
   const [fromLocation, setFromLocation] = useState<'current' | 'specified'>('current');
-  const [fromLocationLocation, setFromLocationLocation] = useState<Coordinates>(DEFAULT_CENTER);
+  const [fromLocationLocation, setFromLocationLocation] = useState<google.maps.LatLngLiteral>(DEFAULT_CENTER);
   const [fromLocationDistance, setFromLocationDistance] = useState(5);
   const fromLocationAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
@@ -64,7 +64,7 @@ const ReviewsPage: React.FC = () => {
 
   const [selectedPlace, setSelectedPlace] = useState<GooglePlace | null>(null);
 
-  const [areaMapLocation, setAreaMapLocation] = useState<Coordinates>(DEFAULT_CENTER);
+  const [areaMapLocation, setAreaMapLocation] = useState<google.maps.LatLngLiteral>(DEFAULT_CENTER);
   const [showAreaMap, setShowAreaMap] = useState<boolean>(false);
   const areaMapAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
@@ -301,7 +301,7 @@ const ReviewsPage: React.FC = () => {
       const place: google.maps.places.PlaceResult = areaMapAutocompleteRef.current.getPlace();
       if (place.geometry !== undefined) {
         const geometry: google.maps.places.PlaceGeometry = place.geometry!;
-        const newCoordinates: Coordinates = {
+        const newCoordinates: google.maps.LatLngLiteral = {
           lat: geometry.location!.lat(),
           lng: geometry.location!.lng(),
         };
@@ -325,7 +325,7 @@ const ReviewsPage: React.FC = () => {
                 lng: longitude,
               }
             );
-            console.log("Current Location Coordinates:", { latitude, longitude });
+            console.log("Current Location google.maps.LatLngLiteral:", { latitude, longitude });
 
             // Optionally, you can use reverse geocoding here to convert coordinates to an address
           },

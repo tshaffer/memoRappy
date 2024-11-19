@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Coordinates, GooglePlace } from '../types';
+import { GooglePlace } from '../types';
 import { AdvancedMarker, APIProvider, InfoWindow, Map, MapCameraChangedEvent } from '@vis.gl/react-google-maps';
 import { getLatLngFromPlace } from '../utilities';
 import '../App.css';
 
 interface MapWithMarkersProps {
-  initialCenter: Coordinates;
+  initialCenter: google.maps.LatLngLiteral;
   locations: GooglePlace[];
 }
 
@@ -14,7 +14,7 @@ const DEFAULT_ZOOM = 14;
 
 const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, locations }) => {
 
-  const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<google.maps.LatLngLiteral | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<GooglePlace | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
