@@ -39,3 +39,7 @@ export interface SubmitReviewBody {
   sessionId: string;
 }
 
+export interface PreviewRequestBody {
+  reviewText: string;
+  sessionId: string;
+}
