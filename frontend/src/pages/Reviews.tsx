@@ -54,7 +54,7 @@ const ReviewsPage: React.FC = () => {
   const [filteredPlaces, setFilteredPlaces] = useState<GooglePlace[]>([]);
   const [filteredReviews, setFilteredReviews] = useState<MemoRappReview[]>([]);
 
-  const [query, setQuery] = useState<string>("");
+  const [query, setQuery] = useState<string>(process.env.REACT_APP_GOOGLE_MAPS_API_KEY!);
 
   const [anchorElSetDistance, setAnchorElSetDistance] = useState<HTMLElement | null>(null);
   const [distanceFilterEnabled, setDistanceFilterEnabled] = useState(false);
