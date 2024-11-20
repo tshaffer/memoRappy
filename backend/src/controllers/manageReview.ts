@@ -27,7 +27,7 @@ export const previewReviewHandler = async (
     const freeformReviewProperties: FreeformReviewProperties = await parsePreview(sessionId, reviewText);
     console.log('freeformReviewProperties:', freeformReviewProperties); // Debugging log
     const previewResponse: PreviewResponse = { freeformReviewProperties };
-    return res.json({ previewResponse });
+    return res.json(previewResponse);
   } catch (error) {
     console.error('Error processing review preview:', error);
     return res.status(500).json({ error: 'An error occurred while processing the review preview.' });
