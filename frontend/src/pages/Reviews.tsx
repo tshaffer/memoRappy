@@ -54,7 +54,7 @@ const ReviewsPage: React.FC = () => {
   const [filteredPlaces, setFilteredPlaces] = useState<GooglePlace[]>([]);
   const [filteredReviews, setFilteredReviews] = useState<MemoRappReview[]>([]);
 
-  const [query, setQuery] = useState<string>(process.env.REACT_APP_GOOGLE_MAPS_API_KEY!);
+  const [query, setQuery] = useState<string>("");
 
   const [anchorElSetDistance, setAnchorElSetDistance] = useState<HTMLElement | null>(null);
   const [distanceFilterEnabled, setDistanceFilterEnabled] = useState(false);
@@ -84,6 +84,10 @@ const ReviewsPage: React.FC = () => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setCurrentLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+          setSelectedPlaceMapLocation({
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           });
