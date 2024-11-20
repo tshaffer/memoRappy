@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
+import { useMediaQuery } from '@mui/material';
 import {
   TextField,
   Button,
@@ -21,10 +22,6 @@ import { LoadScript, Autocomplete, Libraries } from '@react-google-maps/api';
 import { ReviewFormDisplayTabs, ChatResponse, GooglePlace, FreeformReviewProperties, PreviewRequestBody, ReviewEntity, SubmitReviewBody, StructuredReviewProperties, MemoRappReview, EditableReview, PreviewResponse } from '../types';
 import { pickGooglePlaceProperties } from '../utilities';
 
-interface LocationState {
-  editableReview: EditableReview;
-}
-
 type ChatMessage = {
   role: 'user' | 'ai';
   message: string | FreeformReviewProperties;
@@ -35,6 +32,8 @@ const libraries = ['places'] as Libraries;
 const ReviewForm: React.FC = () => {
 
   const { _id } = useParams<{ _id: string }>();
+
+  const isMobile = useMediaQuery('(max-width:768px)');
 
   const location = useLocation();
   const editableReview = location.state as EditableReview | null;
@@ -249,7 +248,13 @@ const ReviewForm: React.FC = () => {
 
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY!} libraries={libraries}>
-      <Paper style={{ padding: 20 }}>
+      <Paper
+        style={{
+          padding: isMobile ? '16px' : '24px',
+          marginBottom: isMobile ? '56px' : '0', // Space for fixed buttons on mobile
+          minHeight: '100vh',
+        }}
+      >
         {isLoading && (
           <Box
             sx={{
@@ -269,16 +274,28 @@ const ReviewForm: React.FC = () => {
           </Box>
         )}
         <Typography variant="h4" gutterBottom>
-          Add a Review
+          {isMobile ? 'Add/Edit Review' : 'Add a Review'}
         </Typography>
 
-        <Tabs value={displayTab} onChange={handleTabChange} indicatorColor="primary" textColor="primary">
-          <Tab label="Review Text" />
-          <Tab label="Extracted Information" />
-          <Tab label="Chat History" />
+        <Tabs
+          value={displayTab}
+          onChange={handleTabChange}
+          indicatorColor="primary"
+          textColor="primary"
+          variant={isMobile ? 'scrollable' : 'standard'}
+        >
+          <Tab label="Review" />
+          <Tab label="Info" />
+          <Tab label="Chat" />
         </Tabs>
 
-        <Box mt={2}>
+        <Box
+          mt={2}
+          sx={{
+            overflowY: 'auto',
+            maxHeight: isMobile ? 'calc(100vh - 160px)' : 'auto', // Adjust for mobile view
+          }}
+        >
           {displayTab === ReviewFormDisplayTabs.ReviewText && (
             <Box>
               <Autocomplete
@@ -305,7 +322,7 @@ const ReviewForm: React.FC = () => {
               />
               <FormControl component="fieldset" style={{ marginTop: 20, width: '100%' }}>
                 <FormLabel component="legend">Would Return</FormLabel>
-                <Box display="flex" alignItems="center">
+                <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
                   <RadioGroup
                     row
                     aria-label="would-return"
@@ -316,7 +333,7 @@ const ReviewForm: React.FC = () => {
                     <FormControlLabel value="yes" control={<Radio />} label="Yes" />
                     <FormControlLabel value="no" control={<Radio />} label="No" />
                   </RadioGroup>
-                  <Button onClick={() => setWouldReturn(null)} style={{ marginLeft: 10 }}>
+                  <Button onClick={() => setWouldReturn(null)} size="small">
                     Clear
                   </Button>
                 </Box>
@@ -325,7 +342,7 @@ const ReviewForm: React.FC = () => {
                 style={{ marginTop: 20 }}
                 fullWidth
                 multiline
-                rows={8}
+                rows={isMobile ? 5 : 8}
                 label="Write Your Review"
                 value={reviewText}
                 onChange={(e) => setReviewText(e.target.value)}
@@ -334,7 +351,9 @@ const ReviewForm: React.FC = () => {
               />
             </Box>
           )}
-          {displayTab === ReviewFormDisplayTabs.ExtractedInformation && freeformReviewProperties && renderPreviewResponse(freeformReviewProperties)}
+          {displayTab === ReviewFormDisplayTabs.ExtractedInformation && freeformReviewProperties && (
+            renderPreviewResponse(freeformReviewProperties)
+          )}
           {displayTab === ReviewFormDisplayTabs.ChatHistory && (
             <Box>
               {chatHistory.map((msg, idx) => (
@@ -375,43 +394,87 @@ const ReviewForm: React.FC = () => {
           )}
         </Box>
 
-        <Grid container spacing={2} style={{ marginTop: 20 }}>
-          <Grid item xs={4}>
+        {isMobile ? (
+          <Box
+            sx={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              display: 'flex',
+              justifyContent: 'space-around',
+              backgroundColor: 'white',
+              padding: '8px 16px',
+              boxShadow: '0 -2px 6px rgba(0,0,0,0.1)',
+            }}
+          >
             <Button
               variant="contained"
               color="primary"
-              fullWidth
               onClick={handlePreview}
               disabled={!googlePlace || !reviewText}
+              size="small"
             >
               Preview
             </Button>
-          </Grid>
-          <Grid item xs={4}>
             <Button
               variant="contained"
               color="secondary"
-              fullWidth
               onClick={handleChat}
               disabled={!chatInput}
+              size="small"
             >
               Chat
             </Button>
-          </Grid>
-          <Grid item xs={4}>
             <Button
               variant="contained"
               color="primary"
-              fullWidth
               onClick={handleSubmit}
               disabled={!freeformReviewProperties}
+              size="small"
             >
               Submit
             </Button>
+          </Box>
+        ) : (
+          <Grid container spacing={2} style={{ marginTop: 20 }}>
+            <Grid item xs={4}>
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                onClick={handlePreview}
+                disabled={!googlePlace || !reviewText}
+              >
+                Preview
+              </Button>
+            </Grid>
+            <Grid item xs={4}>
+              <Button
+                variant="contained"
+                color="secondary"
+                fullWidth
+                onClick={handleChat}
+                disabled={!chatInput}
+              >
+                Chat
+              </Button>
+            </Grid>
+            <Grid item xs={4}>
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                onClick={handleSubmit}
+                disabled={!freeformReviewProperties}
+              >
+                Submit
+              </Button>
+            </Grid>
           </Grid>
-        </Grid>
+        )}
       </Paper>
-    </LoadScript>
+    </LoadScript >
   );
 };
 

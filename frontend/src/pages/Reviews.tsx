@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMediaQuery } from '@mui/material';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Button, Popover, FormControlLabel, Checkbox, TextField, ToggleButton, ToggleButtonGroup, Slider, Switch, Radio, Tooltip, Box } from '@mui/material';
 
+import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
+import RateReviewOutlinedIcon from '@mui/icons-material/RateReviewOutlined';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
@@ -40,6 +43,7 @@ const thumbsStyle: React.CSSProperties = {
 
 const ReviewsPage: React.FC = () => {
 
+  const isMobile = useMediaQuery('(max-width:768px)');
   const navigate = useNavigate();
 
   const [currentLocation, setCurrentLocation] = useState<google.maps.LatLngLiteral | null>(null);
@@ -66,11 +70,12 @@ const ReviewsPage: React.FC = () => {
     notSpecified: false,
   });
 
+  const [viewMode, setViewMode] = useState<'list' | 'details' | 'map'>('list');
   const [selectedPlace, setSelectedPlace] = useState<GooglePlace | null>(null);
 
-  const [areaMapLocation, setAreaMapLocation] = useState<google.maps.LatLngLiteral>(DEFAULT_CENTER);
-  const [showAreaMap, setShowAreaMap] = useState<boolean>(false);
-  const areaMapAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const [selectedPlaceMapLocation, setSelectedPlaceMapLocation] = useState<google.maps.LatLngLiteral | null>(null);
+  const [showSelectedPlaceMap, setShowSelectedPlaceMap] = useState<boolean>(false);
+  const selectedPlaceMapAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   const libraries = ['places'] as Libraries;
 
@@ -256,20 +261,32 @@ const ReviewsPage: React.FC = () => {
 
   const handlePlaceClick = (place: GooglePlace) => {
     setSelectedPlace(place);
+    if (isMobile) {
+      setViewMode('details');
+    }
   }
 
   const handleShowMap = (placeId: string) => {
     const googlePlace: GooglePlace | undefined = places.find(place => place.place_id === placeId);
     if (googlePlace && googlePlace.geometry) {
       const geometry: GoogleGeometry = googlePlace.geometry!;
-      setAreaMapLocation(
+      setSelectedPlaceMapLocation(
         {
           lat: geometry.location.lat,
           lng: geometry.location.lng,
         }
       );
-      setShowAreaMap(true);
+      setShowSelectedPlaceMap(true);
+      if (isMobile) {
+        setViewMode('map');
+      }
     }
+  };
+
+  const handleBackToList = () => {
+    setViewMode('list');
+    setSelectedPlace(null);
+    setSelectedPlaceMapLocation(null);
   };
 
   const handleShowDirections = (placeId: string) => {
@@ -284,9 +301,9 @@ const ReviewsPage: React.FC = () => {
 
   const handleTogglePanel = (_: React.MouseEvent<HTMLElement>, newView: string | null) => {
     if (newView === "map") {
-      setShowAreaMap(true);
+      setShowSelectedPlaceMap(true);
     } else if (newView === "details") {
-      setShowAreaMap(false);
+      setShowSelectedPlaceMap(false);
     }
   };
 
@@ -305,15 +322,15 @@ const ReviewsPage: React.FC = () => {
   }
 
   const handlePlaceChanged = () => {
-    if (areaMapAutocompleteRef.current) {
-      const place: google.maps.places.PlaceResult = areaMapAutocompleteRef.current.getPlace();
+    if (selectedPlaceMapAutocompleteRef.current) {
+      const place: google.maps.places.PlaceResult = selectedPlaceMapAutocompleteRef.current.getPlace();
       if (place.geometry !== undefined) {
         const geometry: google.maps.places.PlaceGeometry = place.geometry!;
         const newCoordinates: google.maps.LatLngLiteral = {
           lat: geometry.location!.lat(),
           lng: geometry.location!.lng(),
         };
-        setAreaMapLocation(newCoordinates);
+        setSelectedPlaceMapLocation(newCoordinates);
         console.log("Place changed:", place, newCoordinates);
       }
     }
@@ -327,7 +344,7 @@ const ReviewsPage: React.FC = () => {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
-            setAreaMapLocation(
+            setSelectedPlaceMapLocation(
               {
                 lat: latitude,
                 lng: longitude,
@@ -350,10 +367,27 @@ const ReviewsPage: React.FC = () => {
   const renderMap = () => {
     return (
       <MapWithMarkers
-        key={JSON.stringify({ googlePlaces: places, specifiedLocation: areaMapLocation })} // Forces re-render on prop change
-        initialCenter={areaMapLocation}
+        key={JSON.stringify({ googlePlaces: places, specifiedLocation: selectedPlaceMapLocation })} // Forces re-render on prop change
+        initialCenter={selectedPlaceMapLocation!}
         locations={places}
       />
+    );
+  };
+
+  const renderMapView = () => {
+    if (!selectedPlaceMapLocation) {
+      return null;
+    }
+    return (
+      <div style={{ padding: '16px' }}>
+        <Button variant="outlined" onClick={handleBackToList} style={{ marginBottom: '16px' }}>
+          Back to List
+        </Button>
+        {renderSelectedPlaceMapAutocomplete()}
+        <div style={{ height: '400px', width: '100%' }}>
+          {renderMap()}
+        </div>
+      </div>
     );
   };
 
@@ -589,12 +623,28 @@ const ReviewsPage: React.FC = () => {
     );
   }
 
+  const renderSelectedPlaceMapAutocomplete = (): JSX.Element => {
+    return (
+      <Autocomplete
+        onLoad={(autocomplete) => (selectedPlaceMapAutocompleteRef.current = autocomplete)}
+        onPlaceChanged={handlePlaceChanged}
+      >
+        <input
+          type="text"
+          placeholder="Enter the location"
+          onChange={handleInputChange} // Custom input handling
+          style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}
+        />
+      </Autocomplete>
+    );
+  }
+
   const renderElementIDontKnowHowToName = (): JSX.Element => {
     return (
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div>
           <ToggleButtonGroup
-            value={showAreaMap ? "map" : "details"}
+            value={showSelectedPlaceMap ? "map" : "details"}
             exclusive
             onChange={handleTogglePanel}
             style={{ marginBottom: '10px', display: 'flex', justifyContent: 'left' }}
@@ -606,35 +656,14 @@ const ReviewsPage: React.FC = () => {
               Reviews
             </ToggleButton>
           </ToggleButtonGroup>
-          {showAreaMap ?
-            (
-              <Autocomplete
-                onLoad={(autocomplete) => (areaMapAutocompleteRef.current = autocomplete)}
-                onPlaceChanged={handlePlaceChanged}
-              >
-                <input
-                  type="text"
-                  placeholder="Enter the location"
-                  onChange={handleInputChange} // Custom input handling
-                  style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}
-                />
-                {/* <TextField
-                  fullWidth
-                  label="Restaurant Name"
-                  value={restaurantLabel}
-                  onChange={(e) => setRestaurantLabel(e.target.value)}
-                  placeholder="Enter the restaurant name"
-                  required
-                  style={{ marginBottom: 20 }}
-                /> */}
-              </Autocomplete>
-            ) : null
-          }
+          {showSelectedPlaceMap ? ( // If the map is shown, render the autocomplete
+            renderSelectedPlaceMapAutocomplete()
+          ) : null}
         </div>
         <div
           style={{ flex: 1 }}
         >
-          {showAreaMap ? (
+          {showSelectedPlaceMap ? (
             <Paper id='mapContainer' className="map-container">
               {renderMap()}
             </Paper>
@@ -688,51 +717,90 @@ const ReviewsPage: React.FC = () => {
         </div>
 
         {/* Container for Places Table / Map */}
-        <div className="table-and-details-container">
-          <TableContainer component={Paper} className="scrollable-table-container">
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow className="table-head-fixed">
-                  <TableCell align="center"></TableCell>
-                  <TableCell align="center"></TableCell>
-                  <TableCell align="center"></TableCell>
-                  <TableCell align="center"></TableCell>
-                  <TableCell>Place</TableCell>
-                  <TableCell>Location</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredPlaces.map((place: GooglePlace) => (
-                  <React.Fragment key={place.place_id}>
-                    <TableRow className="table-row-hover" onClick={() => handlePlaceClick(place)} >
-                      <TableCell align="right" className="dimmed" style={smallColumnStyle}>
-                        <IconButton onClick={() => handleShowMap(place.place_id)}>
-                          <MapIcon />
-                        </IconButton>
-                      </TableCell>
-                      <TableCell align="right" className="dimmed" style={smallColumnStyle}>
-                        <IconButton onClick={() => handleShowDirections(place.place_id)}>
-                          <DirectionsIcon />
-                        </IconButton>
-                      </TableCell>
-                      <TableCell align="right" style={thumbsStyle}>
-                        {renderThumbsUps(place.place_id)}
-                      </TableCell>
-                      <TableCell align="right" style={thumbsStyle}>
-                        {renderThumbsDowns(place.place_id)}
-                      </TableCell>
-                      <TableCell>{place.name}</TableCell>
-                      <TableCell>{getCityNameFromPlace(place) || 'Not provided'}</TableCell>
-                    </TableRow>
-                  </React.Fragment>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          {renderElementIDontKnowHowToName()}
-        </div>
-      </div>
-    </LoadScript>
+        {isMobile ? (
+          viewMode === 'list' ? (
+            <div className="scrollable-table-container">
+              {filteredPlaces.map((place) => (
+                <div key={place.place_id} style={{ marginBottom: '16px', padding: '8px', borderBottom: '1px solid #ddd' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Typography variant="h6">{place.name}</Typography>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <IconButton onClick={() => handleShowMap(place.place_id)} size="small" title="View Map">
+                        <MapOutlinedIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton onClick={() => handlePlaceClick(place)} size="small" title="View Reviews">
+                        <RateReviewOutlinedIcon fontSize="small" />
+                      </IconButton>
+                    </div>
+                  </div>
+                  <Typography variant="body2" color="textSecondary">{getCityNameFromPlace(place)}</Typography>
+                </div>
+              ))}
+            </div>
+          ) : viewMode === 'details' ? (
+            // Mobile Details View
+            <div style={{ padding: '16px' }}>
+              <Button variant="outlined" onClick={handleBackToList} style={{ marginBottom: '16px' }}>
+                Back to List
+              </Button>
+              {selectedPlace && (
+                <div>
+                  <Typography variant="h5">Reviews for {selectedPlace.name}</Typography>
+                  {renderReviewDetailsForSelectedPlace()}
+                </div>
+              )}
+            </div>
+          ) : (
+            // Mobile Map View
+            renderMapView()
+          )
+        ) : (
+          <div className="table-and-details-container">
+            <TableContainer component={Paper} className="scrollable-table-container">
+              <Table stickyHeader>
+                <TableHead>
+                  <TableRow className="table-head-fixed">
+                    <TableCell align="center"></TableCell>
+                    <TableCell align="center"></TableCell>
+                    <TableCell align="center"></TableCell>
+                    <TableCell align="center"></TableCell>
+                    <TableCell>Place</TableCell>
+                    <TableCell>Location</TableCell>
+                  </TableRow>
+                </TableHead >
+                <TableBody>
+                  {filteredPlaces.map((place: GooglePlace) => (
+                    <React.Fragment key={place.place_id}>
+                      <TableRow className="table-row-hover" onClick={() => handlePlaceClick(place)} >
+                        <TableCell align="right" className="dimmed" style={smallColumnStyle}>
+                          <IconButton onClick={() => handleShowMap(place.place_id)}>
+                            <MapIcon />
+                          </IconButton>
+                        </TableCell>
+                        <TableCell align="right" className="dimmed" style={smallColumnStyle}>
+                          <IconButton onClick={() => handleShowDirections(place.place_id)}>
+                            <DirectionsIcon />
+                          </IconButton>
+                        </TableCell>
+                        <TableCell align="right" style={thumbsStyle}>
+                          {renderThumbsUps(place.place_id)}
+                        </TableCell>
+                        <TableCell align="right" style={thumbsStyle}>
+                          {renderThumbsDowns(place.place_id)}
+                        </TableCell>
+                        <TableCell>{place.name}</TableCell>
+                        <TableCell>{getCityNameFromPlace(place) || 'Not provided'}</TableCell>
+                      </TableRow>
+                    </React.Fragment>
+                  ))}
+                </TableBody>
+              </Table >
+            </TableContainer >
+            {renderElementIDontKnowHowToName()}
+          </div >
+        )}
+      </div >
+    </LoadScript >
   );
 };
 

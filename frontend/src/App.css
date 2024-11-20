@@ -95,3 +95,36 @@
 .pac-container {
   z-index: 2000 !important;
 }
+
+/* Add this at the end of App.css */
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  .page-container {
+    flex-direction: column;
+    padding: 10px; /* Reduce padding for mobile */
+  }
+
+  .table-and-details-container {
+    flex-direction: column;
+    height: auto; /* Allow height to adjust automatically */
+  }
+
+  .scrollable-table-container {
+    max-width: 100%; /* Full width for mobile */
+  }
+
+  .review-details,
+  .map-container {
+    height: auto;
+    margin-top: 10px; /* Add spacing between sections */
+  }
+
+  .full-width-container {
+    max-width: 100% !important; /* Ensure full width for forms */
+  }
+
+  .App-header {
+    font-size: calc(8px + 2vmin); /* Slightly smaller font for mobile */
+  }
+}
