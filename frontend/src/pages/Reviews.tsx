@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Button, Popover, FormControlLabel, Checkbox, TextField, ToggleButton, ToggleButtonGroup, Slider, Switch, Radio, Tooltip } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Button, Popover, FormControlLabel, Checkbox, TextField, ToggleButton, ToggleButtonGroup, Slider, Switch, Radio, Tooltip, Box } from '@mui/material';
 
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
-import { FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlace, MemoRappReview, QueryRequestBody, WouldReturnQuery } from '../types';
+import { FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlace, ItemReview, MemoRappReview, QueryRequestBody, WouldReturnQuery } from '../types';
 import '../App.css';
 import { Autocomplete, Libraries, LoadScript } from '@react-google-maps/api';
 import MapWithMarkers from '../components/MapWIthMarkers';
@@ -361,19 +361,37 @@ const ReviewsPage: React.FC = () => {
     return (
       <Paper id='reviewDetails' key={review._id} className="review-details" style={{ marginTop: '16px', boxShadow: 'none' }}>
         <Typography>
-          <Tooltip title="Edit Review">
-            <IconButton onClick={() => handleEditReview(review)}>
-              <EditIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Delete" arrow>
-            <IconButton onClick={() => handleDeleteReview(review)}>
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
+          <Box sx={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+            <Tooltip title="Edit Review">
+              <IconButton
+                onClick={() => handleEditReview(review)}
+                size="small" // Makes the button smaller
+                sx={{ padding: '0px' }} // Reduces padding for smaller appearance
+              >
+                <EditIcon fontSize="small" /> {/* Makes the icon smaller */}
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete" arrow>
+              <IconButton
+                onClick={() => handleDeleteReview(review)}
+                size="small" // Makes the button smaller
+                sx={{ padding: '0px' }} // Reduces padding for smaller appearance
+              >
+                <DeleteIcon fontSize="small" /> {/* Makes the icon smaller */}
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Typography>
         <Typography><strong>Date of Visit:</strong> {review.structuredReviewProperties.dateOfVisit}</Typography>
         <Typography><strong>Would Return:</strong> {(review.structuredReviewProperties.wouldReturn === true) ? 'Yes' : (review.structuredReviewProperties.wouldReturn === false) ? 'No' : 'Unspecified'}</Typography>
+        <Typography><strong>Items Ordered:</strong></Typography>
+        <ul>
+          {review.freeformReviewProperties.itemReviews.map((itemReview: ItemReview, idx) => (
+            <li key={idx}>
+              {itemReview.item} - {itemReview.review || 'No rating provided'}
+            </li>
+          ))}
+        </ul>
         <Typography><strong>Review Text:</strong> {review.freeformReviewProperties.reviewText}</Typography>
       </Paper>
     );
