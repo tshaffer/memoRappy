@@ -263,8 +263,16 @@ const ReviewsPage: React.FC = () => {
     }
   };
 
+  const getGooglePlaceFromPlace = (place: GooglePlace): google.maps.LatLngLiteral => {
+    return {
+      lat: place!.geometry!.location.lat,
+      lng: place!.geometry!.location.lng,
+    };
+  }
+  
   const handlePlaceClick = (place: GooglePlace) => {
     setSelectedPlace(place);
+    setSelectedPlaceMapLocation(getGooglePlaceFromPlace(place));
     if (isMobile) {
       setViewMode('details');
     }
@@ -273,13 +281,7 @@ const ReviewsPage: React.FC = () => {
   const handleShowMap = (placeId: string) => {
     const googlePlace: GooglePlace | undefined = places.find(place => place.place_id === placeId);
     if (googlePlace && googlePlace.geometry) {
-      const geometry: GoogleGeometry = googlePlace.geometry!;
-      setSelectedPlaceMapLocation(
-        {
-          lat: geometry.location.lat,
-          lng: geometry.location.lng,
-        }
-      );
+      setSelectedPlaceMapLocation(getGooglePlaceFromPlace(googlePlace));
       setShowSelectedPlaceMap(true);
       if (isMobile) {
         setViewMode('map');
