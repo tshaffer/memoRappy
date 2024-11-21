@@ -19,7 +19,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { LoadScript, Autocomplete, Libraries } from '@react-google-maps/api';
-import { ReviewFormDisplayTabs, ChatResponse, GooglePlace, FreeformReviewProperties, PreviewRequestBody, ReviewEntity, SubmitReviewBody, StructuredReviewProperties, MemoRappReview, EditableReview, PreviewResponse } from '../types';
+import { ReviewFormDisplayTabs, ChatResponse, GooglePlace, FreeformReviewProperties, PreviewRequestBody, ReviewEntity, SubmitReviewBody, StructuredReviewProperties, MemoRappReview, EditableReview, PreviewResponse, ChatRequestBody } from '../types';
 import { pickGooglePlaceProperties } from '../utilities';
 
 type ChatMessage = {
@@ -105,27 +105,8 @@ const ReviewForm: React.FC = () => {
   const handlePlaceChanged = () => {
     if (autocompleteRef.current) {
       const place: google.maps.places.PlaceResult = autocompleteRef.current.getPlace();
-      const geometry: google.maps.places.PlaceGeometry = place.geometry!;
-
-      console.log('handlePlaceChanged');
-      console.log('place', place);
-      console.log('geometry', geometry);
-      console.log('geometry.location');
-      console.log(geometry.location!);
-      console.log('geometry.viewport');
-      console.log(geometry.viewport);
-
-      console.log(geometry.location!.lat());
-      console.log(geometry.location!.lng());
-      console.log(geometry.viewport!.getNorthEast().lat());
-      console.log(geometry.viewport!.getNorthEast().lng());
-      console.log(geometry.viewport!.getSouthWest().lat());
-      console.log(geometry.viewport!.getSouthWest().lng());
-
-      // setPlaceResult(place);
       const googlePlace: GooglePlace = pickGooglePlaceProperties(place);
       setGooglePlace(googlePlace);
-
       const restaurantLabel = googlePlace.name;
       setRestaurantLabel(restaurantLabel);
     }
@@ -163,10 +144,15 @@ const ReviewForm: React.FC = () => {
     if (!sessionId || !chatInput) return;
     try {
       setIsLoading(true);
+      const chatRequestBody: ChatRequestBody = {
+        userInput: chatInput,
+        sessionId,
+        reviewText,
+      };
       const response: Response = await fetch('/api/reviews/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userInput: chatInput, sessionId, reviewText }),
+        body: JSON.stringify(chatRequestBody),
       });
       const chatResponse: ChatResponse = (await response.json()) as ChatResponse;
       const { freeformReviewProperties, updatedReviewText } = chatResponse;
@@ -186,15 +172,7 @@ const ReviewForm: React.FC = () => {
     if (!freeformReviewProperties) return;
     try {
       setIsLoading(true);
-
-      console.log('googlePlace', googlePlace);
-      console.log('freeformReviewProperties', freeformReviewProperties);
-      console.log('wouldReturn', wouldReturn);
-      console.log('sessionId', sessionId);
-      console.log('reviewText', reviewText);
       const structuredReviewProperties: StructuredReviewProperties = { dateOfVisit, wouldReturn };
-      console.log('structuredReviewProperties:', structuredReviewProperties);
-
       const submitBody: SubmitReviewBody = {
         _id,
         place: googlePlace!,

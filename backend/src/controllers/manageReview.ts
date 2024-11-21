@@ -3,7 +3,7 @@ import { openai } from '../index';
 import { Request, Response } from 'express';
 import Review, { IReview } from "../models/Review";
 import { extractFieldFromResponse, extractItemReviews, removeSquareBrackets } from '../utilities';
-import { FreeformReviewProperties, ItemReview, MemoRappReview, PreviewRequestBody, PreviewResponse, SubmitReviewBody } from '../types';
+import { ChatRequestBody, ChatResponse, FreeformReviewProperties, ItemReview, MemoRappReview, PreviewRequestBody, PreviewResponse, SubmitReviewBody } from '../types';
 import { addPlace, getPlace } from './places';
 import { IMongoPlace } from '../models';
 import { addReview } from './reviews';
@@ -88,6 +88,80 @@ export const parsePreview = async (sessionId: string, reviewText: string): Promi
     throw new Error('Error processing review preview.');
   }
 }
+
+export const chatReviewHandler = async (
+  req: Request<{}, {}, ChatRequestBody>,
+  res: Response
+): Promise<void> => {
+  const { userInput, sessionId, reviewText } = req.body;
+
+  if (!reviewConversations[sessionId]) {
+    res.status(400).json({ error: 'Session not found. Start with a preview first.' });
+    return;
+  }
+
+  // Add user input to the conversation
+  reviewConversations[sessionId].push({ role: "user", content: userInput });
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        ...reviewConversations[sessionId],
+        {
+          role: "system",
+          content: `Please provide:
+          1. The updated structured data based on the full conversation. Please ensure that the updated structured data begins with "Updated Structured Data:".
+          2. An updated review text that incorporates the latest user modifications. Please ensure that the updated review text begins with "Updated Review Text:".
+
+          Original Review: "${reviewText}"`,
+        },
+      ],
+      max_tokens: 500,
+      temperature: 0.5,
+    });
+
+    const messageContent = response.choices[0].message?.content;
+    console.log('ChatGPT response:', messageContent); // Debugging log
+
+    if (!messageContent) {
+      res.status(500).json({ error: 'Failed to extract data from the response.' });
+      return;
+    }
+
+    // Adjusted regular expressions to match the response format
+    const structuredDataMatch = messageContent.match(/^Updated Structured Data:\s*([\s\S]*?)Updated Review Text:/m);
+    const updatedReviewTextMatch = messageContent.match(/Updated Review Text:\s*"(.*)"/s);
+
+    if (!structuredDataMatch || !updatedReviewTextMatch) {
+      console.error('Parsing error: Expected structured data and updated review text not found');
+      res.status(500).json({ error: 'Failed to parse updated data.' });
+      return;
+    }
+
+    const structuredDataText = structuredDataMatch[1].trim();
+    const updatedReviewText = updatedReviewTextMatch[1].trim();
+
+    const itemReviews: ItemReview[] = extractItemReviews(structuredDataText);
+
+    const freeformReviewProperties: FreeformReviewProperties = {
+      reviewText: updatedReviewText,
+      itemReviews,
+      reviewer: removeSquareBrackets(extractFieldFromResponse(structuredDataText, 'Reviewer name')),
+    };
+
+    const chatResponse: ChatResponse = {
+      freeformReviewProperties,
+      updatedReviewText,
+    };
+
+    res.json(chatResponse);
+  } catch (error) {
+    console.error('Error during chat interaction:', error);
+    res.status(500).json({ error: 'An error occurred while processing the chat response.' });
+  }
+};
+
 
 export const submitReviewHandler = async (req: Request, res: Response): Promise<any> => {
 

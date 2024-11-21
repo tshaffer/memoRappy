@@ -15,8 +15,3 @@ export interface ReviewEntity {
   reviewText: string;
 }
 
-export interface ChatResponse {
-  freeformReviewProperties: FreeformReviewProperties;
-  updatedReviewText: string;
-}
-

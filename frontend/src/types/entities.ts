@@ -38,6 +38,12 @@ export interface PreviewRequestBody {
   sessionId: string;
 }
 
+export interface ChatRequestBody {
+  userInput: string;
+  sessionId: string;
+  reviewText: string;
+}
+
 export interface MemoRappPlace {
   place_id: string;
   name: string;
@@ -53,3 +59,9 @@ export interface QueryRequestBody {
 export interface PreviewResponse {
   freeformReviewProperties: FreeformReviewProperties;
 }
+
+export interface ChatResponse {
+  freeformReviewProperties: FreeformReviewProperties;
+  updatedReviewText: string;
+}
+
