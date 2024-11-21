@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { GooglePlace } from '../types';
+import { ExtendedGooglePlace, GooglePlace } from '../types';
 import { AdvancedMarker, APIProvider, InfoWindow, Map, MapCameraChangedEvent } from '@vis.gl/react-google-maps';
 import { getLatLngFromPlace } from '../utilities';
 import '../App.css';
+import { Typography } from '@mui/material';
 
 interface MapWithMarkersProps {
   initialCenter: google.maps.LatLngLiteral;
-  locations: GooglePlace[];
+  locations: ExtendedGooglePlace[];
 }
 
 // const DEFAULT_CENTER = { lat: 37.3944829, lng: -122.0790619 };
@@ -15,7 +16,7 @@ const DEFAULT_ZOOM = 14;
 const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, locations }) => {
 
   const [currentLocation, setCurrentLocation] = useState<google.maps.LatLngLiteral | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<GooglePlace | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<ExtendedGooglePlace | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
   useEffect(() => {
@@ -63,7 +64,7 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
     }} />
   );
 
-  const handleMarkerClick = (location: GooglePlace) => {
+  const handleMarkerClick = (location: ExtendedGooglePlace) => {
     setSelectedLocation(location);
   };
 
@@ -86,6 +87,33 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
       />
     ));
   }
+
+  const renderInfoWindow = (): JSX.Element => {
+    return (
+      <InfoWindow
+        position={getLatLngFromPlace(selectedLocation!)}
+        onCloseClick={handleCloseInfoWindow}
+      >
+        <div>
+          <h4>{selectedLocation!.name}</h4>
+          <a href={selectedLocation!.website} target="_blank" rel="noopener noreferrer">
+            {selectedLocation!.website}
+          </a>
+          <Typography
+            component="p"
+            style={{
+              margin: 0,
+              fontFamily: 'inherit', // Matches the inherited font family
+              fontSize: 'inherit', // Inherits the size from <h4>
+              lineHeight: 'inherit', // Matches the line-height
+            }}
+          >
+            {selectedLocation!.reviews[0]!.freeformReviewProperties.reviewText}
+          </Typography>
+        </div>
+      </InfoWindow>
+    );
+  };
 
   const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY!;
 
@@ -114,19 +142,7 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
             <CustomBlueDot />
           </AdvancedMarker>
         )}
-        {selectedLocation && (
-          <InfoWindow
-            position={getLatLngFromPlace(selectedLocation)}
-            onCloseClick={handleCloseInfoWindow}
-          >
-            <div>
-              <h4>{selectedLocation.name}</h4>
-              <a href={selectedLocation.website} target="_blank" rel="noopener noreferrer">
-                {selectedLocation.website}
-              </a>
-            </div>
-          </InfoWindow>
-        )}
+        {selectedLocation && (renderInfoWindow())}
       </Map>
     </APIProvider>
   );

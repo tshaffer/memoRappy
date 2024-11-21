@@ -8,7 +8,7 @@ import RateReviewOutlinedIcon from '@mui/icons-material/RateReviewOutlined';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
-import { FilterQueryParams, PlacesReviewsCollection, GoogleGeometry, GooglePlace, ItemReview, MemoRappReview, QueryRequestBody, WouldReturnQuery } from '../types';
+import { FilterQueryParams, PlacesReviewsCollection, GoogleGeometry, GooglePlace, ItemReview, MemoRappReview, QueryRequestBody, WouldReturnQuery, ExtendedGooglePlace } from '../types';
 import '../App.css';
 import { Autocomplete, Libraries, LoadScript } from '@react-google-maps/api';
 import MapWithMarkers from '../components/MapWIthMarkers';
@@ -370,12 +370,22 @@ const ReviewsPage: React.FC = () => {
     }
   };
 
+  const getExtendedGooglePlaces = (): ExtendedGooglePlace[] => {
+    return places.map((place: GooglePlace) => {
+      const reviewsForPlace: MemoRappReview[] = getFilteredReviewsForPlace(place.place_id);
+      return {
+        ...place,
+        reviews: reviewsForPlace,
+      };
+    });
+  }
+
   const renderMap = () => {
     return (
       <MapWithMarkers
         key={JSON.stringify({ googlePlaces: places, specifiedLocation: selectedPlaceMapLocation })} // Forces re-render on prop change
         initialCenter={selectedPlaceMapLocation!}
-        locations={places}
+        locations={getExtendedGooglePlaces()}
       />
     );
   };
