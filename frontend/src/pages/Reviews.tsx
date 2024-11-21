@@ -269,7 +269,7 @@ const ReviewsPage: React.FC = () => {
       lng: place!.geometry!.location.lng,
     };
   }
-  
+
   const handlePlaceClick = (place: GooglePlace) => {
     setSelectedPlace(place);
     setSelectedPlaceMapLocation(getGooglePlaceFromPlace(place));
@@ -479,6 +479,55 @@ const ReviewsPage: React.FC = () => {
     } else {
       return null;
     }
+  }
+
+  const renderFiltersUI = (): JSX.Element => {
+    return (
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+        {/* Specify Filter Buttons */}
+        <Button
+          variant="outlined"
+          aria-describedby="set-distance-popover"
+          onClick={handleDistanceClick}
+          sx={{
+            borderColor: '#1976d2', // MUI primary color
+            color: '#1976d2',
+            textTransform: 'none', // Prevents uppercase transformation
+          }}
+        >
+          Distance Away
+        </Button>
+        <Button
+          variant="outlined"
+          aria-describedby="would-return-popover"
+          onClick={handleWouldReturnClick}
+          sx={{
+            borderColor: '#1976d2', // MUI primary color
+            color: '#1976d2',
+            textTransform: 'none',
+          }}
+        >
+          Would Return
+        </Button>
+
+        {/* Apply Filter Button */}
+        <Button
+          variant="contained"
+          onClick={handleSearchByFilter}
+          sx={{
+            backgroundColor: '#1976d2', // MUI primary color
+            color: '#fff',
+            fontWeight: 'bold',
+            boxShadow: 'none',
+            '&:hover': {
+              backgroundColor: '#1565c0', // Darker shade of primary color
+            },
+          }}
+        >
+          Apply
+        </Button>
+      </div>
+    );
   }
 
   const renderDistanceAwayFilterPopover = (): JSX.Element => {
@@ -703,24 +752,7 @@ const ReviewsPage: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <Button variant="outlined" aria-describedby={anchorElSetDistance ? 'set-distance-popover' : undefined} onClick={handleDistanceClick}>
-            Distance Away
-          </Button>
-          <Button variant="outlined" aria-describedby={anchorElWouldReturn ? 'would-return-popover' : undefined} onClick={handleWouldReturnClick}>
-            Would Return
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={handleSearchByFilter}
-          >
-            Search
-          </Button>
-
-          {renderDistanceAwayFilterPopover()}
-          {renderWouldReturnFilterPopover()}
-
-        </div>
+        {renderFiltersUI()}
 
         {/* Container for Places Table / Map */}
         {isMobile ? (
