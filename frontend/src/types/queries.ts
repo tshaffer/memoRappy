@@ -30,7 +30,7 @@ export interface FilterQueryParams {
   wouldReturn?: WouldReturnQuery;
 }
 
-export interface FilterResponse {
+export interface PlacesReviewsCollection {
   places: GooglePlace[];
   reviews: MemoRappReview[];
 }

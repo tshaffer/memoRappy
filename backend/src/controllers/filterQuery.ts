@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import MongoPlace, { IMongoPlace } from '../models/MongoPlace';
 import Review, { IReview } from '../models/Review';
-import { FilterQueryParams, QueryResponse, FilterResponse, GooglePlace, MemoRappReview } from '../types';
+import { FilterQueryParams, QueryResponse, PlacesReviewsCollection, GooglePlace, MemoRappReview } from '../types';
 import { convertMongoPlacesToGooglePlaces } from '../utilities';
 
 export const filterReviewsHandler = async (
@@ -18,7 +18,7 @@ export const filterReviewsHandler = async (
     return review.toObject();
   });
 
-  const filterResponse: FilterResponse = {
+  const filterResponse: PlacesReviewsCollection = {
     places: googlePlaces,
     reviews: memoRappReviews,
   };

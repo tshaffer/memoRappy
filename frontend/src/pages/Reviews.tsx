@@ -8,7 +8,7 @@ import RateReviewOutlinedIcon from '@mui/icons-material/RateReviewOutlined';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
-import { FilterQueryParams, FilterResponse, GoogleGeometry, GooglePlace, ItemReview, MemoRappReview, QueryRequestBody, WouldReturnQuery } from '../types';
+import { FilterQueryParams, PlacesReviewsCollection, GoogleGeometry, GooglePlace, ItemReview, MemoRappReview, QueryRequestBody, WouldReturnQuery } from '../types';
 import '../App.css';
 import { Autocomplete, Libraries, LoadScript } from '@react-google-maps/api';
 import MapWithMarkers from '../components/MapWIthMarkers';
@@ -254,7 +254,7 @@ const ReviewsPage: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(filterQueryParams),
       });
-      const data: FilterResponse = await apiResponse.json();
+      const data: PlacesReviewsCollection = await apiResponse.json();
       console.log('Filter query results:', data);
       setFilteredPlaces(data.places);
       setFilteredReviews(data.reviews);

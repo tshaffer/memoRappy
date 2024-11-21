@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import { MongoPlaceEntity } from '../types/mongoPlace';
+import { MongoPlaceEntity } from '../types/mongoTypes';
 
-export interface IMongoPlace extends Omit<MongoPlaceEntity, "_id">, Document {}
+export interface IMongoPlace extends Omit<MongoPlaceEntity, "_id">, Document { }
 
 export type MongoPlaceModel = Model<IMongoPlace>;
 

@@ -2,7 +2,7 @@ import { Request, response, Response } from 'express';
 import { openai } from '../index';
 import Review, { IReview } from '../models/Review';
 import MongoPlace, { IMongoPlace } from '../models/MongoPlace';
-import { FilterResponse, GooglePlace, MemoRappReview, QueryRequestBody, QueryResponse } from '../types';
+import { PlacesReviewsCollection, GooglePlace, MemoRappReview, QueryRequestBody, QueryResponse } from '../types';
 import { convertMongoPlacesToGooglePlaces } from '../utilities';
 
 interface DateRange {
@@ -89,7 +89,7 @@ export const naturalLanguageQueryHandler: any = async (
     return review.toObject();
   });
 
-  const result: FilterResponse = {
+  const result: PlacesReviewsCollection = {
     places: googlePlaces,
     reviews: memoRappReviews,
   };
