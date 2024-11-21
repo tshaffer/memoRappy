@@ -303,7 +303,6 @@ const ReviewForm: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
                   <RadioGroup
                     row
-                    aria-label="would-return"
                     name="would-return"
                     value={wouldReturn === true ? 'yes' : wouldReturn === false ? 'no' : ''}
                     onChange={handleWouldReturnChange}

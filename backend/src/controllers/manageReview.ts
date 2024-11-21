@@ -7,6 +7,8 @@ import { ChatRequestBody, ChatResponse, FreeformReviewProperties, ItemReview, Me
 import { addPlace, getPlace } from './places';
 import { IMongoPlace } from '../models';
 import { addReview } from './reviews';
+import ItemOrderedModel from '../models/ItemOrdered';
+import { findBestMatch } from './textSimilarity';
 
 // Store conversations for each session
 interface ReviewConversations {
@@ -176,6 +178,8 @@ export const submitReviewHandler = async (req: Request, res: Response): Promise<
   }
 };
 
+
+
 export const submitReview = async (memoRappReview: SubmitReviewBody): Promise<IReview | null> => {
 
   const { _id, place, structuredReviewProperties, freeformReviewProperties, sessionId } = memoRappReview;
@@ -188,6 +192,14 @@ export const submitReview = async (memoRappReview: SubmitReviewBody): Promise<IR
     if (!place) {
       throw new Error('Error saving place.');
     }
+  }
+
+  const { itemReviews } = freeformReviewProperties;
+
+  for (const itemReview of itemReviews) {
+    const inputName = itemReview.item;
+    const matchedStandardizedName = await findBestMatch(inputName);
+    console.log('matchedStandardizedName:', matchedStandardizedName);
   }
 
   const addReviewBody: MemoRappReview = {
@@ -217,6 +229,14 @@ export const submitReview = async (memoRappReview: SubmitReviewBody): Promise<IR
   delete reviewConversations[sessionId];
 
   return null;
-  // const newReview: IReview = new Review(memoRappReview);
-
 }
+
+export const getStandardizedNames = async (request: Request, response: Response) => {
+  try {
+    const uniqueStandardizedNames: string[] = await ItemOrderedModel.distinct("standardizedName").exec();
+    response.json(uniqueStandardizedNames);
+  } catch (error) {
+    console.error("Error fetching standardized names:", error);
+    response.status(500).json({ error: "An error occurred while fetching standardized names." });
+  }
+};  

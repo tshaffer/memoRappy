@@ -35,7 +35,7 @@ const MongoPlaceSchema: Schema = new Schema({
   formatted_address: { type: String, required: true },
   website: { type: String },
   geometry: MongoGeometrySchema
-});
+}, { collection: "mongoPlaces" });
 
 MongoPlaceSchema.index({ "geometry.location": "2dsphere" });
 

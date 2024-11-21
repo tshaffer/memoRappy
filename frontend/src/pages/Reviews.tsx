@@ -70,6 +70,10 @@ const ReviewsPage: React.FC = () => {
     notSpecified: false,
   });
 
+  const [anchorElItemOrdered, setAnchorElItemOrdered] = useState<HTMLElement | null>(null);
+  const [standardizedItemsOrdered, setStandardizedItemsOrdered] = useState<string[]>([]);
+  const [selectedItemsOrdered, setSelectedItemsOrdered] = useState<Set<string>>(new Set());
+
   const [viewMode, setViewMode] = useState<'list' | 'details' | 'map'>('list');
   const [selectedPlace, setSelectedPlace] = useState<GooglePlace | null>(null);
 
@@ -111,8 +115,14 @@ const ReviewsPage: React.FC = () => {
       setReviews(data.memoRappReviews);
       setFilteredReviews(data.memoRappReviews);
     };
+    const fetchStandardizedItemsOrdered = async () => {
+      const response = await fetch('/api/standardizedNames');
+      const uniqueStandardizedNames: string[] = await response.json();
+      setStandardizedItemsOrdered(uniqueStandardizedNames);
+    }
     fetchPlaces();
     fetchReviews();
+    fetchStandardizedItemsOrdered();
   }, []);
 
   const getPlaceById = (placeId: string): GooglePlace | undefined => {
@@ -225,6 +235,26 @@ const ReviewsPage: React.FC = () => {
     setAnchorElWouldReturn(null);
   };
 
+  const handleItemOrderedClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElItemOrdered(event.currentTarget);
+  };
+
+  const handleToggleItemOrdered = (item: string) => {
+    setSelectedItemsOrdered((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(item)) {
+        newSet.delete(item);
+      } else {
+        newSet.add(item);
+      }
+      return newSet;
+    });
+  };
+
+  const handleItemOrderedClose = () => {
+    setAnchorElItemOrdered(null);
+  };
+
   const handleSearchByFilter = async () => {
     console.log('handleSearchByFilter');
 
@@ -246,6 +276,7 @@ const ReviewsPage: React.FC = () => {
     const filterQueryParams: FilterQueryParams = {
       distanceAwayQuery: distanceFilterEnabled ? { lat: lat!, lng: lng!, radius: fromLocationDistance } : undefined,
       wouldReturn,
+      itemsOrdered: selectedItemsOrdered.size > 0 ? Array.from(selectedItemsOrdered) : undefined,
     };
 
     try {
@@ -497,7 +528,6 @@ const ReviewsPage: React.FC = () => {
         {/* Specify Filter Buttons */}
         <Button
           variant="outlined"
-          aria-describedby="set-distance-popover"
           onClick={handleDistanceClick}
           sx={{
             borderColor: '#1976d2', // MUI primary color
@@ -509,7 +539,6 @@ const ReviewsPage: React.FC = () => {
         </Button>
         <Button
           variant="outlined"
-          aria-describedby="would-return-popover"
           onClick={handleWouldReturnClick}
           sx={{
             borderColor: '#1976d2', // MUI primary color
@@ -518,6 +547,17 @@ const ReviewsPage: React.FC = () => {
           }}
         >
           Return?
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={handleItemOrderedClick}
+          sx={{
+            borderColor: '#1976d2', // MUI primary color
+            color: '#1976d2',
+            textTransform: 'none',
+          }}
+        >
+          Item Ordered
         </Button>
 
         {/* Apply Filter Button */}
@@ -538,6 +578,7 @@ const ReviewsPage: React.FC = () => {
         </Button>
         {renderDistanceAwayFilterPopover()}
         {renderWouldReturnFilterPopover()}
+        {renderItemOrderedFilterPopover()}
       </div>
     );
   }
@@ -616,7 +657,6 @@ const ReviewsPage: React.FC = () => {
           <Slider
             value={fromLocationDistance}
             onChange={handleDistanceSliderChange}
-            aria-labelledby="distance-slider"
             min={0}
             max={10}
             step={0.5}
@@ -690,6 +730,54 @@ const ReviewsPage: React.FC = () => {
     );
   }
 
+  const renderItemOrderedFilterPopover = (): JSX.Element => {
+    return (
+      <Popover
+        open={Boolean(anchorElItemOrdered)}
+        anchorEl={anchorElItemOrdered}
+        onClose={handleItemOrderedClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+      >
+        <Box sx={{ padding: 2, minWidth: 250 }}>
+          <Typography variant="h6" gutterBottom>
+            Filter by Items Ordered
+          </Typography>
+
+          {standardizedItemsOrdered.length > 0 ? (
+            <Box sx={{ maxHeight: 300, overflowY: 'auto' }}>
+              {standardizedItemsOrdered.map((item) => (
+                <FormControlLabel
+                  key={item}
+                  control={
+                    <Checkbox
+                      checked={selectedItemsOrdered.has(item)}
+                      onChange={() => handleToggleItemOrdered(item)}
+                    />
+                  }
+                  label={item}
+                />
+              ))}
+            </Box>
+          ) : (
+            <Typography variant="body2" color="textSecondary">
+              No items available to filter.
+            </Typography>
+          )}
+
+          <Box display="flex" justifyContent="flex-end" mt={2}>
+            <Button variant="contained" color="primary" onClick={handleItemOrderedClose}>
+              Close
+            </Button>
+          </Box>
+        </Box>
+
+      </Popover>
+    )
+  }
+
   const renderSelectedPlaceMapAutocomplete = (): JSX.Element => {
     return (
       <Autocomplete
@@ -716,10 +804,10 @@ const ReviewsPage: React.FC = () => {
             onChange={handleTogglePanel}
             style={{ marginBottom: '10px', display: 'flex', justifyContent: 'left' }}
           >
-            <ToggleButton value="map" aria-label="Map">
+            <ToggleButton value="map">
               Map
             </ToggleButton>
-            <ToggleButton value="details" aria-label="Review Details">
+            <ToggleButton value="details">
               Reviews
             </ToggleButton>
           </ToggleButtonGroup>
