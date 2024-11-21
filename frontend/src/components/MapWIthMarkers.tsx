@@ -94,21 +94,30 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
         position={getLatLngFromPlace(selectedLocation!)}
         onCloseClick={handleCloseInfoWindow}
       >
-        <div>
-          <h4>{selectedLocation!.name}</h4>
+        <div style={{ padding: '4px' }}>
+          <style>
+            {`
+            .gm-style-iw-chr {
+              margin-top: -8px;
+              height: 30px;
+            }
+
+            .gm-style-iw {
+              font-size: 13px;
+            }
+          `}
+          </style>
+          <h4 style={{ marginBlockStart: '-6px ' }}>{selectedLocation!.name}</h4>
           <a href={selectedLocation!.website} target="_blank" rel="noopener noreferrer">
             {selectedLocation!.website}
           </a>
           <Typography
-            component="p"
             style={{
-              margin: 0,
-              fontFamily: 'inherit', // Matches the inherited font family
-              fontSize: 'inherit', // Inherits the size from <h4>
-              lineHeight: 'inherit', // Matches the line-height
+              marginTop: '8px',
+              fontSize: 'inherit',
             }}
           >
-            {selectedLocation!.reviews[0]!.freeformReviewProperties.reviewText}
+            {selectedLocation!.reviews[0]?.freeformReviewProperties?.reviewText || 'No review available.'}
           </Typography>
         </div>
       </InfoWindow>
