@@ -507,7 +507,7 @@ const ReviewsPage: React.FC = () => {
             textTransform: 'none',
           }}
         >
-          Would Return
+          Return?
         </Button>
 
         {/* Apply Filter Button */}
@@ -526,6 +526,8 @@ const ReviewsPage: React.FC = () => {
         >
           Apply
         </Button>
+        {renderDistanceAwayFilterPopover()}
+        {renderWouldReturnFilterPopover()}
       </div>
     );
   }
