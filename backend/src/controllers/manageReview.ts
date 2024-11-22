@@ -304,6 +304,14 @@ async function findBestMatch(inputName: string): Promise<string> {
 
     // Step 5: Compare against threshold
     if (bestMatch.similarity >= similarityThreshold) {
+      // Add the inputName and matched standardizedName to the database
+      const matchedItem = new ItemOrderedModel({
+        inputName,
+        standardizedName: bestMatch.item.standardizedName, // Use the matched standardizedName
+        embedding: inputEmbedding, // Save the embedding for the inputName
+      });
+      await matchedItem.save();
+
       return bestMatch.item.standardizedName; // Return the matched standardizedName
     }
 
