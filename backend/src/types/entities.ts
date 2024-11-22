@@ -27,7 +27,6 @@ export interface ItemOrdered {
 
 export interface ItemReview {
   item: string;
-  standardizedName?: string;
   review: string;
 }
 

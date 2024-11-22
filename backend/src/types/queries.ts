@@ -28,6 +28,7 @@ export interface DistanceAwayQuery {
 export interface FilterQueryParams {
   distanceAwayQuery?: DistanceAwayQuery;
   wouldReturn?: WouldReturnQuery;
+  itemsOrdered?: string[];
 }
 
 export interface PlacesReviewsCollection {
