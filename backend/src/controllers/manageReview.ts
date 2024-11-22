@@ -263,21 +263,23 @@ async function findBestMatch(inputName: string): Promise<string> {
     // Step 1: Fetch all items from the database
     const allItems = await ItemOrderedModel.find({}).exec();
 
-    if (allItems.length === 0) {
-      // If no items exist, add inputName as a new standardizedName
-      await new ItemOrderedModel({
-        inputName,
-        standardizedName: inputName,
-      }).save();
-      return inputName; // No match, treated as new
-    }
-
     // Step 2: Generate embedding for inputName
     const inputEmbeddingResponse = await openai.embeddings.create({
       model: "text-embedding-ada-002",
       input: inputName,
     });
     const inputEmbedding = inputEmbeddingResponse.data[0].embedding;
+
+    if (allItems.length === 0) {
+      // If no items exist, add inputName as a new standardizedName with its embedding
+      const newItem = new ItemOrderedModel({
+        inputName,
+        standardizedName: inputName,
+        embedding: inputEmbedding, // Save the embedding
+      });
+      await newItem.save();
+      return inputName; // No match, treated as new
+    }
 
     // Step 3: Compute similarity scores
     const similarities = allItems.map((item) => {
@@ -309,7 +311,7 @@ async function findBestMatch(inputName: string): Promise<string> {
     const newItem = new ItemOrderedModel({
       inputName,
       standardizedName: inputName,
-      embedding: inputEmbedding,
+      embedding: inputEmbedding, // Save the embedding
     });
     await newItem.save();
     return inputName; // Treated as new
