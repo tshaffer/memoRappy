@@ -213,35 +213,33 @@ export const submitReview = async (memoRappReview: SubmitReviewBody): Promise<IR
     // }
   }
 
+  const addReviewBody: MemoRappReview = {
+    place_id: place.place_id,
+    structuredReviewProperties,
+    freeformReviewProperties,
+  };
+
+  let savedReview: IReview | null;
+
+  if (_id) {
+    // If _id is provided, update the existing document
+    savedReview = await Review.findByIdAndUpdate(_id, addReviewBody, {
+      new: true,    // Return the updated document
+      runValidators: true // Ensure the updated data complies with schema validation
+    });
+
+    if (!savedReview) {
+      throw new Error('Review not found for update.');
+    }
+  } else {
+    const newReview: IReview | null = await addReview(addReviewBody);
+    console.log('newReview:', newReview?.toObject());
+  }
+
+  // Clear conversation history for the session after submission
+  delete reviewConversations[sessionId];
+
   return null;
-
-  // const addReviewBody: MemoRappReview = {
-  //   place_id: place.place_id,
-  //   structuredReviewProperties,
-  //   freeformReviewProperties,
-  // };
-
-  // let savedReview: IReview | null;
-
-  // if (_id) {
-  //   // If _id is provided, update the existing document
-  //   savedReview = await Review.findByIdAndUpdate(_id, addReviewBody, {
-  //     new: true,    // Return the updated document
-  //     runValidators: true // Ensure the updated data complies with schema validation
-  //   });
-
-  //   if (!savedReview) {
-  //     throw new Error('Review not found for update.');
-  //   }
-  // } else {
-  //   const newReview: IReview | null = await addReview(addReviewBody);
-  //   console.log('newReview:', newReview?.toObject());
-  // }
-
-  // // Clear conversation history for the session after submission
-  // delete reviewConversations[sessionId];
-
-  // return null;
   // const newReview: IReview = new Review(memoRappReview);
 
 }
