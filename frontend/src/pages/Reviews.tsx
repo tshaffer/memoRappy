@@ -528,7 +528,6 @@ const ReviewsPage: React.FC = () => {
         {/* Specify Filter Buttons */}
         <Button
           variant="outlined"
-          aria-describedby="set-distance-popover"
           onClick={handleDistanceClick}
           sx={{
             borderColor: '#1976d2', // MUI primary color
@@ -540,7 +539,6 @@ const ReviewsPage: React.FC = () => {
         </Button>
         <Button
           variant="outlined"
-          aria-describedby="would-return-popover"
           onClick={handleWouldReturnClick}
           sx={{
             borderColor: '#1976d2', // MUI primary color
@@ -659,7 +657,6 @@ const ReviewsPage: React.FC = () => {
           <Slider
             value={fromLocationDistance}
             onChange={handleDistanceSliderChange}
-            aria-labelledby="distance-slider"
             min={0}
             max={10}
             step={0.5}
@@ -807,10 +804,10 @@ const ReviewsPage: React.FC = () => {
             onChange={handleTogglePanel}
             style={{ marginBottom: '10px', display: 'flex', justifyContent: 'left' }}
           >
-            <ToggleButton value="map" aria-label="Map">
+            <ToggleButton value="map">
               Map
             </ToggleButton>
-            <ToggleButton value="details" aria-label="Review Details">
+            <ToggleButton value="details">
               Reviews
             </ToggleButton>
           </ToggleButtonGroup>
