@@ -72,7 +72,7 @@ const ReviewsPage: React.FC = () => {
 
   const [anchorElItemOrdered, setAnchorElItemOrdered] = useState<HTMLElement | null>(null);
   const [standardizedItemsOrdered, setStandardizedItemsOrdered] = useState<string[]>([]);
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [selectedItemsOrdered, setSelectedItemsOrdered] = useState<Set<string>>(new Set());
 
   const [viewMode, setViewMode] = useState<'list' | 'details' | 'map'>('list');
   const [selectedPlace, setSelectedPlace] = useState<GooglePlace | null>(null);
@@ -239,6 +239,18 @@ const ReviewsPage: React.FC = () => {
     setAnchorElItemOrdered(event.currentTarget);
   };
 
+  const handleToggleItemOrdered = (item: string) => {
+    setSelectedItemsOrdered((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(item)) {
+        newSet.delete(item);
+      } else {
+        newSet.add(item);
+      }
+      return newSet;
+    });
+  };
+
   const handleItemOrderedClose = () => {
     setAnchorElItemOrdered(null);
   };
@@ -264,6 +276,7 @@ const ReviewsPage: React.FC = () => {
     const filterQueryParams: FilterQueryParams = {
       distanceAwayQuery: distanceFilterEnabled ? { lat: lat!, lng: lng!, radius: fromLocationDistance } : undefined,
       wouldReturn,
+      itemsOrdered: selectedItemsOrdered.size > 0 ? Array.from(selectedItemsOrdered) : undefined,
     };
 
     try {
@@ -720,18 +733,6 @@ const ReviewsPage: React.FC = () => {
     );
   }
 
-  const handleToggleItem = (item: string) => {
-    setSelectedItems((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(item)) {
-        newSet.delete(item);
-      } else {
-        newSet.add(item);
-      }
-      return newSet;
-    });
-  };
-
   const renderItemOrderedFilterPopover = (): JSX.Element => {
     return (
       <Popover
@@ -755,8 +756,8 @@ const ReviewsPage: React.FC = () => {
                   key={item}
                   control={
                     <Checkbox
-                      checked={selectedItems.has(item)}
-                      onChange={() => handleToggleItem(item)}
+                      checked={selectedItemsOrdered.has(item)}
+                      onChange={() => handleToggleItemOrdered(item)}
                     />
                   }
                   label={item}
