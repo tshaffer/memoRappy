@@ -1,23 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMediaQuery } from '@mui/material';
+import { List, ListItem, ListItemText, useMediaQuery } from '@mui/material';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Button, Popover, FormControlLabel, Checkbox, TextField, ToggleButton, ToggleButtonGroup, Slider, Switch, Radio, Tooltip, Box } from '@mui/material';
 
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
 import RateReviewOutlinedIcon from '@mui/icons-material/RateReviewOutlined';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-
-import { FilterQueryParams, PlacesReviewsCollection, GoogleGeometry, GooglePlace, ItemReview, MemoRappReview, QueryRequestBody, WouldReturnQuery, ExtendedGooglePlace } from '../types';
-import '../App.css';
-import { Autocomplete, Libraries, LoadScript } from '@react-google-maps/api';
-import MapWithMarkers from '../components/MapWIthMarkers';
-import { getCityNameFromPlace } from '../utilities';
-
 import DirectionsIcon from '@mui/icons-material/Directions';
 import MapIcon from '@mui/icons-material/Map';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+
+import '../App.css';
+
+import { FilterQueryParams, PlacesReviewsCollection, GooglePlace, ItemReview, MemoRappReview, QueryRequestBody, WouldReturnQuery, ExtendedGooglePlace } from '../types';
+import { Autocomplete, Libraries, LoadScript } from '@react-google-maps/api';
+import MapWithMarkers from '../components/MapWIthMarkers';
+import { getCityNameFromPlace } from '../utilities';
 
 interface WouldReturnCounts {
   yesCount: number;
@@ -39,6 +39,10 @@ const thumbsStyle: React.CSSProperties = {
   maxWidth: '60px',
   textAlign: 'center',
   padding: '0',
+};
+
+const smallTextStyle: React.CSSProperties = {
+  fontSize: '0.875rem'
 };
 
 const ReviewsPage: React.FC = () => {
@@ -599,7 +603,11 @@ const ReviewsPage: React.FC = () => {
 
           <FormControlLabel
             control={<Switch checked={distanceFilterEnabled} onChange={handleDistanceFilterToggle} />}
-            label="Enable Distance Filter"
+            label={
+              <Typography sx={smallTextStyle}>
+                Enable Distance Filter
+              </Typography>
+            }
           />
 
           {/* From Label and Radio Buttons */}
@@ -613,7 +621,11 @@ const ReviewsPage: React.FC = () => {
                   disabled={!distanceFilterEnabled} // Disable when the filter is off
                 />
               }
-              label="Current Location"
+              label={
+                <Typography sx={smallTextStyle}>
+                  Current Location
+                </Typography>
+              }
             />
             <FormControlLabel
               control={
@@ -623,7 +635,11 @@ const ReviewsPage: React.FC = () => {
                   disabled={!distanceFilterEnabled} // Disable when the filter is off
                 />
               }
-              label="Specify Location"
+              label={
+                <Typography sx={smallTextStyle}>
+                  Specify Location
+                </Typography>
+              }
             />
           </div>
 
@@ -637,6 +653,7 @@ const ReviewsPage: React.FC = () => {
                 type="text"
                 placeholder="Enter a from location"
                 style={{
+                  fontSize: '0.875rem',
                   width: '100%',
                   padding: '10px',
                   boxSizing: 'border-box',
@@ -647,12 +664,12 @@ const ReviewsPage: React.FC = () => {
             </Autocomplete>
           )}
 
-          <Typography variant="body2" style={{ marginTop: '10px', marginBottom: '5px' }}>Distance</Typography>
+          <Typography sx={smallTextStyle} style={{ marginTop: '10px', marginBottom: '5px' }}>Distance</Typography>
 
           {/* Slider */}
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Typography variant="body2">0 mi</Typography>
-            <Typography variant="body2">{fromLocationDistance} mi</Typography>
+            <Typography sx={smallTextStyle}>0 mi</Typography>
+            <Typography sx={smallTextStyle}>{fromLocationDistance} mi</Typography>
           </div>
           <Slider
             value={fromLocationDistance}
@@ -687,21 +704,33 @@ const ReviewsPage: React.FC = () => {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
       >
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column' }}>
-          <Typography variant="subtitle1" gutterBottom>
-            Would Return
+          <Typography sx={smallTextStyle} gutterBottom>
+            Would Return Filter
           </Typography>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <FormControlLabel
               control={<Checkbox checked={wouldReturnFilter.yes} onChange={() => handleWouldReturnChange('yes')} />}
-              label="Yes"
+              label={
+                <Typography sx={smallTextStyle}>
+                  Yes
+                </Typography>
+              }
             />
             <FormControlLabel
               control={<Checkbox checked={wouldReturnFilter.no} onChange={() => handleWouldReturnChange('no')} />}
-              label="No"
+              label={
+                <Typography sx={smallTextStyle}>
+                  No
+                </Typography>
+              }
             />
             <FormControlLabel
               control={<Checkbox checked={wouldReturnFilter.notSpecified} onChange={() => handleWouldReturnChange('notSpecified')} />}
-              label="Not Specified"
+              label={
+                <Typography sx={smallTextStyle}>
+                  Not Specified
+                </Typography>
+              }
             />
             <Button
               variant="outlined"
@@ -742,24 +771,23 @@ const ReviewsPage: React.FC = () => {
         }}
       >
         <Box sx={{ padding: 2, minWidth: 250 }}>
-          <Typography variant="h6" gutterBottom>
-            Filter by Items Ordered
+          <Typography variant="subtitle1" gutterBottom>
+            Items Ordered Filter
           </Typography>
 
           {standardizedItemsOrdered.length > 0 ? (
             <Box sx={{ maxHeight: 300, overflowY: 'auto' }}>
-              {standardizedItemsOrdered.map((item) => (
-                <FormControlLabel
-                  key={item}
-                  control={
+              <List>
+                {standardizedItemsOrdered.map((item) => (
+                  <ListItem key={item} disablePadding>
                     <Checkbox
                       checked={selectedItemsOrdered.has(item)}
                       onChange={() => handleToggleItemOrdered(item)}
                     />
-                  }
-                  label={item}
-                />
-              ))}
+                    <ListItemText primary={item} />
+                  </ListItem>
+                ))}
+              </List>
             </Box>
           ) : (
             <Typography variant="body2" color="textSecondary">
@@ -773,11 +801,9 @@ const ReviewsPage: React.FC = () => {
             </Button>
           </Box>
         </Box>
-
       </Popover>
-    )
-  }
-
+    );
+  };
   const renderSelectedPlaceMapAutocomplete = (): JSX.Element => {
     return (
       <Autocomplete
