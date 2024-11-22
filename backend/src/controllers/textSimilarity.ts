@@ -37,11 +37,11 @@ async function generateEmbeddings(texts: string[]): Promise<number[][]> {
 }
 
 // Function to calculate cosine similarity between two vectors
-function cosineSimilarity(vec1: number[], vec2: number[]): number {
-  const dotProduct = vec1.reduce((sum, val, idx) => sum + val * vec2[idx], 0);
-  const magnitude1 = Math.sqrt(vec1.reduce((sum, val) => sum + val * val, 0));
-  const magnitude2 = Math.sqrt(vec2.reduce((sum, val) => sum + val * val, 0));
-  return dotProduct / (magnitude1 * magnitude2);
+export function cosineSimilarity(vecA: number[], vecB: number[]): number {
+  const dotProduct = vecA.reduce((sum, a, idx) => sum + a * vecB[idx], 0);
+  const magnitudeA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
+  const magnitudeB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
+  return dotProduct / (magnitudeA * magnitudeB);
 }
 
 // Handler function to check similarity

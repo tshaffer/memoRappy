@@ -17,23 +17,31 @@ import { ItemOrdered } from '../types/entities';
 // import { Document, Model, Schema, model } from 'mongoose';
 
 // Define the TypeScript interface for the schema
-export interface IItemOrdered {
-  inputName: string;
-  standardizedName: string;
-}
+// export interface IItemOrdered {
+//   inputName: string;
+//   standardizedName: string;
+// }
 
-// Extend the interface with Mongoose Document
-export interface IItemOrderedDocument extends IItemOrdered, Document {}
+// // Extend the interface with Mongoose Document
+// export interface IItemOrderedDocument extends IItemOrdered, Document {}
 
-// Create the schema
-const ItemOrderedSchema: Schema = new Schema({
+// // Create the schema
+// const ItemOrderedSchema: Schema = new Schema({
+//   inputName: { type: String, required: true },
+//   standardizedName: { type: String, required: true },
+// });
+
+// // Create the Mongoose model
+// const ItemOrdered: Model<IItemOrderedDocument> = mongoose.model<IItemOrderedDocument>('ItemOrdered', ItemOrderedSchema);
+
+// export default ItemOrdered;
+// // Query with the correct type
+// // const itemOrderedDocument: IItemOrderedDocument[] = await ItemOrdered.find({ inputName }).exec();
+
+const ItemOrderedModel = mongoose.model<ItemOrdered>("ItemOrdered", new mongoose.Schema({
   inputName: { type: String, required: true },
   standardizedName: { type: String, required: true },
-});
+  embedding: { type: [Number], required: false },
+}));
 
-// Create the Mongoose model
-const ItemOrdered: Model<IItemOrderedDocument> = mongoose.model<IItemOrderedDocument>('ItemOrdered', ItemOrderedSchema);
-
-export default ItemOrdered;
-// Query with the correct type
-// const itemOrderedDocument: IItemOrderedDocument[] = await ItemOrdered.find({ inputName }).exec();
+export default ItemOrderedModel;
