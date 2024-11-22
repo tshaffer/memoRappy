@@ -47,20 +47,26 @@ const getFilteredPlacesAndReviews = async (queryParams: FilterQueryParams): Prom
 
     // Step 2: Add Items Ordered filter if provided
     if (itemsOrdered && itemsOrdered.length > 0) {
-      // Fetch standardized names for the itemsOrdered
+      // Step 1: Fetch standardized names for the provided itemsOrdered
       const standardizedNames = await ItemOrderedModel.find({
         inputName: { $in: itemsOrdered },
       }).distinct('standardizedName');
-
-      if (standardizedNames.length > 0) {
+    
+      // Step 2: Fetch all input names associated with the matched standardized names
+      const relatedInputNames = await ItemOrderedModel.find({
+        standardizedName: { $in: standardizedNames },
+      }).distinct('inputName');
+    
+      // Step 3: Add filter to reviewQuery
+      if (relatedInputNames.length > 0) {
         reviewQuery['freeformReviewProperties.itemReviews'] = {
           $elemMatch: {
-            item: { $in: standardizedNames },
+            item: { $in: relatedInputNames }, // Match any related inputName
           },
         };
       }
     }
-
+    
     // Step 3: Fetch reviews that match the constructed query
     reviews = await Review.find(reviewQuery);
 
