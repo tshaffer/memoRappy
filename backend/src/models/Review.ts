@@ -26,7 +26,7 @@ const ReviewSchema: Schema = new Schema({
   place_id: { type: String, required: true},
   structuredReviewProperties: StructuredReviewPropertiesSchema,
   freeformReviewProperties: FreeformReviewPropertiesSchema
-});
+}, { collection: "reviews" });
 
 const Review: ReviewModel = mongoose.model<IReview>('Review', ReviewSchema);
 

@@ -7,9 +7,8 @@ import { ChatRequestBody, ChatResponse, FreeformReviewProperties, ItemReview, Me
 import { addPlace, getPlace } from './places';
 import { IMongoPlace } from '../models';
 import { addReview } from './reviews';
-// import ItemOrdered, { IItemOrderedDocument } from '../models/ItemOrdered';
 import ItemOrderedModel from '../models/ItemOrdered';
-import { cosineSimilarity } from './textSimilarity';
+import { findBestMatch } from './textSimilarity';
 
 // Store conversations for each session
 interface ReviewConversations {
@@ -196,21 +195,11 @@ export const submitReview = async (memoRappReview: SubmitReviewBody): Promise<IR
   }
 
   const { itemReviews } = freeformReviewProperties;
-  // const allItemsOrderedDocs: any[] = await ItemOrdered.find({}).exec();
-  // const allStandardizedNames: string[] = allItemsOrderedDocs.map((itemOrderedDoc: any) => itemOrderedDoc.toObject().standardizedName);
 
   for (const itemReview of itemReviews) {
     const inputName = itemReview.item;
     const matchedStandardizedName = await findBestMatch(inputName);
     console.log('matchedStandardizedName:', matchedStandardizedName);
-    // const standardizedName: string | null = await getStandardizedNameFromDb(inputName);
-    // if (!standardizedName) {
-    //   const newItemOrdered: IItemOrderedDocument = new ItemOrdered({ inputName, standardizedName: inputName });
-    //   await newItemOrdered.save();
-    // } else {
-
-      // ask chatty for similarity match
-    // }
   }
 
   const addReviewBody: MemoRappReview = {
@@ -240,91 +229,6 @@ export const submitReview = async (memoRappReview: SubmitReviewBody): Promise<IR
   delete reviewConversations[sessionId];
 
   return null;
-  // const newReview: IReview = new Review(memoRappReview);
-
-}
-
-// const getStandardizedNameFromDb = async (inputName: string): Promise<string | null> => {
-//   const itemOrderedDocument: any = await ItemOrdered.find({ inputName }).exec();
-//   if (!itemOrderedDocument) {
-//     return null;
-//   } else {
-//     const itemOrdered: ItemOrdered = itemOrderedDocument.toObject();
-//     return itemOrdered.standardizedName;
-//   }
-// }
-
-const similarityThreshold = 0.8;
-
-async function findBestMatch(inputName: string): Promise<string> {
-  try {
-    // Step 1: Fetch all items from the database
-    const allItems = await ItemOrderedModel.find({}).exec();
-
-    // Step 2: Generate embedding for inputName
-    const inputEmbeddingResponse = await openai.embeddings.create({
-      model: "text-embedding-ada-002",
-      input: inputName,
-    });
-    const inputEmbedding = inputEmbeddingResponse.data[0].embedding;
-
-    if (allItems.length === 0) {
-      // If no items exist, add inputName as a new standardizedName with its embedding
-      const newItem = new ItemOrderedModel({
-        inputName,
-        standardizedName: inputName,
-        embedding: inputEmbedding, // Save the embedding
-      });
-      await newItem.save();
-      return inputName; // No match, treated as new
-    }
-
-    // Step 3: Compute similarity scores
-    const similarities = allItems.map((item) => {
-      if (item.embedding) {
-        // Use existing embedding
-        return {
-          item,
-          similarity: cosineSimilarity(inputEmbedding, item.embedding),
-        };
-      } else {
-        return {
-          item,
-          similarity: 0, // Placeholder if no embedding is available
-        };
-      }
-    });
-
-    // Step 4: Find the best match
-    const bestMatch = similarities.reduce((best, current) =>
-      current.similarity > best.similarity ? current : best
-    );
-
-    // Step 5: Compare against threshold
-    if (bestMatch.similarity >= similarityThreshold) {
-      // Add the inputName and matched standardizedName to the database
-      const matchedItem = new ItemOrderedModel({
-        inputName,
-        standardizedName: bestMatch.item.standardizedName, // Use the matched standardizedName
-        embedding: inputEmbedding, // Save the embedding for the inputName
-      });
-      await matchedItem.save();
-
-      return bestMatch.item.standardizedName; // Return the matched standardizedName
-    }
-
-    // Step 6: Add as a new standardizedName if no match
-    const newItem = new ItemOrderedModel({
-      inputName,
-      standardizedName: inputName,
-      embedding: inputEmbedding, // Save the embedding
-    });
-    await newItem.save();
-    return inputName; // Treated as new
-  } catch (error) {
-    console.error("Error finding best match:", error);
-    throw error;
-  }
 }
 
 export const getStandardizedNames = async (request: Request, response: Response) => {
