@@ -70,6 +70,10 @@ const ReviewsPage: React.FC = () => {
     notSpecified: false,
   });
 
+  const [anchorElItemOrdered, setAnchorElItemOrdered] = useState<HTMLElement | null>(null);
+  const [standardizedItemsOrdered, setStandardizedItemsOrdered] = useState<string[]>([]);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+
   const [viewMode, setViewMode] = useState<'list' | 'details' | 'map'>('list');
   const [selectedPlace, setSelectedPlace] = useState<GooglePlace | null>(null);
 
@@ -111,8 +115,14 @@ const ReviewsPage: React.FC = () => {
       setReviews(data.memoRappReviews);
       setFilteredReviews(data.memoRappReviews);
     };
+    const fetchStandardizedItemsOrdered = async () => {
+      const response = await fetch('/api/standardizedNames');
+      const uniqueStandardizedNames: string[] = await response.json();
+      setStandardizedItemsOrdered(uniqueStandardizedNames);
+    }
     fetchPlaces();
     fetchReviews();
+    fetchStandardizedItemsOrdered();
   }, []);
 
   const getPlaceById = (placeId: string): GooglePlace | undefined => {
@@ -223,6 +233,14 @@ const ReviewsPage: React.FC = () => {
 
   const handleWouldReturnClose = () => {
     setAnchorElWouldReturn(null);
+  };
+
+  const handleItemOrderedClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElItemOrdered(event.currentTarget);
+  };
+
+  const handleItemOrderedClose = () => {
+    setAnchorElItemOrdered(null);
   };
 
   const handleSearchByFilter = async () => {
@@ -519,6 +537,17 @@ const ReviewsPage: React.FC = () => {
         >
           Return?
         </Button>
+        <Button
+          variant="outlined"
+          onClick={handleItemOrderedClick}
+          sx={{
+            borderColor: '#1976d2', // MUI primary color
+            color: '#1976d2',
+            textTransform: 'none',
+          }}
+        >
+          Item Ordered
+        </Button>
 
         {/* Apply Filter Button */}
         <Button
@@ -538,6 +567,7 @@ const ReviewsPage: React.FC = () => {
         </Button>
         {renderDistanceAwayFilterPopover()}
         {renderWouldReturnFilterPopover()}
+        {renderItemOrderedFilterPopover()}
       </div>
     );
   }
@@ -688,6 +718,66 @@ const ReviewsPage: React.FC = () => {
         </div>
       </Popover>
     );
+  }
+
+  const handleToggleItem = (item: string) => {
+    setSelectedItems((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(item)) {
+        newSet.delete(item);
+      } else {
+        newSet.add(item);
+      }
+      return newSet;
+    });
+  };
+
+  const renderItemOrderedFilterPopover = (): JSX.Element => {
+    return (
+      <Popover
+        open={Boolean(anchorElItemOrdered)}
+        anchorEl={anchorElItemOrdered}
+        onClose={handleItemOrderedClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+      >
+        <Box sx={{ padding: 2, minWidth: 250 }}>
+          <Typography variant="h6" gutterBottom>
+            Filter by Items Ordered
+          </Typography>
+
+          {standardizedItemsOrdered.length > 0 ? (
+            <Box sx={{ maxHeight: 300, overflowY: 'auto' }}>
+              {standardizedItemsOrdered.map((item) => (
+                <FormControlLabel
+                  key={item}
+                  control={
+                    <Checkbox
+                      checked={selectedItems.has(item)}
+                      onChange={() => handleToggleItem(item)}
+                    />
+                  }
+                  label={item}
+                />
+              ))}
+            </Box>
+          ) : (
+            <Typography variant="body2" color="textSecondary">
+              No items available to filter.
+            </Typography>
+          )}
+
+          <Box display="flex" justifyContent="flex-end" mt={2}>
+            <Button variant="contained" color="primary" onClick={handleItemOrderedClose}>
+              Close
+            </Button>
+          </Box>
+        </Box>
+
+      </Popover>
+    )
   }
 
   const renderSelectedPlaceMapAutocomplete = (): JSX.Element => {
