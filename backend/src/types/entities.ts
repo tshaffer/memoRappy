@@ -19,8 +19,14 @@ export interface FreeformReviewProperties {
   reviewer?: string;
 }
 
+export interface ItemOrdered {
+  inputName: string;
+  standardizedName: string;
+}
+
 export interface ItemReview {
   item: string;
+  standardizedName?: string;
   review: string;
 }
 

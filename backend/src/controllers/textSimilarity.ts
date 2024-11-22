@@ -2,7 +2,7 @@ import { openai } from '../index';
 import { Request, response, Response } from 'express';
 
 // Function to generate embeddings for a list of texts
-async function generateEmbeddings(texts: string[]): Promise<number[][]> {
+async function old_generateEmbeddings(texts: string[]): Promise<number[][]> {
   try {
     const embeddings: number[][] = [];
     for (const text of texts) {
@@ -19,6 +19,23 @@ async function generateEmbeddings(texts: string[]): Promise<number[][]> {
   }
 }
 
+async function generateEmbeddings(texts: string[]): Promise<number[][]> {
+  try {
+    // Use the OpenAI API to embed all texts in a single call
+    const response = await openai.embeddings.create({
+      model: "text-embedding-ada-002", // Embedding model
+      input: texts, // Pass the entire array of texts
+    });
+
+    // Extract embeddings for all texts from the response
+    const embeddings: number[][] = response.data.map((data) => data.embedding);
+    return embeddings;
+  } catch (error) {
+    console.error("Error generating embeddings:", error);
+    throw error;
+  }
+}
+
 // Function to calculate cosine similarity between two vectors
 function cosineSimilarity(vec1: number[], vec2: number[]): number {
   const dotProduct = vec1.reduce((sum, val, idx) => sum + val * vec2[idx], 0);
@@ -27,16 +44,28 @@ function cosineSimilarity(vec1: number[], vec2: number[]): number {
   return dotProduct / (magnitude1 * magnitude2);
 }
 
-// Main function to check similarity
-export const checkTextSimilarity: any = async (
+// Handler function to check similarity
+export const checkTextSimilarityHandler: any = async (
   req: Request,
   res: Response
 ): Promise<any> => {
   try {
-    const { text1, text2 } = req.body;
+    const similarity = await checkTextSimilarity(req.body.text1, req.body.text2);
+    res.json(similarity);
+  } catch (error) {
+    console.error("Error checking similarity:", error);
+    throw error;
+  }
+}
+
+export const checkTextSimilarity: any = async (
+  text1: string,
+  text2: string,
+): Promise<number> => {
+  try {
     const embeddings = await generateEmbeddings([text1, text2]);
     const similarity = cosineSimilarity(embeddings[0], embeddings[1]);
-    res.json(similarity);
+     return similarity;
   } catch (error) {
     console.error("Error checking similarity:", error);
     throw error;

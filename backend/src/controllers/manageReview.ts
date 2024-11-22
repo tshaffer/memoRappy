@@ -7,6 +7,7 @@ import { ChatRequestBody, ChatResponse, FreeformReviewProperties, ItemReview, Me
 import { addPlace, getPlace } from './places';
 import { IMongoPlace } from '../models';
 import { addReview } from './reviews';
+import ItemOrdered, { IItemOrderedDocument } from '../models/ItemOrdered';
 
 // Store conversations for each session
 interface ReviewConversations {
@@ -176,6 +177,23 @@ export const submitReviewHandler = async (req: Request, res: Response): Promise<
   }
 };
 
+const getStandardizedNameFromDb = async (inputName: string): Promise<string | null> => {
+  const itemOrderedDocument: any = await ItemOrdered.find({ inputName }).exec();
+  if (!itemOrderedDocument) {
+    return null;
+  } else {
+    const itemOrdered: ItemOrdered = itemOrderedDocument.toObject();
+    return itemOrdered.standardizedName;
+  }
+}
+
+export const foo = async () => {
+  const response = await openai.embeddings.create({
+    model: "text-embedding-ada-002",
+    input: [userInput, ...existingItems],
+  });
+
+}
 export const submitReview = async (memoRappReview: SubmitReviewBody): Promise<IReview | null> => {
 
   const { _id, place, structuredReviewProperties, freeformReviewProperties, sessionId } = memoRappReview;
@@ -187,6 +205,22 @@ export const submitReview = async (memoRappReview: SubmitReviewBody): Promise<IR
     mongoPlace = await addPlace(place);
     if (!place) {
       throw new Error('Error saving place.');
+    }
+  }
+
+  const { itemReviews } = freeformReviewProperties;
+  const allItemsOrderedDocs: any[] = await ItemOrdered.find({}).exec();
+  const allStandardizedNames: string[] = allItemsOrderedDocs.map((itemOrderedDoc: any) => itemOrderedDoc.toObject().standardizedName);
+
+  for (const itemReview of itemReviews) {
+    const inputName = itemReview.item;
+    const standardizedName: string | null = await getStandardizedNameFromDb(inputName);
+    if (!standardizedName) {
+      const newItemOrdered: IItemOrderedDocument = new ItemOrdered({ inputName, standardizedName: inputName });
+      await newItemOrdered.save();
+    } else {
+      
+      // ask chatty for similarity match
     }
   }
 

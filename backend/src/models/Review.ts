@@ -12,6 +12,7 @@ const StructuredReviewPropertiesSchema: Schema = new Schema({
 
 const ItemReviewSchema: Schema = new Schema({
   item: { type: String, required: true },
+  standardizedName: { type: String },
   review: { type: String, required: true }
 });
 
