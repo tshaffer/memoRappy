@@ -328,3 +328,13 @@ async function findBestMatch(inputName: string): Promise<string> {
     throw error;
   }
 }
+
+export const getStandardizedNames = async (request: Request, response: Response) => {
+  try {
+    const uniqueStandardizedNames: string[] = await ItemOrderedModel.distinct("standardizedName").exec();
+    response.json(uniqueStandardizedNames);
+  } catch (error) {
+    console.error("Error fetching standardized names:", error);
+    response.status(500).json({ error: "An error occurred while fetching standardized names." });
+  }
+};  
