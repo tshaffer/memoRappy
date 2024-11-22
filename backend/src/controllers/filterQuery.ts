@@ -3,6 +3,7 @@ import MongoPlace, { IMongoPlace } from '../models/MongoPlace';
 import Review, { IReview } from '../models/Review';
 import { FilterQueryParams, QueryResponse, PlacesReviewsCollection, GooglePlace, MemoRappReview } from '../types';
 import { convertMongoPlacesToGooglePlaces } from '../utilities';
+import ItemOrderedModel from '../models/ItemOrdered';
 
 export const filterReviewsHandler = async (
   request: Request<{}, {}, FilterQueryParams>,
@@ -26,7 +27,6 @@ export const filterReviewsHandler = async (
 }
 
 const getFilteredPlacesAndReviews = async (queryParams: FilterQueryParams): Promise<QueryResponse> => {
-
   const { distanceAwayQuery, wouldReturn, itemsOrdered } = queryParams;
   const { lat, lng, radius } = distanceAwayQuery || {};
 
@@ -38,15 +38,31 @@ const getFilteredPlacesAndReviews = async (queryParams: FilterQueryParams): Prom
     // Step 1: Construct the Would Return filter for reviews
     const reviewQuery: any = {};
     if (wouldReturn) {
-      const returnFilter: (boolean | null)[] = []; // Allow both boolean and null
+      const returnFilter: (boolean | null)[] = [];
       if (wouldReturn.yes) returnFilter.push(true);
       if (wouldReturn.no) returnFilter.push(false);
       if (wouldReturn.notSpecified) returnFilter.push(null);
       reviewQuery['structuredReviewProperties.wouldReturn'] = { $in: returnFilter };
-
-      // Step 2: Fetch reviews that match the Would Return filter
-      reviews = await Review.find(reviewQuery);
     }
+
+    // Step 2: Add Items Ordered filter if provided
+    if (itemsOrdered && itemsOrdered.length > 0) {
+      // Fetch standardized names for the itemsOrdered
+      const standardizedNames = await ItemOrderedModel.find({
+        inputName: { $in: itemsOrdered },
+      }).distinct('standardizedName');
+
+      if (standardizedNames.length > 0) {
+        reviewQuery['freeformReviewProperties.itemReviews'] = {
+          $elemMatch: {
+            item: { $in: standardizedNames },
+          },
+        };
+      }
+    }
+
+    // Step 3: Fetch reviews that match the constructed query
+    reviews = await Review.find(reviewQuery);
 
     // Extract unique place_ids from the reviews
     const placeIdsWithReviews = Array.from(new Set(reviews.map((review) => review.place_id)));
@@ -56,7 +72,7 @@ const getFilteredPlacesAndReviews = async (queryParams: FilterQueryParams): Prom
       return { places: [], reviews: [] };
     }
 
-    // Step 3: Filter places based on the Distance Away filter and matching place IDs
+    // Step 4: Filter places based on the Distance Away filter and matching place IDs
     if (lat !== undefined && lng !== undefined && radius !== undefined) {
       const placeQuery: any = {
         place_id: { $in: placeIdsWithReviews }, // Only include places that have matching reviews
@@ -71,11 +87,11 @@ const getFilteredPlacesAndReviews = async (queryParams: FilterQueryParams): Prom
 
       places = await MongoPlace.find(placeQuery);
 
-      // Step 4: Filter reviews again to include only those belonging to the resulting places
+      // Step 5: Filter reviews again to include only those belonging to the resulting places
       const filteredPlaceIds = places.map((place) => place.place_id);
       reviews = reviews.filter((review) => filteredPlaceIds.includes(review.place_id));
-
     }
+
     // Combine results
     return {
       places,
