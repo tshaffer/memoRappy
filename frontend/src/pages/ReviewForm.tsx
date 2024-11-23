@@ -91,6 +91,12 @@ const ReviewForm: React.FC = () => {
   const [listening, setListening] = useState(false);
   const [recognizer, setRecognizer] = useState<SpeechRecognition | null>(null);
 
+  // const [currentField, setCurrentField] = useState<string>('restaurantName');
+  let currentField = 'restaurantName';
+  const setCurrentField = (field: string) => {
+    currentField = field;
+  }
+
   useEffect(() => {
     setDateOfVisit(getFormattedDate());
     if (!sessionId) {
@@ -137,6 +143,39 @@ const ReviewForm: React.FC = () => {
     }
   };
 
+  const navigateToNextField = () => {
+    const fields = ['restaurantName', 'dateOfVisit', 'wouldReturn', 'reviewText'];
+    const currentIndex = fields.indexOf(currentField);
+    const nextIndex = (currentIndex + 1) % fields.length;
+    setCurrentField(fields[nextIndex]);
+  };
+
+  const navigateToPreviousField = () => {
+    const fields = ['restaurantName', 'dateOfVisit', 'wouldReturn', 'reviewText'];
+    const currentIndex = fields.indexOf(currentField);
+    const prevIndex = (currentIndex - 1 + fields.length) % fields.length;
+    setCurrentField(fields[prevIndex]);
+  };
+
+  /*
+  const processVoice = (textInput: string) => {
+    if (textInput.includes('next field')) {
+      navigateToNextField();
+    } else if (textInput.includes('previous field')) {
+      navigateToPreviousField();
+    } else if (currentField === 'restaurantName') {
+      setRestaurantLabel((prev) => prev + ' ' + textInput);
+    } else if (currentField === 'dateOfVisit') {
+      setDateOfVisit(textInput);
+    } else if (currentField === 'wouldReturn') {
+      if (textInput.includes('yes')) setWouldReturn(true);
+      else if (textInput.includes('no')) setWouldReturn(false);
+    } else if (currentField === 'reviewText') {
+      setReviewText((prev) => prev + ' ' + textInput);
+    }
+  }
+  */
+
   // Initialize speech recognition
   useEffect(() => {
 
@@ -148,22 +187,54 @@ const ReviewForm: React.FC = () => {
 
       recognition.onresult = (event: any) => {
         if (recognitionActive) {
-          // Use functional setReviewText to ensure it accumulates correctly
-          setReviewText((prevReviewText) => {
-            let finalTranscript = prevReviewText; // Use accumulated text
 
-            // Iterate through the results and append final and interim results
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-              let transcript = event.results[i][0].transcript;
-              transcript = processPunctuation(transcript); // Process punctuation
+          let voiceInput = '';
+          let processResults: boolean = false;
 
-              if (event.results[i].isFinal) {
-                finalTranscript += transcript; // Append final results to existing text
-              }
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            voiceInput = event.results[i][0].transcript;
+            voiceInput = processPunctuation(voiceInput); // Process punctuation
+            if (event.results[i].isFinal) {
+              processResults = true;
+              break;
             }
+          }
 
-            return finalTranscript; // Return updated final transcript
-          });
+          if (processResults) {
+            console.log('processResults:', voiceInput);
+            if (voiceInput.includes('next field')) {
+              navigateToNextField();
+            } else if (voiceInput.includes('previous field')) {
+              navigateToPreviousField();
+            } else if (currentField === 'restaurantName') {
+              setRestaurantLabel((prev) => prev + ' ' + voiceInput);
+            } else if (currentField === 'dateOfVisit') {
+              setDateOfVisit(voiceInput);
+            } else if (currentField === 'wouldReturn') {
+              if (voiceInput.includes('yes')) {
+                setWouldReturn(true);
+              } else if (voiceInput.includes('no')) {
+                setWouldReturn(false);
+              }
+            } else if (currentField === 'reviewText') {
+              // Use functional setReviewText to ensure it accumulates correctly
+              setReviewText((prevReviewText) => {
+                let finalTranscript = prevReviewText; // Use accumulated text
+
+                // Iterate through the results and append final and interim results
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                  let transcript = event.results[i][0].transcript;
+                  transcript = processPunctuation(transcript); // Process punctuation
+
+                  if (event.results[i].isFinal) {
+                    finalTranscript += transcript; // Append final results to existing text
+                  }
+                }
+
+                return finalTranscript; // Return updated final transcript
+              });
+            }
+          }
         }
       };
 
