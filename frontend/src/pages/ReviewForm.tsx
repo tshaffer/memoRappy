@@ -214,9 +214,9 @@ const ReviewForm: React.FC = () => {
                             placesService.getDetails({ placeId: firstPrediction.place_id }, (place, status) => {
                               if (status === google.maps.places.PlacesServiceStatus.OK && place) {
                                 console.log('Place details:', place);
-                                // const googlePlace: GooglePlace = pickGooglePlaceProperties(place);
-                                // setGooglePlace(googlePlace);
-                                // setRestaurantLabel(googlePlace.name || updatedLabel);
+                                const googlePlace: GooglePlace = pickGooglePlaceProperties(place);
+                                setGooglePlace(googlePlace);
+                                setRestaurantLabel(googlePlace.name || updatedLabel);
                               }
                             });
                           } else {
