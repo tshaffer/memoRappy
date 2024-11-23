@@ -178,56 +178,41 @@ const ReviewForm: React.FC = () => {
       recognition.continuous = true; // Keep listening until manually stopped
       recognition.interimResults = true; // Show partial results
       recognition.lang = 'en-US'; // Set language
-  
+
       recognition.onresult = (event: any) => {
         if (recognitionActive) {
           let interimTranscript = '';
           let finalTranscript = '';
-  
+
           for (let i = event.resultIndex; i < event.results.length; i++) {
             let transcript = event.results[i][0].transcript.trim();
-  
+
             // Process punctuation if needed
             transcript = processPunctuation(transcript);
-  
+
             if (event.results[i].isFinal) {
               finalTranscript += transcript; // Add to the finalized text
-  
-              // Process commands and field-specific updates
-              if (transcript.includes('next field')) {
-                navigateToNextField();
-              } else if (transcript.includes('previous field')) {
-                navigateToPreviousField();
-              } else if (currentField === 'restaurantName') {
-                setRestaurantLabel((prev) => prev + ' ' + transcript);
-              } else if (currentField === 'dateOfVisit') {
-                setDateOfVisit(transcript);
-              } else if (currentField === 'wouldReturn') {
-                if (transcript.includes('yes')) setWouldReturn(true);
-                else if (transcript.includes('no')) setWouldReturn(false);
-              } else if (currentField === 'reviewText') {
-                setReviewText((prev) => prev + ' ' + transcript);
-              }
+              processFinalResults(finalTranscript);
             } else {
               interimTranscript += transcript; // Accumulate interim results
             }
           }
-  
+
           // Set interim results for display
           setInterimText(interimTranscript);
         }
       };
-  
+
       recognition.onend = () => {
         if (recognitionActive.current) {
           recognition.start(); // Restart recognition if voice input mode is still active
         }
       };
-  
+
       setRecognizer(recognition);
     }
-  }, [recognitionActive, currentField, navigateToNextField, navigateToPreviousField]);
-  
+  }, [recognitionActive, currentField]);
+
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setDisplayTab(newValue);
   };
