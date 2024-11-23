@@ -395,6 +395,8 @@ const ReviewForm: React.FC = () => {
     )
   };
 
+  // const isFocused = (fieldName: string) => currentField === fieldName;
+
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY!} libraries={libraries}>
       <div ref={placesServiceContainerRef} style={{ display: 'none' }}></div>
@@ -458,22 +460,36 @@ const ReviewForm: React.FC = () => {
                   {listening ? <MicOffIcon /> : <MicIcon />}
                 </IconButton>
               </Tooltip>
-              <Autocomplete
-                onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
-                onPlaceChanged={handlePlaceChanged}
+              <Box
+                style={{
+                  marginBottom: 20,
+                  // border: isFocused('restaurantName') ? '2px solid blue' : '1px solid red',
+                  // borderRadius: 4,
+                  // padding: '4px', // Optional for spacing
+                }}
               >
-                <TextField
-                  fullWidth
-                  label="Restaurant Name"
-                  inputRef={restaurantNameRef}
-                  value={restaurantLabel}
-                  onChange={(e) => setRestaurantLabel(e.target.value)}
-                  placeholder="Enter the restaurant name"
-                  required
-                  style={{ marginBottom: 20 }}
-                />
-              </Autocomplete>
+                <Autocomplete
+                  onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+                  onPlaceChanged={handlePlaceChanged}
+                >
+                  <TextField
+                    fullWidth
+                    label="Restaurant Name"
+                    inputRef={restaurantNameRef}
+                    value={restaurantLabel}
+                    onChange={(e) => setRestaurantLabel(e.target.value)}
+                    placeholder="Enter the restaurant name"
+                    required
+                  />
+                </Autocomplete>
+              </Box>
               <TextField
+                // style={{
+                  // marginBottom: 20,
+                  // border: isFocused('dateOfVisit') ? '2px solid blue' : '1px solid red',
+                  // borderRadius: 4,
+                  // padding: '4px', // Optional for spacing
+                // }}
                 fullWidth
                 type="date"
                 value={dateOfVisit}
