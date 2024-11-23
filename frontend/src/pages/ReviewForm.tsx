@@ -189,24 +189,50 @@ const ReviewForm: React.FC = () => {
               navigateToPreviousField();
             } else if (currentField === 'restaurantName') {
               setRestaurantLabel((prev) => {
-
                 const updatedLabel = prev + ' ' + voiceInput;
 
                 console.log('setRestaurantLabel:', updatedLabel);
                 console.log('restaurantNameRef.current:', restaurantNameRef.current);
                 console.log('autocompleteRef.current:', autocompleteRef.current);
 
-                // Update the TextField's input element and trigger autocomplete logic
-                if (restaurantNameRef.current && autocompleteRef.current) {
-                  restaurantNameRef.current.value = updatedLabel; // Update input value
-                  // autocompleteRef.current.setBounds(/* Optional: Set bounds if needed */);
-                  autocompleteRef.current.addListener('place_changed', () => handlePlaceChanged());
-                  autocompleteRef.current.getPlace(); // Trigger search for the updated value
+                // Programmatically trigger Google Places search
+                if (restaurantNameRef.current) {
+                  const autocompleteService = new google.maps.places.AutocompleteService();
+                  autocompleteService.getPlacePredictions(
+                    { input: updatedLabel },
+                    (predictions, status) => {
+                      if (status === google.maps.places.PlacesServiceStatus.OK && predictions?.length) {
+                        
+                        console.log('Predictions:', predictions);
+
+                        // Use the first prediction for this example
+                        const firstPrediction = predictions[0];
+                        if (restaurantNameRef.current) {
+                          const parentElement = restaurantNameRef.current.parentElement;
+                          if (parentElement && parentElement instanceof HTMLDivElement) {
+                            const placesService = new google.maps.places.PlacesService(parentElement);
+                            placesService.getDetails({ placeId: firstPrediction.place_id }, (place, status) => {
+                              if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+                                console.log('Place details:', place);
+                                const googlePlace: GooglePlace = pickGooglePlaceProperties(place);
+                                setGooglePlace(googlePlace);
+                                setRestaurantLabel(googlePlace.name || updatedLabel);
+                              }
+                            });
+                          } else {
+                            console.error('Parent element of restaurantNameRef is not an HTMLDivElement.');
+                          }
+                        } else {
+                          console.error('restaurantNameRef.current is null.');
+                        }
+                      }
+                    }
+                  );
                 }
 
                 return updatedLabel;
-
               });
+
             } else if (currentField === 'dateOfVisit') {
               setDateOfVisit(voiceInput);
             } else if (currentField === 'wouldReturn') {
