@@ -171,48 +171,104 @@ const ReviewForm: React.FC = () => {
   };
 
   // Initialize speech recognition
+  // useEffect(() => {
+  //   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  //   if (SpeechRecognition) {
+  //     const recognition = new SpeechRecognition();
+  //     recognition.continuous = true; // Keep listening until manually stopped
+  //     recognition.interimResults = true; // Show partial results
+
+  //     recognition.onresult = (event: any) => {
+  //       if (recognitionActive) {
+
+  //         // Use functional setReviewText to ensure it accumulates correctly
+  //         setReviewText((prevReviewText) => {
+  //           let finalTranscript = prevReviewText; // Use accumulated text
+
+  //           // Iterate through the results and append final and interim results
+  //           for (let i = event.resultIndex; i < event.results.length; i++) {
+  //             let transcript = event.results[i][0].transcript;
+  //             transcript = processPunctuation(transcript); // Process punctuation
+
+  //             if (event.results[i].isFinal) {
+  //               finalTranscript += transcript; // Append final results to existing text
+  //             } else {
+  //               setInterimText(transcript); // Set interim text separately
+  //             }
+  //           }
+
+  //           return finalTranscript; // Return updated final transcript
+  //         });
+  //         setInterimText(''); // Clear interim text after final results are received
+  //       }
+  //     };
+
+  //     recognition.onend = () => {
+  //       if (recognitionActive.current) {
+  //         recognition.start(); // Restart recognition if voice input mode is still active
+  //       }
+  //     };
+
+  //     setRecognizer(recognition);
+  //   }
+  // }, []);
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
       recognition.continuous = true; // Keep listening until manually stopped
       recognition.interimResults = true; // Show partial results
-
+      recognition.lang = 'en-US'; // Set language
+  
       recognition.onresult = (event: any) => {
         if (recognitionActive) {
-
-          // Use functional setReviewText to ensure it accumulates correctly
-          setReviewText((prevReviewText) => {
-            let finalTranscript = prevReviewText; // Use accumulated text
-
-            // Iterate through the results and append final and interim results
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-              let transcript = event.results[i][0].transcript;
-              transcript = processPunctuation(transcript); // Process punctuation
-
-              if (event.results[i].isFinal) {
-                finalTranscript += transcript; // Append final results to existing text
-              } else {
-                setInterimText(transcript); // Set interim text separately
+          let interimTranscript = '';
+          let finalTranscript = '';
+  
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            let transcript = event.results[i][0].transcript.trim();
+  
+            // Process punctuation if needed
+            transcript = processPunctuation(transcript);
+  
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript; // Add to the finalized text
+  
+              // Process commands and field-specific updates
+              if (transcript.includes('next field')) {
+                navigateToNextField();
+              } else if (transcript.includes('previous field')) {
+                navigateToPreviousField();
+              } else if (currentField === 'restaurantName') {
+                setRestaurantLabel((prev) => prev + ' ' + transcript);
+              } else if (currentField === 'dateOfVisit') {
+                setDateOfVisit(transcript);
+              } else if (currentField === 'wouldReturn') {
+                if (transcript.includes('yes')) setWouldReturn(true);
+                else if (transcript.includes('no')) setWouldReturn(false);
+              } else if (currentField === 'reviewText') {
+                setReviewText((prev) => prev + ' ' + transcript);
               }
+            } else {
+              interimTranscript += transcript; // Accumulate interim results
             }
-
-            return finalTranscript; // Return updated final transcript
-          });
-          setInterimText(''); // Clear interim text after final results are received
+          }
+  
+          // Set interim results for display
+          setInterimText(interimTranscript);
         }
       };
-
+  
       recognition.onend = () => {
         if (recognitionActive.current) {
           recognition.start(); // Restart recognition if voice input mode is still active
         }
       };
-
+  
       setRecognizer(recognition);
     }
-  }, []);
-
+  }, [recognitionActive, currentField, navigateToNextField, navigateToPreviousField]);
+  
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setDisplayTab(newValue);
   };
