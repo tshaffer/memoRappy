@@ -13,29 +13,31 @@ interface CustomMarkerProps {
 
 const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick, onHover, onHoverEnd }) => {
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  const debounceTimeout = useRef<number | null>(null);
 
   useEffect(() => {
     const marker = markerRef.current;
 
     if (marker && marker.content) {
       const handleMouseOver = () => {
-        console.log('Mouse over marker:', location);
+        if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
         onHover(location);
       };
 
       const handleMouseOut = () => {
-        console.log('Mouse out of marker');
-        onHoverEnd();
+        // Delay the mouseout event to prevent rapid toggling
+        debounceTimeout.current = window.setTimeout(() => {
+          onHoverEnd();
+        }, 200); // Adjust delay as needed
       };
 
-      // Attach event listeners to the marker's content
       marker.content.addEventListener('mouseover', handleMouseOver);
       marker.content.addEventListener('mouseout', handleMouseOut);
 
       return () => {
-        // Cleanup event listeners
         marker.content?.removeEventListener('mouseover', handleMouseOver);
         marker.content?.removeEventListener('mouseout', handleMouseOut);
+        if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
       };
     }
   }, [location, onHover, onHoverEnd]);
