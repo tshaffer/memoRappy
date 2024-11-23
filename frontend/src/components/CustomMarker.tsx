@@ -67,24 +67,24 @@ const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick, onHover,
       marker.content = content;
 
       // Hover event handlers with debounce
-      const handleMouseOver = () => {
-        if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-        onHover(location);
-      };
+      // const handleMouseOver = () => {
+      //   if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+      //   onHover(location);
+      // };
 
-      const handleMouseOut = () => {
-        debounceTimeout.current = window.setTimeout(() => {
-          onHoverEnd();
-        }, 200); // Adjust delay as needed
-      };
+      // const handleMouseOut = () => {
+      //   debounceTimeout.current = window.setTimeout(() => {
+      //     onHoverEnd();
+      //   }, 200); // Adjust delay as needed
+      // };
 
-      marker.content.addEventListener('mouseover', handleMouseOver);
-      marker.content.addEventListener('mouseout', handleMouseOut);
+      // marker.content.addEventListener('mouseover', handleMouseOver);
+      // marker.content.addEventListener('mouseout', handleMouseOut);
 
       return () => {
         // Cleanup listeners and debounce
-        marker.content?.removeEventListener('mouseover', handleMouseOver);
-        marker.content?.removeEventListener('mouseout', handleMouseOut);
+        // marker.content?.removeEventListener('mouseover', handleMouseOver);
+        // marker.content?.removeEventListener('mouseout', handleMouseOut);
         if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
       };
     }
