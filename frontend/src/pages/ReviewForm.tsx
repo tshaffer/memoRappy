@@ -447,6 +447,15 @@ const ReviewForm: React.FC = () => {
         >
           {displayTab === ReviewFormDisplayTabs.ReviewText && (
             <Box>
+              <Button
+                style={{ marginBottom: 8 }}
+                variant="contained"
+                color="primary"
+                onClick={handleVoiceInputToggle}
+                startIcon={<MicIcon />}
+              >
+                {listening ? 'Stop Listening' : 'Speak Your Review'}
+              </Button>
               <Autocomplete
                 onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
                 onPlaceChanged={handlePlaceChanged}
@@ -487,14 +496,6 @@ const ReviewForm: React.FC = () => {
                   </Button>
                 </Box>
               </FormControl>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleVoiceInputToggle}
-                startIcon={<MicIcon />}
-              >
-                {listening ? 'Stop Listening' : 'Speak Your Review'}
-              </Button>
               <TextField
                 style={{ marginTop: 20 }}
                 fullWidth
