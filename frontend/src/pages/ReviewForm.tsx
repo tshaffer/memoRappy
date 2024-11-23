@@ -89,6 +89,7 @@ const ReviewForm: React.FC = () => {
 
   let recognitionActive: React.MutableRefObject<boolean> = useRef(false);
   const [listening, setListening] = useState(false);
+  const [currentField, setCurrentField] = useState<string>('restaurantName');
   const [recognizer, setRecognizer] = useState<SpeechRecognition | null>(null);
   const [interimText, setInterimText] = useState(''); // Hold interim results
 
@@ -123,6 +124,37 @@ const ReviewForm: React.FC = () => {
       .replace(/\bexclamation mark\b/gi, '!');
   };
 
+  const processFinalResults = (finalResults: string) => {
+    if (finalResults.includes('next field')) {
+      navigateToNextField();
+    } else if (finalResults.includes('previous field')) {
+      navigateToPreviousField();
+    } else if (currentField === 'restaurantName') {
+      setRestaurantLabel((prev) => prev + ' ' + finalResults);
+    } else if (currentField === 'dateOfVisit') {
+      setDateOfVisit(finalResults);
+    } else if (currentField === 'wouldReturn') {
+      if (finalResults.includes('yes')) setWouldReturn(true);
+      else if (finalResults.includes('no')) setWouldReturn(false);
+    } else if (currentField === 'reviewText') {
+      setReviewText((prev) => prev + ' ' + finalResults);
+    }
+  }
+
+  const navigateToNextField = () => {
+    const fields = ['restaurantName', 'dateOfVisit', 'wouldReturn', 'reviewText'];
+    const currentIndex = fields.indexOf(currentField);
+    const nextIndex = (currentIndex + 1) % fields.length;
+    setCurrentField(fields[nextIndex]);
+  };
+
+  const navigateToPreviousField = () => {
+    const fields = ['restaurantName', 'dateOfVisit', 'wouldReturn', 'reviewText'];
+    const currentIndex = fields.indexOf(currentField);
+    const prevIndex = (currentIndex - 1 + fields.length) % fields.length;
+    setCurrentField(fields[prevIndex]);
+  };
+
   // Handle voice input toggle
   const handleVoiceInputToggle = () => {
     if (recognitionActive.current && recognizer) {
@@ -140,7 +172,6 @@ const ReviewForm: React.FC = () => {
 
   // Initialize speech recognition
   useEffect(() => {
-
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
@@ -149,6 +180,7 @@ const ReviewForm: React.FC = () => {
 
       recognition.onresult = (event: any) => {
         if (recognitionActive) {
+
           // Use functional setReviewText to ensure it accumulates correctly
           setReviewText((prevReviewText) => {
             let finalTranscript = prevReviewText; // Use accumulated text
