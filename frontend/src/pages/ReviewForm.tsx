@@ -85,6 +85,7 @@ const ReviewForm: React.FC = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
+  const restaurantNameRef = useRef<HTMLInputElement | null>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   let recognitionActive: React.MutableRefObject<boolean> = useRef(false);
@@ -157,28 +158,8 @@ const ReviewForm: React.FC = () => {
     setCurrentField(fields[prevIndex]);
   };
 
-  /*
-  const processVoice = (textInput: string) => {
-    if (textInput.includes('next field')) {
-      navigateToNextField();
-    } else if (textInput.includes('previous field')) {
-      navigateToPreviousField();
-    } else if (currentField === 'restaurantName') {
-      setRestaurantLabel((prev) => prev + ' ' + textInput);
-    } else if (currentField === 'dateOfVisit') {
-      setDateOfVisit(textInput);
-    } else if (currentField === 'wouldReturn') {
-      if (textInput.includes('yes')) setWouldReturn(true);
-      else if (textInput.includes('no')) setWouldReturn(false);
-    } else if (currentField === 'reviewText') {
-      setReviewText((prev) => prev + ' ' + textInput);
-    }
-  }
-  */
-
   // Initialize speech recognition
   useEffect(() => {
-
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
@@ -207,7 +188,20 @@ const ReviewForm: React.FC = () => {
             } else if (voiceInput.includes('previous field')) {
               navigateToPreviousField();
             } else if (currentField === 'restaurantName') {
-              setRestaurantLabel((prev) => prev + ' ' + voiceInput);
+              setRestaurantLabel((prev) => {
+
+                const updatedLabel = prev + ' ' + voiceInput;
+
+                // Update the TextField's input element and trigger autocomplete logic
+                if (restaurantNameRef.current && autocompleteRef.current) {
+                  restaurantNameRef.current.value = updatedLabel; // Update input value
+                  // autocompleteRef.current.setBounds(/* Optional: Set bounds if needed */);
+                  autocompleteRef.current.getPlace(); // Trigger search for the updated value
+                }
+
+                return updatedLabel;
+
+              });
             } else if (currentField === 'dateOfVisit') {
               setDateOfVisit(voiceInput);
             } else if (currentField === 'wouldReturn') {
@@ -217,20 +211,16 @@ const ReviewForm: React.FC = () => {
                 setWouldReturn(false);
               }
             } else if (currentField === 'reviewText') {
-              // Use functional setReviewText to ensure it accumulates correctly
               setReviewText((prevReviewText) => {
-                let finalTranscript = prevReviewText; // Use accumulated text
-
+                let finalTranscript = prevReviewText;
                 // Iterate through the results and append final and interim results
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                   let transcript = event.results[i][0].transcript;
                   transcript = processPunctuation(transcript); // Process punctuation
-
                   if (event.results[i].isFinal) {
                     finalTranscript += transcript; // Append final results to existing text
                   }
                 }
-
                 return finalTranscript; // Return updated final transcript
               });
             }
@@ -433,6 +423,7 @@ const ReviewForm: React.FC = () => {
                 <TextField
                   fullWidth
                   label="Restaurant Name"
+                  inputRef={restaurantNameRef}
                   value={restaurantLabel}
                   onChange={(e) => setRestaurantLabel(e.target.value)}
                   placeholder="Enter the restaurant name"
