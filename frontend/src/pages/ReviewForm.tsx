@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
-import { useMediaQuery } from '@mui/material';
+import { IconButton, Tooltip, useMediaQuery } from '@mui/material';
 import {
   TextField,
   Button,
@@ -19,6 +19,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
+import MicOffIcon from '@mui/icons-material/MicOff';
 
 import { LoadScript, Autocomplete, Libraries } from '@react-google-maps/api';
 import { ReviewFormDisplayTabs, ChatResponse, GooglePlace, FreeformReviewProperties, PreviewRequestBody, ReviewEntity, SubmitReviewBody, StructuredReviewProperties, MemoRappReview, EditableReview, PreviewResponse, ChatRequestBody } from '../types';
@@ -447,15 +448,16 @@ const ReviewForm: React.FC = () => {
         >
           {displayTab === ReviewFormDisplayTabs.ReviewText && (
             <Box>
-              <Button
-                style={{ marginBottom: 8 }}
-                variant="contained"
-                color="primary"
-                onClick={handleVoiceInputToggle}
-                startIcon={<MicIcon />}
-              >
-                {listening ? 'Stop Listening' : 'Speak Your Review'}
-              </Button>
+              <Tooltip title={listening ? 'Stop Listening' : 'Speak Your Review'}>
+                <IconButton
+                  color={listening ? 'secondary' : 'primary'}
+                  onClick={handleVoiceInputToggle}
+                  size="small"
+                  aria-label={listening ? 'Stop Listening' : 'Speak Your Review'}
+                >
+                  {listening ? <MicOffIcon /> : <MicIcon />}
+                </IconButton>
+              </Tooltip>
               <Autocomplete
                 onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
                 onPlaceChanged={handlePlaceChanged}
