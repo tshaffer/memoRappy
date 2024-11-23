@@ -17,8 +17,6 @@ import {
   RadioGroup,
   Radio,
   CircularProgress,
-  ToggleButton,
-  ToggleButtonGroup,
 } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 
@@ -87,6 +85,7 @@ const ReviewForm: React.FC = () => {
   const [chatInput, setChatInput] = useState<string>('');
   const restaurantNameRef = useRef<HTMLInputElement | null>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const placesServiceContainerRef = useRef<HTMLDivElement | null>(null);
 
   let recognitionActive: React.MutableRefObject<boolean> = useRef(false);
   const [listening, setListening] = useState(false);
@@ -208,9 +207,8 @@ const ReviewForm: React.FC = () => {
                         // Use the first prediction for this example
                         const firstPrediction = predictions[0];
                         if (restaurantNameRef.current) {
-                          const parentElement = restaurantNameRef.current.parentElement;
-                          if (parentElement && parentElement instanceof HTMLDivElement) {
-                            const placesService = new google.maps.places.PlacesService(parentElement);
+                          if (placesServiceContainerRef.current) {
+                            const placesService = new google.maps.places.PlacesService(placesServiceContainerRef.current);
                             placesService.getDetails({ placeId: firstPrediction.place_id }, (place, status) => {
                               if (status === google.maps.places.PlacesServiceStatus.OK && place) {
                                 console.log('Place details:', place);
@@ -219,8 +217,6 @@ const ReviewForm: React.FC = () => {
                                 setRestaurantLabel(googlePlace.name || updatedLabel);
                               }
                             });
-                          } else {
-                            console.error('Parent element of restaurantNameRef is not an HTMLDivElement.');
                           }
                         } else {
                           console.error('restaurantNameRef.current is null.');
@@ -400,6 +396,7 @@ const ReviewForm: React.FC = () => {
 
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY!} libraries={libraries}>
+      <div ref={placesServiceContainerRef} style={{ display: 'none' }}></div>
       <Paper
         style={{
           padding: isMobile ? '16px' : '24px',
