@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
-import { useMediaQuery } from '@mui/material';
+import { IconButton, Tooltip, useMediaQuery } from '@mui/material';
 import {
   TextField,
   Button,
@@ -18,9 +18,20 @@ import {
   Radio,
   CircularProgress,
 } from '@mui/material';
+import MicIcon from '@mui/icons-material/Mic';
+import MicOffIcon from '@mui/icons-material/MicOff';
+
 import { LoadScript, Autocomplete, Libraries } from '@react-google-maps/api';
 import { ReviewFormDisplayTabs, ChatResponse, GooglePlace, FreeformReviewProperties, PreviewRequestBody, ReviewEntity, SubmitReviewBody, StructuredReviewProperties, MemoRappReview, EditableReview, PreviewResponse, ChatRequestBody } from '../types';
 import { pickGooglePlaceProperties } from '../utilities';
+
+// Manually define SpeechRecognition and webkitSpeechRecognition types
+declare global {
+  interface Window {
+    // SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
 
 type ChatMessage = {
   role: 'user' | 'ai';
@@ -73,7 +84,21 @@ const ReviewForm: React.FC = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
+  const restaurantNameRef = useRef<HTMLInputElement | null>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const placesServiceContainerRef = useRef<HTMLDivElement | null>(null);
+
+  let recognitionActive: React.MutableRefObject<boolean> = useRef(false);
+  const [listening, setListening] = useState(false);
+  const [recognizer, setRecognizer] = useState<SpeechRecognition | null>(null);
+
+  const [currentField, setCurrentField] = useState<string>('restaurantName');
+  const currentFieldRef = useRef(currentField);
+
+  useEffect(() => {
+    // Update the ref whenever currentField changes
+    currentFieldRef.current = currentField;
+  }, [currentField]);
 
   useEffect(() => {
     setDateOfVisit(getFormattedDate());
@@ -97,13 +122,172 @@ const ReviewForm: React.FC = () => {
     }
   }, [place, review]);
 
+  // Map spoken words to punctuation
+  const processPunctuation = (text: string) => {
+    return text
+      .replace(/\bcomma\b/gi, ',')
+      .replace(/\bperiod\b/gi, '.')
+      .replace(/\bquestion mark\b/gi, '?')
+      .replace(/\bexclamation mark\b/gi, '!');
+  };
+
+  // Handle voice input toggle
+  const handleVoiceInputToggle = () => {
+    if (recognitionActive.current && recognizer) {
+      recognizer.stop();
+      recognitionActive.current = false;
+      setListening(false);
+    } else {
+      if (recognizer) {
+        recognizer.start();
+        recognitionActive.current = true;
+        setListening(true);
+      }
+    }
+  };
+
+  const navigateToNextField = useCallback(() => {
+    console.log('Current Field Before Update:', currentField);
+    setCurrentField((prevField) => {
+      const fields = ['restaurantName', 'dateOfVisit', 'wouldReturn', 'reviewText'];
+      const currentIndex = fields.indexOf(prevField);
+      const nextIndex = (currentIndex + 1) % fields.length;
+      const nextField = fields[nextIndex];
+      console.log('Current Field After Update:', nextField);
+      return nextField;
+    });
+  }, []);
+
+  const navigateToPreviousField = useCallback(() => {
+    const fields = ['restaurantName', 'dateOfVisit', 'wouldReturn', 'reviewText'];
+    const currentIndex = fields.indexOf(currentField);
+    const prevIndex = (currentIndex - 1 + fields.length) % fields.length;
+    setCurrentField(fields[prevIndex]);
+  }, [currentField]);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true; // Keep listening until manually stopped
+      recognition.interimResults = true; // Show partial results
+
+      recognition.onresult = (event: any) => {
+        if (recognitionActive) {
+
+          let voiceInput = '';
+          let processResults: boolean = false;
+
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            voiceInput = event.results[i][0].transcript;
+            voiceInput = processPunctuation(voiceInput); // Process punctuation
+            if (event.results[i].isFinal) {
+              processResults = true;
+              break;
+            }
+          }
+
+          if (processResults) {
+            console.log('processResults:', voiceInput);
+            console.log('currentField (from ref):', currentFieldRef.current);
+
+            if (voiceInput.includes('next field')) {
+              navigateToNextField();
+            } else if (voiceInput.includes('previous field')) {
+              navigateToPreviousField();
+            } else {
+              const currentFieldValue = currentFieldRef.current;
+              if (currentFieldValue === 'restaurantName') {
+                setRestaurantLabel((prev) => {
+                  const updatedLabel = prev + ' ' + voiceInput;
+
+                  console.log('setRestaurantLabel:', updatedLabel);
+                  console.log('restaurantNameRef.current:', restaurantNameRef.current);
+                  console.log('autocompleteRef.current:', autocompleteRef.current);
+
+                  // Programmatically trigger Google Places search
+                  if (restaurantNameRef.current) {
+                    const autocompleteService = new google.maps.places.AutocompleteService();
+                    autocompleteService.getPlacePredictions(
+                      { input: updatedLabel },
+                      (predictions, status) => {
+                        if (status === google.maps.places.PlacesServiceStatus.OK && predictions?.length) {
+
+                          console.log('Predictions:', predictions);
+
+                          // Use the first prediction for this example
+                          const firstPrediction = predictions[0];
+                          if (restaurantNameRef.current) {
+                            if (placesServiceContainerRef.current) {
+                              const placesService = new google.maps.places.PlacesService(placesServiceContainerRef.current);
+                              placesService.getDetails({ placeId: firstPrediction.place_id }, (place, status) => {
+                                if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+                                  console.log('Place details:', place);
+                                  const googlePlace: GooglePlace = pickGooglePlaceProperties(place);
+                                  setGooglePlace(googlePlace);
+                                  setRestaurantLabel(googlePlace.name || updatedLabel);
+                                }
+                              });
+                            }
+                          } else {
+                            console.error('restaurantNameRef.current is null.');
+                          }
+                        }
+                      }
+                    );
+                  }
+
+                  console.log('updatedLabel:', updatedLabel);
+                  return updatedLabel;
+                });
+
+              } else if (currentFieldValue === 'dateOfVisit') {
+                setDateOfVisit(voiceInput);
+              } else if (currentFieldValue === 'wouldReturn') {
+                if (voiceInput.includes('yes')) {
+                  setWouldReturn(true);
+                } else if (voiceInput.includes('no')) {
+                  setWouldReturn(false);
+                }
+              } else if (currentFieldValue === 'reviewText') {
+                setReviewText((prevReviewText) => {
+                  let finalTranscript = prevReviewText;
+                  // Iterate through the results and append final and interim results
+                  for (let i = event.resultIndex; i < event.results.length; i++) {
+                    let transcript = event.results[i][0].transcript;
+                    transcript = processPunctuation(transcript); // Process punctuation
+                    if (event.results[i].isFinal) {
+                      finalTranscript += transcript; // Append final results to existing text
+                    }
+                  }
+                  return finalTranscript; // Return updated final transcript
+                });
+              }
+            }
+          }
+        }
+      }
+
+
+      recognition.onend = () => {
+        if (recognitionActive.current) {
+          recognition.start(); // Restart recognition if voice input mode is still active
+        }
+      };
+
+      setRecognizer(recognition);
+    }
+  }, [navigateToNextField, navigateToPreviousField]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setDisplayTab(newValue);
   };
 
   const handlePlaceChanged = () => {
+    console.log('handlePlaceChanged');
     if (autocompleteRef.current) {
+      console.log('autocompleteRef.current:', autocompleteRef.current);
       const place: google.maps.places.PlaceResult = autocompleteRef.current.getPlace();
       const googlePlace: GooglePlace = pickGooglePlaceProperties(place);
       setGooglePlace(googlePlace);
@@ -224,8 +408,11 @@ const ReviewForm: React.FC = () => {
     )
   };
 
+  const isFocused = (fieldName: string) => currentField === fieldName;
+
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY!} libraries={libraries}>
+      <div ref={placesServiceContainerRef} style={{ display: 'none' }}></div>
       <Paper
         style={{
           padding: isMobile ? '16px' : '24px',
@@ -276,21 +463,46 @@ const ReviewForm: React.FC = () => {
         >
           {displayTab === ReviewFormDisplayTabs.ReviewText && (
             <Box>
-              <Autocomplete
-                onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
-                onPlaceChanged={handlePlaceChanged}
+              <Tooltip title={listening ? 'Stop Listening' : 'Speak Your Review'}>
+                <IconButton
+                  color={listening ? 'secondary' : 'primary'}
+                  onClick={handleVoiceInputToggle}
+                  size="small"
+                  aria-label={listening ? 'Stop Listening' : 'Speak Your Review'}
+                >
+                  {listening ? <MicOffIcon /> : <MicIcon />}
+                </IconButton>
+              </Tooltip>
+              <Box
+                style={{
+                  marginBottom: 20,
+                  border: isFocused('restaurantName') ? '2px solid blue' : '1px solid #ccc',
+                  borderRadius: 4,
+                  padding: '4px', // Optional for spacing
+                }}
               >
-                <TextField
-                  fullWidth
-                  label="Restaurant Name"
-                  value={restaurantLabel}
-                  onChange={(e) => setRestaurantLabel(e.target.value)}
-                  placeholder="Enter the restaurant name"
-                  required
-                  style={{ marginBottom: 20 }}
-                />
-              </Autocomplete>
+                <Autocomplete
+                  onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+                  onPlaceChanged={handlePlaceChanged}
+                >
+                  <TextField
+                    fullWidth
+                    label="Restaurant Name"
+                    inputRef={restaurantNameRef}
+                    value={restaurantLabel}
+                    onChange={(e) => setRestaurantLabel(e.target.value)}
+                    placeholder="Enter the restaurant name"
+                    required
+                  />
+                </Autocomplete>
+              </Box>
               <TextField
+                style={{
+                  // marginBottom: 20,
+                  border: isFocused('dateOfVisit') ? '2px solid blue' : '1px solid #ccc',
+                  borderRadius: 4,
+                  padding: '4px', // Optional for spacing
+                }}
                 fullWidth
                 type="date"
                 value={dateOfVisit}
@@ -300,7 +512,16 @@ const ReviewForm: React.FC = () => {
               />
               <FormControl component="fieldset" style={{ marginTop: 20, width: '100%' }}>
                 <FormLabel component="legend">Would Return</FormLabel>
-                <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                <Box sx={{
+                  // marginBottom: 20,
+                  border: isFocused('wouldReturn') ? '2px solid blue' : '1px solid #ccc',
+                  borderRadius: 4,
+                  padding: '4px', // Optional for spacing
+                  display: 'flex',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: 1
+                }}>
                   <RadioGroup
                     row
                     name="would-return"
@@ -316,7 +537,12 @@ const ReviewForm: React.FC = () => {
                 </Box>
               </FormControl>
               <TextField
-                style={{ marginTop: 20 }}
+                style={{
+                  marginTop: 20,
+                  border: isFocused('reviewText') ? '2px solid blue' : '1px solid #ccc',
+                  borderRadius: 4,
+                  padding: '4px', // Optional for spacing
+                }}
                 fullWidth
                 multiline
                 rows={isMobile ? 5 : 8}
