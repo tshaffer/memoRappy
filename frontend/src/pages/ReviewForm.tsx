@@ -171,47 +171,6 @@ const ReviewForm: React.FC = () => {
   };
 
   // Initialize speech recognition
-  // useEffect(() => {
-  //   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  //   if (SpeechRecognition) {
-  //     const recognition = new SpeechRecognition();
-  //     recognition.continuous = true; // Keep listening until manually stopped
-  //     recognition.interimResults = true; // Show partial results
-
-  //     recognition.onresult = (event: any) => {
-  //       if (recognitionActive) {
-
-  //         // Use functional setReviewText to ensure it accumulates correctly
-  //         setReviewText((prevReviewText) => {
-  //           let finalTranscript = prevReviewText; // Use accumulated text
-
-  //           // Iterate through the results and append final and interim results
-  //           for (let i = event.resultIndex; i < event.results.length; i++) {
-  //             let transcript = event.results[i][0].transcript;
-  //             transcript = processPunctuation(transcript); // Process punctuation
-
-  //             if (event.results[i].isFinal) {
-  //               finalTranscript += transcript; // Append final results to existing text
-  //             } else {
-  //               setInterimText(transcript); // Set interim text separately
-  //             }
-  //           }
-
-  //           return finalTranscript; // Return updated final transcript
-  //         });
-  //         setInterimText(''); // Clear interim text after final results are received
-  //       }
-  //     };
-
-  //     recognition.onend = () => {
-  //       if (recognitionActive.current) {
-  //         recognition.start(); // Restart recognition if voice input mode is still active
-  //       }
-  //     };
-
-  //     setRecognizer(recognition);
-  //   }
-  // }, []);
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
