@@ -17,10 +17,22 @@ import {
   RadioGroup,
   Radio,
   CircularProgress,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
+import MicIcon from '@mui/icons-material/Mic';
+
 import { LoadScript, Autocomplete, Libraries } from '@react-google-maps/api';
 import { ReviewFormDisplayTabs, ChatResponse, GooglePlace, FreeformReviewProperties, PreviewRequestBody, ReviewEntity, SubmitReviewBody, StructuredReviewProperties, MemoRappReview, EditableReview, PreviewResponse, ChatRequestBody } from '../types';
 import { pickGooglePlaceProperties } from '../utilities';
+
+// Manually define SpeechRecognition and webkitSpeechRecognition types
+declare global {
+  interface Window {
+    // SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
 
 type ChatMessage = {
   role: 'user' | 'ai';
@@ -75,6 +87,11 @@ const ReviewForm: React.FC = () => {
   const [chatInput, setChatInput] = useState<string>('');
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
+  let recognitionActive: React.MutableRefObject<boolean> = useRef(false);
+  const [listening, setListening] = useState(false);
+  const [recognizer, setRecognizer] = useState<SpeechRecognition | null>(null);
+  const [interimText, setInterimText] = useState(''); // Hold interim results
+
   useEffect(() => {
     setDateOfVisit(getFormattedDate());
     if (!sessionId) {
@@ -97,6 +114,72 @@ const ReviewForm: React.FC = () => {
     }
   }, [place, review]);
 
+  // Map spoken words to punctuation
+  const processPunctuation = (text: string) => {
+    return text
+      .replace(/\bcomma\b/gi, ',')
+      .replace(/\bperiod\b/gi, '.')
+      .replace(/\bquestion mark\b/gi, '?')
+      .replace(/\bexclamation mark\b/gi, '!');
+  };
+
+  // Handle voice input toggle
+  const handleVoiceInputToggle = () => {
+    if (recognitionActive.current && recognizer) {
+      recognizer.stop();
+      recognitionActive.current = false;
+      setListening(false);
+    } else {
+      if (recognizer) {
+        recognizer.start();
+        recognitionActive.current = true;
+        setListening(true);
+      }
+    }
+  };
+
+  // Initialize speech recognition
+  useEffect(() => {
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true; // Keep listening until manually stopped
+      recognition.interimResults = true; // Show partial results
+
+      recognition.onresult = (event: any) => {
+        if (recognitionActive) {
+          // Use functional setReviewText to ensure it accumulates correctly
+          setReviewText((prevReviewText) => {
+            let finalTranscript = prevReviewText; // Use accumulated text
+
+            // Iterate through the results and append final and interim results
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              let transcript = event.results[i][0].transcript;
+              transcript = processPunctuation(transcript); // Process punctuation
+
+              if (event.results[i].isFinal) {
+                finalTranscript += transcript; // Append final results to existing text
+              } else {
+                setInterimText(transcript); // Set interim text separately
+              }
+            }
+
+            return finalTranscript; // Return updated final transcript
+          });
+          setInterimText(''); // Clear interim text after final results are received
+        }
+      };
+
+      recognition.onend = () => {
+        if (recognitionActive.current) {
+          recognition.start(); // Restart recognition if voice input mode is still active
+        }
+      };
+
+      setRecognizer(recognition);
+    }
+  }, []);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setDisplayTab(newValue);
@@ -315,6 +398,14 @@ const ReviewForm: React.FC = () => {
                   </Button>
                 </Box>
               </FormControl>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleVoiceInputToggle}
+                startIcon={<MicIcon />}
+              >
+                {listening ? 'Stop Listening' : 'Speak Your Review'}
+              </Button>
               <TextField
                 style={{ marginTop: 20 }}
                 fullWidth
