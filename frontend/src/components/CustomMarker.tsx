@@ -17,18 +17,25 @@ const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick, onHover,
   useEffect(() => {
     const marker = markerRef.current;
 
-    if (marker) {
-      const mouseOverListener = google.maps.event.addListener(marker, 'mouseover', () => {
+    if (marker && marker.content) {
+      const handleMouseOver = () => {
+        console.log('Mouse over marker:', location);
         onHover(location);
-      });
+      };
 
-      const mouseOutListener = google.maps.event.addListener(marker, 'mouseout', () => {
+      const handleMouseOut = () => {
+        console.log('Mouse out of marker');
         onHoverEnd();
-      });
+      };
+
+      // Attach event listeners to the marker's content
+      marker.content.addEventListener('mouseover', handleMouseOver);
+      marker.content.addEventListener('mouseout', handleMouseOut);
 
       return () => {
-        google.maps.event.removeListener(mouseOverListener);
-        google.maps.event.removeListener(mouseOutListener);
+        // Cleanup event listeners
+        marker.content?.removeEventListener('mouseover', handleMouseOver);
+        marker.content?.removeEventListener('mouseout', handleMouseOut);
       };
     }
   }, [location, onHover, onHoverEnd]);
