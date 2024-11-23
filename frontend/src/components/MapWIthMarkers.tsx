@@ -4,6 +4,7 @@ import { AdvancedMarker, APIProvider, InfoWindow, Map, MapCameraChangedEvent } f
 import { getLatLngFromPlace } from '../utilities';
 import '../App.css';
 import { Typography } from '@mui/material';
+import CustomMarker from './CustomMarker';
 
 interface MapWithMarkersProps {
   initialCenter: google.maps.LatLngLiteral;
@@ -63,14 +64,17 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
   );
 
   const handleMarkerClick = (location: ExtendedGooglePlace) => {
+    console.log('handleMarkerClick', location);
     setSelectedLocation(location);
   };
 
   const handleMarkerHover = (location: ExtendedGooglePlace) => {
+    console.log('handleMarkerHover', location);
     setHoveredLocation(location);
   };
 
   const handleMarkerHoverEnd = () => {
+    console.log('handleMarkerHoverEnd');
     setHoveredLocation(null);
   };
 
@@ -83,34 +87,15 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
   };
 
   const renderMarkers = (): JSX.Element[] => {
-    return locations.map((location, index) => {
-      const position = getLatLngFromPlace(location);
-      return (
-        <React.Fragment key={index}>
-          <AdvancedMarker
-            position={position}
-            onClick={() => handleMarkerClick(location)}
-            onMouseOver={() => handleMarkerHover(location)}
-            onMouseOut={handleMarkerHoverEnd}
-          />
-          {/* Render label */}
-          <div
-            style={{
-              position: 'absolute',
-              transform: `translate(-50%, -100%)`,
-              whiteSpace: 'nowrap',
-              backgroundColor: 'white',
-              padding: '2px 4px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              fontSize: '12px',
-            }}
-          >
-            {location.name}
-          </div>
-        </React.Fragment>
-      );
-    });
+    return locations.map((location, index) => (
+      <CustomMarker
+        key={index}
+        location={location}
+        onClick={() => handleMarkerClick(location)}
+        onHover={(loc: ExtendedGooglePlace) => handleMarkerHover(loc)}
+        onHoverEnd={handleMarkerHoverEnd}
+      />
+    ));
   };
 
   const renderHoveredInfoWindow = (): JSX.Element | null => {
