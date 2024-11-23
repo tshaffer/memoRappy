@@ -192,10 +192,15 @@ const ReviewForm: React.FC = () => {
 
                 const updatedLabel = prev + ' ' + voiceInput;
 
+                console.log('setRestaurantLabel:', updatedLabel);
+                console.log('restaurantNameRef.current:', restaurantNameRef.current);
+                console.log('autocompleteRef.current:', autocompleteRef.current);
+
                 // Update the TextField's input element and trigger autocomplete logic
                 if (restaurantNameRef.current && autocompleteRef.current) {
                   restaurantNameRef.current.value = updatedLabel; // Update input value
                   // autocompleteRef.current.setBounds(/* Optional: Set bounds if needed */);
+                  autocompleteRef.current.addListener('place_changed', () => handlePlaceChanged());
                   autocompleteRef.current.getPlace(); // Trigger search for the updated value
                 }
 
@@ -243,7 +248,9 @@ const ReviewForm: React.FC = () => {
   };
 
   const handlePlaceChanged = () => {
+    console.log('handlePlaceChanged');
     if (autocompleteRef.current) {
+      console.log('autocompleteRef.current:', autocompleteRef.current);
       const place: google.maps.places.PlaceResult = autocompleteRef.current.getPlace();
       const googlePlace: GooglePlace = pickGooglePlaceProperties(place);
       setGooglePlace(googlePlace);
