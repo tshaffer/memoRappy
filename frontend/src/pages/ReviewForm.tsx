@@ -202,26 +202,26 @@ const ReviewForm: React.FC = () => {
                     { input: updatedLabel },
                     (predictions, status) => {
                       if (status === google.maps.places.PlacesServiceStatus.OK && predictions?.length) {
-                        
+
                         console.log('Predictions:', predictions);
 
                         // Use the first prediction for this example
                         const firstPrediction = predictions[0];
                         if (restaurantNameRef.current) {
-                          const parentElement = restaurantNameRef.current.parentElement;
-                          if (parentElement && parentElement instanceof HTMLDivElement) {
-                            const placesService = new google.maps.places.PlacesService(parentElement);
-                            placesService.getDetails({ placeId: firstPrediction.place_id }, (place, status) => {
-                              if (status === google.maps.places.PlacesServiceStatus.OK && place) {
-                                console.log('Place details:', place);
-                                const googlePlace: GooglePlace = pickGooglePlaceProperties(place);
-                                setGooglePlace(googlePlace);
-                                setRestaurantLabel(googlePlace.name || updatedLabel);
-                              }
-                            });
-                          } else {
-                            console.error('Parent element of restaurantNameRef is not an HTMLDivElement.');
-                          }
+                        //   const parentElement = restaurantNameRef.current.parentElement;
+                        //   if (parentElement && parentElement instanceof HTMLDivElement) {
+                        //     const placesService = new google.maps.places.PlacesService(parentElement);
+                        //     // placesService.getDetails({ placeId: firstPrediction.place_id }, (place, status) => {
+                        //     //   if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+                        //     //     console.log('Place details:', place);
+                        //     //     // const googlePlace: GooglePlace = pickGooglePlaceProperties(place);
+                        //     //     // setGooglePlace(googlePlace);
+                        //     //     // setRestaurantLabel(googlePlace.name || updatedLabel);
+                        //     //   }
+                        //     // });
+                        //   } else {
+                        //     console.error('Parent element of restaurantNameRef is not an HTMLDivElement.');
+                        //   }
                         } else {
                           console.error('restaurantNameRef.current is null.');
                         }
@@ -230,6 +230,7 @@ const ReviewForm: React.FC = () => {
                   );
                 }
 
+                console.log('updatedLabel:', updatedLabel);
                 return updatedLabel;
               });
 
