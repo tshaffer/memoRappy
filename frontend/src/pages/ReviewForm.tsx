@@ -408,7 +408,7 @@ const ReviewForm: React.FC = () => {
     )
   };
 
-  // const isFocused = (fieldName: string) => currentField === fieldName;
+  const isFocused = (fieldName: string) => currentField === fieldName;
 
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY!} libraries={libraries}>
@@ -476,9 +476,9 @@ const ReviewForm: React.FC = () => {
               <Box
                 style={{
                   marginBottom: 20,
-                  // border: isFocused('restaurantName') ? '2px solid blue' : '1px solid red',
-                  // borderRadius: 4,
-                  // padding: '4px', // Optional for spacing
+                  border: isFocused('restaurantName') ? '2px solid blue' : '1px solid #ccc',
+                  borderRadius: 4,
+                  padding: '4px', // Optional for spacing
                 }}
               >
                 <Autocomplete
@@ -497,12 +497,12 @@ const ReviewForm: React.FC = () => {
                 </Autocomplete>
               </Box>
               <TextField
-                // style={{
-                // marginBottom: 20,
-                // border: isFocused('dateOfVisit') ? '2px solid blue' : '1px solid red',
-                // borderRadius: 4,
-                // padding: '4px', // Optional for spacing
-                // }}
+                style={{
+                  // marginBottom: 20,
+                  border: isFocused('dateOfVisit') ? '2px solid blue' : '1px solid #ccc',
+                  borderRadius: 4,
+                  padding: '4px', // Optional for spacing
+                }}
                 fullWidth
                 type="date"
                 value={dateOfVisit}
@@ -512,7 +512,16 @@ const ReviewForm: React.FC = () => {
               />
               <FormControl component="fieldset" style={{ marginTop: 20, width: '100%' }}>
                 <FormLabel component="legend">Would Return</FormLabel>
-                <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                <Box sx={{
+                  // marginBottom: 20,
+                  border: isFocused('wouldReturn') ? '2px solid blue' : '1px solid #ccc',
+                  borderRadius: 4,
+                  padding: '4px', // Optional for spacing
+                  display: 'flex',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: 1
+                }}>
                   <RadioGroup
                     row
                     name="would-return"
@@ -528,7 +537,12 @@ const ReviewForm: React.FC = () => {
                 </Box>
               </FormControl>
               <TextField
-                style={{ marginTop: 20 }}
+                style={{
+                  marginTop: 20,
+                  border: isFocused('reviewText') ? '2px solid blue' : '1px solid #ccc',
+                  borderRadius: 4,
+                  padding: '4px', // Optional for spacing
+                }}
                 fullWidth
                 multiline
                 rows={isMobile ? 5 : 8}
