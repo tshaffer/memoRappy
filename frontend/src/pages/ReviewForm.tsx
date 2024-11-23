@@ -90,7 +90,6 @@ const ReviewForm: React.FC = () => {
   let recognitionActive: React.MutableRefObject<boolean> = useRef(false);
   const [listening, setListening] = useState(false);
   const [recognizer, setRecognizer] = useState<SpeechRecognition | null>(null);
-  const [interimText, setInterimText] = useState(''); // Hold interim results
 
   useEffect(() => {
     setDateOfVisit(getFormattedDate());
@@ -160,14 +159,11 @@ const ReviewForm: React.FC = () => {
 
               if (event.results[i].isFinal) {
                 finalTranscript += transcript; // Append final results to existing text
-              } else {
-                setInterimText(transcript); // Set interim text separately
               }
             }
 
             return finalTranscript; // Return updated final transcript
           });
-          setInterimText(''); // Clear interim text after final results are received
         }
       };
 
