@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { IconButton, Tooltip, useMediaQuery } from '@mui/material';
 import {
@@ -92,11 +92,11 @@ const ReviewForm: React.FC = () => {
   const [listening, setListening] = useState(false);
   const [recognizer, setRecognizer] = useState<SpeechRecognition | null>(null);
 
-  // const [currentField, setCurrentField] = useState<string>('restaurantName');
-  let currentField = 'restaurantName';
-  const setCurrentField = (field: string) => {
-    currentField = field;
-  }
+  const [currentField, setCurrentField] = useState<string>('restaurantName');
+  // let currentField = 'restaurantName';
+  // const setCurrentField = (field: string) => {
+  //   currentField = field;
+  // }
 
   useEffect(() => {
     setDateOfVisit(getFormattedDate());
@@ -144,19 +144,39 @@ const ReviewForm: React.FC = () => {
     }
   };
 
-  const navigateToNextField = () => {
+  const xnavigateToNextField = useCallback(() => {
     const fields = ['restaurantName', 'dateOfVisit', 'wouldReturn', 'reviewText'];
     const currentIndex = fields.indexOf(currentField);
     const nextIndex = (currentIndex + 1) % fields.length;
     setCurrentField(fields[nextIndex]);
-  };
 
-  const navigateToPreviousField = () => {
+  }, [currentField]);
+
+  const navigateToNextField = useCallback(() => {
+    // const fields = ['restaurantName', 'dateOfVisit', 'wouldReturn', 'reviewText'];
+    // setCurrentField((prevField) => {
+    //   const currentIndex = fields.indexOf(prevField);
+    //   const nextIndex = (currentIndex + 1) % fields.length;
+    //   return fields[nextIndex];
+    // });
+    console.log('Current Field Before Update:', currentField);
+    setCurrentField((prevField) => {
+      const fields = ['restaurantName', 'dateOfVisit', 'wouldReturn', 'reviewText'];
+      const currentIndex = fields.indexOf(prevField);
+      const nextIndex = (currentIndex + 1) % fields.length;
+      const nextField = fields[nextIndex];
+      console.log('Current Field After Update:', nextField);
+      return nextField;
+    });
+
+  }, []);
+
+  const navigateToPreviousField = useCallback(() => {
     const fields = ['restaurantName', 'dateOfVisit', 'wouldReturn', 'reviewText'];
     const currentIndex = fields.indexOf(currentField);
     const prevIndex = (currentIndex - 1 + fields.length) % fields.length;
     setCurrentField(fields[prevIndex]);
-  };
+  }, [currentField]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -183,6 +203,7 @@ const ReviewForm: React.FC = () => {
 
           if (processResults) {
             console.log('processResults:', voiceInput);
+            console.log('currentField: ', currentField);
             if (voiceInput.includes('next field')) {
               navigateToNextField();
             } else if (voiceInput.includes('previous field')) {
@@ -265,7 +286,7 @@ const ReviewForm: React.FC = () => {
 
       setRecognizer(recognition);
     }
-  }, []);
+  }, [navigateToNextField, navigateToPreviousField]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setDisplayTab(newValue);
@@ -485,10 +506,10 @@ const ReviewForm: React.FC = () => {
               </Box>
               <TextField
                 // style={{
-                  // marginBottom: 20,
-                  // border: isFocused('dateOfVisit') ? '2px solid blue' : '1px solid red',
-                  // borderRadius: 4,
-                  // padding: '4px', // Optional for spacing
+                // marginBottom: 20,
+                // border: isFocused('dateOfVisit') ? '2px solid blue' : '1px solid red',
+                // borderRadius: 4,
+                // padding: '4px', // Optional for spacing
                 // }}
                 fullWidth
                 type="date"
