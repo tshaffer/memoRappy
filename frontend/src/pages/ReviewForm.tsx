@@ -93,10 +93,12 @@ const ReviewForm: React.FC = () => {
   const [recognizer, setRecognizer] = useState<SpeechRecognition | null>(null);
 
   const [currentField, setCurrentField] = useState<string>('restaurantName');
-  // let currentField = 'restaurantName';
-  // const setCurrentField = (field: string) => {
-  //   currentField = field;
-  // }
+  const currentFieldRef = useRef(currentField);
+
+  useEffect(() => {
+    // Update the ref whenever currentField changes
+    currentFieldRef.current = currentField;
+  }, [currentField]);
 
   useEffect(() => {
     setDateOfVisit(getFormattedDate());
@@ -144,21 +146,7 @@ const ReviewForm: React.FC = () => {
     }
   };
 
-  const xnavigateToNextField = useCallback(() => {
-    const fields = ['restaurantName', 'dateOfVisit', 'wouldReturn', 'reviewText'];
-    const currentIndex = fields.indexOf(currentField);
-    const nextIndex = (currentIndex + 1) % fields.length;
-    setCurrentField(fields[nextIndex]);
-
-  }, [currentField]);
-
   const navigateToNextField = useCallback(() => {
-    // const fields = ['restaurantName', 'dateOfVisit', 'wouldReturn', 'reviewText'];
-    // setCurrentField((prevField) => {
-    //   const currentIndex = fields.indexOf(prevField);
-    //   const nextIndex = (currentIndex + 1) % fields.length;
-    //   return fields[nextIndex];
-    // });
     console.log('Current Field Before Update:', currentField);
     setCurrentField((prevField) => {
       const fields = ['restaurantName', 'dateOfVisit', 'wouldReturn', 'reviewText'];
@@ -168,7 +156,6 @@ const ReviewForm: React.FC = () => {
       console.log('Current Field After Update:', nextField);
       return nextField;
     });
-
   }, []);
 
   const navigateToPreviousField = useCallback(() => {
@@ -203,80 +190,85 @@ const ReviewForm: React.FC = () => {
 
           if (processResults) {
             console.log('processResults:', voiceInput);
-            console.log('currentField: ', currentField);
+            console.log('currentField (from ref):', currentFieldRef.current);
+
             if (voiceInput.includes('next field')) {
               navigateToNextField();
             } else if (voiceInput.includes('previous field')) {
               navigateToPreviousField();
-            } else if (currentField === 'restaurantName') {
-              setRestaurantLabel((prev) => {
-                const updatedLabel = prev + ' ' + voiceInput;
+            } else {
+              const currentFieldValue = currentFieldRef.current;
+              if (currentFieldValue === 'restaurantName') {
+                setRestaurantLabel((prev) => {
+                  const updatedLabel = prev + ' ' + voiceInput;
 
-                console.log('setRestaurantLabel:', updatedLabel);
-                console.log('restaurantNameRef.current:', restaurantNameRef.current);
-                console.log('autocompleteRef.current:', autocompleteRef.current);
+                  console.log('setRestaurantLabel:', updatedLabel);
+                  console.log('restaurantNameRef.current:', restaurantNameRef.current);
+                  console.log('autocompleteRef.current:', autocompleteRef.current);
 
-                // Programmatically trigger Google Places search
-                if (restaurantNameRef.current) {
-                  const autocompleteService = new google.maps.places.AutocompleteService();
-                  autocompleteService.getPlacePredictions(
-                    { input: updatedLabel },
-                    (predictions, status) => {
-                      if (status === google.maps.places.PlacesServiceStatus.OK && predictions?.length) {
+                  // Programmatically trigger Google Places search
+                  if (restaurantNameRef.current) {
+                    const autocompleteService = new google.maps.places.AutocompleteService();
+                    autocompleteService.getPlacePredictions(
+                      { input: updatedLabel },
+                      (predictions, status) => {
+                        if (status === google.maps.places.PlacesServiceStatus.OK && predictions?.length) {
 
-                        console.log('Predictions:', predictions);
+                          console.log('Predictions:', predictions);
 
-                        // Use the first prediction for this example
-                        const firstPrediction = predictions[0];
-                        if (restaurantNameRef.current) {
-                          if (placesServiceContainerRef.current) {
-                            const placesService = new google.maps.places.PlacesService(placesServiceContainerRef.current);
-                            placesService.getDetails({ placeId: firstPrediction.place_id }, (place, status) => {
-                              if (status === google.maps.places.PlacesServiceStatus.OK && place) {
-                                console.log('Place details:', place);
-                                const googlePlace: GooglePlace = pickGooglePlaceProperties(place);
-                                setGooglePlace(googlePlace);
-                                setRestaurantLabel(googlePlace.name || updatedLabel);
-                              }
-                            });
+                          // Use the first prediction for this example
+                          const firstPrediction = predictions[0];
+                          if (restaurantNameRef.current) {
+                            if (placesServiceContainerRef.current) {
+                              const placesService = new google.maps.places.PlacesService(placesServiceContainerRef.current);
+                              placesService.getDetails({ placeId: firstPrediction.place_id }, (place, status) => {
+                                if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+                                  console.log('Place details:', place);
+                                  const googlePlace: GooglePlace = pickGooglePlaceProperties(place);
+                                  setGooglePlace(googlePlace);
+                                  setRestaurantLabel(googlePlace.name || updatedLabel);
+                                }
+                              });
+                            }
+                          } else {
+                            console.error('restaurantNameRef.current is null.');
                           }
-                        } else {
-                          console.error('restaurantNameRef.current is null.');
                         }
                       }
-                    }
-                  );
-                }
-
-                console.log('updatedLabel:', updatedLabel);
-                return updatedLabel;
-              });
-
-            } else if (currentField === 'dateOfVisit') {
-              setDateOfVisit(voiceInput);
-            } else if (currentField === 'wouldReturn') {
-              if (voiceInput.includes('yes')) {
-                setWouldReturn(true);
-              } else if (voiceInput.includes('no')) {
-                setWouldReturn(false);
-              }
-            } else if (currentField === 'reviewText') {
-              setReviewText((prevReviewText) => {
-                let finalTranscript = prevReviewText;
-                // Iterate through the results and append final and interim results
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                  let transcript = event.results[i][0].transcript;
-                  transcript = processPunctuation(transcript); // Process punctuation
-                  if (event.results[i].isFinal) {
-                    finalTranscript += transcript; // Append final results to existing text
+                    );
                   }
+
+                  console.log('updatedLabel:', updatedLabel);
+                  return updatedLabel;
+                });
+
+              } else if (currentFieldValue === 'dateOfVisit') {
+                setDateOfVisit(voiceInput);
+              } else if (currentFieldValue === 'wouldReturn') {
+                if (voiceInput.includes('yes')) {
+                  setWouldReturn(true);
+                } else if (voiceInput.includes('no')) {
+                  setWouldReturn(false);
                 }
-                return finalTranscript; // Return updated final transcript
-              });
+              } else if (currentFieldValue === 'reviewText') {
+                setReviewText((prevReviewText) => {
+                  let finalTranscript = prevReviewText;
+                  // Iterate through the results and append final and interim results
+                  for (let i = event.resultIndex; i < event.results.length; i++) {
+                    let transcript = event.results[i][0].transcript;
+                    transcript = processPunctuation(transcript); // Process punctuation
+                    if (event.results[i].isFinal) {
+                      finalTranscript += transcript; // Append final results to existing text
+                    }
+                  }
+                  return finalTranscript; // Return updated final transcript
+                });
+              }
             }
           }
         }
-      };
+      }
+
 
       recognition.onend = () => {
         if (recognitionActive.current) {
