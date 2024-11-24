@@ -69,12 +69,10 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
 
   const handleMarkerHover = (location: ExtendedGooglePlace) => {
     console.log('handleMarkerHover', location);
-    // setHoveredLocation(location);
   };
 
   const handleMarkerHoverEnd = () => {
     console.log('handleMarkerHoverEnd');
-    // setHoveredLocation(null);
   };
 
   const handleCloseInfoWindow = () => {
