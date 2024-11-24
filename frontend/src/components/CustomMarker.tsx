@@ -12,7 +12,6 @@ interface CustomMarkerProps {
 }
 
 const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick, onHover, onHoverEnd }) => {
-  
   let showDiags = false;
   if (location.name.startsWith('La ')) {
     showDiags = true;
@@ -25,7 +24,6 @@ const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick, onHover,
   if (showDiags) console.log('markerRef:', markerRef);
 
   useEffect(() => {
-
     if (showDiags) console.log('useEffect, markerRef.current:', markerRef.current);
 
     const marker = markerRef.current;
@@ -55,10 +53,12 @@ const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick, onHover,
       balloon.style.width = '16px';
       balloon.style.height = '24px';
       balloon.style.backgroundColor = 'red';
-      balloon.style.borderRadius = '8px 8px 0 0'; // Rounded top corners for the balloon
+      balloon.style.borderRadius = '50% 50% 0 0'; // Proper rounded top corners for the balloon
       balloon.style.position = 'relative';
       balloon.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.3)';
-      balloon.style.marginBottom = '-4px';
+      balloon.style.display = 'flex';
+      balloon.style.alignItems = 'flex-end'; // Align the pointer to the bottom
+      balloon.style.marginTop = '-12px';
 
       // Balloon Pointer
       const pointer = document.createElement('div');
@@ -68,21 +68,12 @@ const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick, onHover,
       pointer.style.borderRight = '8px solid transparent';
       pointer.style.borderTop = '8px solid red';
       pointer.style.position = 'absolute';
-      pointer.style.top = '24px';
-      pointer.style.left = '0px';
+      pointer.style.bottom = '-8px'; // Position pointer directly below the balloon
+      pointer.style.left = '50%';
       pointer.style.transform = 'translateX(-50%)';
+
       balloon.appendChild(pointer);
-
       content.appendChild(balloon);
-
-      // Add the marker element (blue dot)
-      const markerElement = document.createElement('div');
-      markerElement.style.width = '12px';
-      markerElement.style.height = '12px';
-      markerElement.style.backgroundColor = '#4285F4'; // Google blue
-      markerElement.style.borderRadius = '50%';
-      markerElement.style.boxShadow = '0 0 8px rgba(66, 133, 244, 0.5)';
-      content.appendChild(markerElement);
 
       // Set the custom content on the marker
       marker.content = content;
