@@ -77,19 +77,6 @@ const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick, onHover,
 
       // Set the custom content on the marker
       marker.content = content;
-
-      // Add event listeners for hover
-      const handleMouseOver = () => onHover(location);
-      const handleMouseOut = () => onHoverEnd();
-
-      // marker.content.addEventListener('mouseover', handleMouseOver);
-      // marker.content.addEventListener('mouseout', handleMouseOut);
-
-      return () => {
-        // Cleanup
-        marker.content?.removeEventListener('mouseover', handleMouseOver);
-        marker.content?.removeEventListener('mouseout', handleMouseOut);
-      };
     }
   }, [location, onHover, onHoverEnd]);
 
