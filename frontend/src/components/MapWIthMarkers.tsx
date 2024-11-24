@@ -15,7 +15,6 @@ const DEFAULT_ZOOM = 14;
 
 const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, locations }) => {
   const [currentLocation, setCurrentLocation] = useState<google.maps.LatLngLiteral | null>(null);
-  const [hoveredLocation, setHoveredLocation] = useState<ExtendedGooglePlace | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<ExtendedGooglePlace | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
@@ -68,16 +67,6 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
     setSelectedLocation(location);
   };
 
-  const handleMarkerHover = (location: ExtendedGooglePlace) => {
-    console.log('handleMarkerHover', location);
-    setHoveredLocation(location);
-  };
-
-  const handleMarkerHoverEnd = () => {
-    console.log('handleMarkerHoverEnd');
-    setHoveredLocation(null);
-  };
-
   const handleCloseInfoWindow = () => {
     setSelectedLocation(null);
   };
@@ -92,26 +81,8 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
         key={index}
         location={location}
         onClick={() => handleMarkerClick(location)}
-        onHover={(loc: ExtendedGooglePlace) => handleMarkerHover(loc)}
-        onHoverEnd={handleMarkerHoverEnd}
       />
     ));
-  };
-
-  const renderHoveredInfoWindow = (): JSX.Element | null => {
-    if (!hoveredLocation) return null;
-    return (
-      <InfoWindow
-        position={getLatLngFromPlace(hoveredLocation)}
-      >
-        <div style={{ padding: '4px' }}>
-          <h4>{hoveredLocation.name}</h4>
-          <Typography>
-            {hoveredLocation.reviews[0]?.freeformReviewProperties?.reviewText || 'No review available.'}
-          </Typography>
-        </div>
-      </InfoWindow>
-    );
   };
 
   const renderSelectedInfoWindow = (): JSX.Element | null => {
@@ -148,7 +119,6 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
         scrollwheel={true}
       >
         {renderMarkers()}
-        {renderHoveredInfoWindow()}
         {renderSelectedInfoWindow()}
         {currentLocation && (
           <AdvancedMarker position={currentLocation}>

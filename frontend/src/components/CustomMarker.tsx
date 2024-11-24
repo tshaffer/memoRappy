@@ -7,13 +7,10 @@ import { getLatLngFromPlace } from '../utilities';
 interface CustomMarkerProps {
   location: ExtendedGooglePlace;
   onClick: () => void;
-  onHover: (location: ExtendedGooglePlace) => void;
-  onHoverEnd: () => void;
 }
 
-const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick, onHover, onHoverEnd }) => {
+const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick }) => {
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
-  const debounceTimeout = useRef<number | null>(null);
 
   useEffect(() => {
     const marker = markerRef.current;
@@ -66,29 +63,8 @@ const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick, onHover,
       // Set custom content on the marker
       marker.content = content;
 
-      // Hover event handlers with debounce
-      // const handleMouseOver = () => {
-      //   if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-      //   onHover(location);
-      // };
-
-      // const handleMouseOut = () => {
-      //   debounceTimeout.current = window.setTimeout(() => {
-      //     onHoverEnd();
-      //   }, 200); // Adjust delay as needed
-      // };
-
-      // marker.content.addEventListener('mouseover', handleMouseOver);
-      // marker.content.addEventListener('mouseout', handleMouseOut);
-
-      return () => {
-        // Cleanup listeners and debounce
-        // marker.content?.removeEventListener('mouseover', handleMouseOver);
-        // marker.content?.removeEventListener('mouseout', handleMouseOut);
-        if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-      };
     }
-  }, [location, onHover, onHoverEnd]);
+  }, [location]);
 
   return <AdvancedMarker ref={markerRef} position={getLatLngFromPlace(location)} onClick={onClick} />;
 };
