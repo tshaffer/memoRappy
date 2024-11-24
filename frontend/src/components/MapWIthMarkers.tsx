@@ -55,6 +55,7 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
       <Map
         style={{ width: '100%', height: '100%' }}
         id="gmap"
+        mapId="1ca0b6526e7d4819"
         defaultCenter={initialCenter}
         zoom={zoom}
         onZoomChanged={handleZoomChanged}
