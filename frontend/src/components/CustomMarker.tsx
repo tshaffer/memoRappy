@@ -12,11 +12,15 @@ interface CustomMarkerProps {
 const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick }) => {
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
 
-  // Effect to monitor `ref` and update marker content
   useEffect(() => {
+    console.log(`CustomMarker: useEffect triggered for location: ${location.name}`);
+    console.log('markerRef.current before content set:', markerRef.current);
+
     const marker = markerRef.current;
 
     if (marker) {
+      console.log(`CustomMarker: Setting content for marker: ${location.name}`);
+
       // Create the custom content (label + red balloon)
       const content = document.createElement('div');
       content.style.display = 'flex';
@@ -63,6 +67,9 @@ const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick }) => {
 
       // Set custom content
       marker.content = content;
+      console.log('Custom content successfully set:', content);
+    } else {
+      console.error('CustomMarker: markerRef.current is null when useEffect is invoked.');
     }
   }, [markerRef, location]);
 

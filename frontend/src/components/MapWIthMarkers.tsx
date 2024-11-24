@@ -16,37 +16,25 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
   const handleMarkerClick = (location: ExtendedGooglePlace) => {
+    console.log('MapWithMarkers: Marker clicked for location:', location.name);
     setSelectedLocation(location);
   };
 
-  const handleCloseInfoWindow = () => {
-    setSelectedLocation(null);
-  };
-
   const handleZoomChanged = (event: MapCameraChangedEvent) => {
+    console.log('MapWithMarkers: Zoom level changed:', event.detail.zoom);
     setZoom(event.detail.zoom);
   };
 
-  const renderMarkers = (): JSX.Element[] =>
-    locations.map((location, index) => (
+  const renderMarkers = (): JSX.Element[] => {
+    console.log('MapWithMarkers: Rendering markers...');
+    return locations.map((location, index) => (
       <CustomMarker
         key={index}
         location={location}
         onClick={() => handleMarkerClick(location)}
       />
     ));
-
-  const renderSelectedInfoWindow = (): JSX.Element | null =>
-    selectedLocation ? (
-      <InfoWindow
-        position={{ lat: selectedLocation.geometry?.location.lat!, lng: selectedLocation.geometry?.location.lng! }}
-        onCloseClick={handleCloseInfoWindow}
-      >
-        <div>
-          <h4>{selectedLocation.name}</h4>
-        </div>
-      </InfoWindow>
-    ) : null;
+  };
 
   const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY!;
 
@@ -65,7 +53,6 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
         scrollwheel
       >
         {renderMarkers()}
-        {renderSelectedInfoWindow()}
       </Map>
     </APIProvider>
   );
