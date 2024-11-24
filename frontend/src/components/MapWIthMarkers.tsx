@@ -98,23 +98,6 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
     ));
   };
 
-  const renderHoveredInfoWindow = (): JSX.Element | null => {
-    return null;
-    // if (!hoveredLocation) return null;
-    // return (
-    //   <InfoWindow
-    //     position={getLatLngFromPlace(hoveredLocation)}
-    //   >
-    //     <div style={{ padding: '4px' }}>
-    //       <h4>{hoveredLocation.name}</h4>
-    //       <Typography>
-    //         {hoveredLocation.reviews[0]?.freeformReviewProperties?.reviewText || 'No review available.'}
-    //       </Typography>
-    //     </div>
-    //   </InfoWindow>
-    // );
-  };
-
   const renderSelectedInfoWindow = (): JSX.Element | null => {
     if (!selectedLocation) return null;
     return (
@@ -149,7 +132,6 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
         scrollwheel={true}
       >
         {renderMarkers()}
-        {renderHoveredInfoWindow()}
         {renderSelectedInfoWindow()}
         {currentLocation && (
           <AdvancedMarker position={currentLocation}>
