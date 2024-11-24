@@ -1,20 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { ExtendedGooglePlace, GooglePlace } from '../types';
+import { ExtendedGooglePlace } from '../types';
 import { AdvancedMarker, APIProvider, InfoWindow, Map, MapCameraChangedEvent } from '@vis.gl/react-google-maps';
 import { getLatLngFromPlace } from '../utilities';
 import '../App.css';
-import { Typography } from '@mui/material';
 
 interface MapWithMarkersProps {
   initialCenter: google.maps.LatLngLiteral;
   locations: ExtendedGooglePlace[];
 }
 
-// const DEFAULT_CENTER = { lat: 37.3944829, lng: -122.0790619 };
 const DEFAULT_ZOOM = 14;
 
 const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, locations }) => {
-
   const [currentLocation, setCurrentLocation] = useState<google.maps.LatLngLiteral | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<ExtendedGooglePlace | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
@@ -24,9 +21,9 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
       if ((event.metaKey || event.ctrlKey) && (event.key === '+' || event.key === '=' || event.key === '-')) {
         event.preventDefault();
         if (event.key === '+' || event.key === '=') {
-          setZoom(zoom + 1);
+          setZoom((prevZoom) => prevZoom + 1);
         } else if (event.key === '-') {
-          setZoom(zoom - 1);
+          setZoom((prevZoom) => prevZoom - 1);
         }
       }
     };
@@ -36,7 +33,7 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [zoom]);
+  }, []);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -47,22 +44,11 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
             lng: position.coords.longitude,
           });
         },
-        (error) => console.error("Error getting current location: ", error),
+        (error) => console.error('Error getting current location: ', error),
         { enableHighAccuracy: true }
       );
     }
   }, []);
-
-  const CustomBlueDot = () => (
-    <div style={{
-      width: '16px',
-      height: '16px',
-      backgroundColor: '#4285F4',  // Google blue color
-      borderRadius: '50%',
-      border: '2px solid #FFFFFF',  // White border
-      boxShadow: '0 0 8px rgba(66, 133, 244, 0.5)',  // Shadow for emphasis
-    }} />
-  );
 
   const handleMarkerClick = (location: ExtendedGooglePlace) => {
     setSelectedLocation(location);
@@ -73,8 +59,6 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
   };
 
   const handleZoomChanged = (event: MapCameraChangedEvent) => {
-    console.log('handleZoomChanged event: ', event);
-    console.log('event.detail.zoom: ', event.detail.zoom);
     setZoom(event.detail.zoom);
   };
 
@@ -84,41 +68,39 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
         key={index}
         position={getLatLngFromPlace(location)}
         onClick={() => handleMarkerClick(location)}
+        content={
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div
+              style={{
+                backgroundColor: 'white',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                padding: '2px 6px',
+                boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.3)',
+                whiteSpace: 'nowrap',
+                fontSize: '12px',
+                marginBottom: '4px', // Space between label and marker
+              }}
+            >
+              {location.name}
+            </div>
+          </div>
+        }
       />
     ));
-  }
+  };
 
-  const renderInfoWindow = (): JSX.Element => {
+  const renderInfoWindow = (): JSX.Element | null => {
+    if (!selectedLocation) return null;
+
     return (
       <InfoWindow
-        position={getLatLngFromPlace(selectedLocation!)}
+        position={getLatLngFromPlace(selectedLocation)}
         onCloseClick={handleCloseInfoWindow}
       >
         <div style={{ padding: '4px' }}>
-          <style>
-            {`
-            .gm-style-iw-chr {
-              margin-top: -8px;
-              height: 30px;
-            }
-
-            .gm-style-iw {
-              font-size: 13px;
-            }
-          `}
-          </style>
-          <h4 style={{ marginBlockStart: '-6px ' }}>{selectedLocation!.name}</h4>
-          <a href={selectedLocation!.website} target="_blank" rel="noopener noreferrer">
-            {selectedLocation!.website}
-          </a>
-          <Typography
-            style={{
-              marginTop: '8px',
-              fontSize: 'inherit',
-            }}
-          >
-            {selectedLocation!.reviews[0]?.freeformReviewProperties?.reviewText || 'No review available.'}
-          </Typography>
+          <h4>{selectedLocation.name}</h4>
+          <p>{selectedLocation.website}</p>
         </div>
       </InfoWindow>
     );
@@ -129,10 +111,7 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
   const locationMarkers: JSX.Element[] = renderMarkers();
 
   return (
-    <APIProvider
-      apiKey={googleMapsApiKey}
-      version="beta"
-    >
+    <APIProvider apiKey={googleMapsApiKey} version="beta">
       <Map
         style={{ width: '100%', height: '100%' }}
         id="gmap"
@@ -142,16 +121,24 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
         onZoomChanged={(event) => handleZoomChanged(event)}
         fullscreenControl={false}
         zoomControl={true}
-        gestureHandling={'greedy'}
+        gestureHandling="greedy"
         scrollwheel={true}
       >
         {locationMarkers}
         {currentLocation && (
           <AdvancedMarker position={currentLocation}>
-            <CustomBlueDot />
+            <div
+              style={{
+                width: '12px',
+                height: '12px',
+                backgroundColor: '#4285F4',
+                borderRadius: '50%',
+                border: '2px solid white',
+              }}
+            />
           </AdvancedMarker>
         )}
-        {selectedLocation && (renderInfoWindow())}
+        {selectedLocation && renderInfoWindow()}
       </Map>
     </APIProvider>
   );
