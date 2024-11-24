@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { AdvancedMarker } from '@vis.gl/react-google-maps';
 
 import { ExtendedGooglePlace } from '../types';
@@ -12,16 +12,9 @@ interface CustomMarkerProps {
 const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick }) => {
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
 
-  // Effect to set custom content once the marker is initialized
-  useEffect(() => {
-    const marker = markerRef.current;
-
-    if (!marker) {
-      console.warn(`CustomMarker: markerRef.current is null for location: ${location.name}`);
-      return;
-    }
-
-    console.log(`CustomMarker: Setting content for location: ${location.name}`);
+  const handleLoad = (marker: google.maps.marker.AdvancedMarkerElement) => {
+    console.log(`CustomMarker: onLoad triggered for location: ${location.name}`);
+    markerRef.current = marker;
 
     // Create the custom content (label + red balloon)
     const content = document.createElement('div');
@@ -70,13 +63,13 @@ const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick }) => {
     // Set custom content
     marker.content = content;
     console.log(`Custom content successfully set for location: ${location.name}`);
-  }, [location]);
+  };
 
   return (
     <AdvancedMarker
-      ref={markerRef}
       position={getLatLngFromPlace(location)}
       onClick={onClick}
+      onLoad={handleLoad}
     />
   );
 };
