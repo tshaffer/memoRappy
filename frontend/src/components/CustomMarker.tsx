@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { AdvancedMarker } from '@vis.gl/react-google-maps';
 
 import { ExtendedGooglePlace } from '../types';
@@ -12,64 +12,75 @@ interface CustomMarkerProps {
 const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick }) => {
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
 
-  const handleLoad = (marker: google.maps.marker.AdvancedMarkerElement) => {
-    console.log(`CustomMarker: onLoad triggered for location: ${location.name}`);
-    markerRef.current = marker;
+  useEffect(() => {
+    const interval = setInterval(() => {
 
-    // Create the custom content (label + red balloon)
-    const content = document.createElement('div');
-    content.style.display = 'flex';
-    content.style.flexDirection = 'column';
-    content.style.alignItems = 'center';
+      console.log('setInterval callback invoked');
+      
+      const marker = markerRef.current;
 
-    // Label
-    const label = document.createElement('div');
-    label.textContent = location.name;
-    label.style.backgroundColor = 'white';
-    label.style.padding = '2px 6px';
-    label.style.borderRadius = '4px';
-    label.style.border = '1px solid #ccc';
-    label.style.whiteSpace = 'nowrap';
-    label.style.fontSize = '12px';
-    label.style.boxShadow = '0px 2px 4px rgba(0, 0, 0, 0.3)';
-    label.style.marginBottom = '4px';
-    content.appendChild(label);
+      if (marker && marker.content === null) {
+        console.log(`CustomMarker: Setting content for location: ${location.name}`);
 
-    // Red balloon marker
-    const balloon = document.createElement('div');
-    balloon.style.width = '16px';
-    balloon.style.height = '24px';
-    balloon.style.backgroundColor = 'red';
-    balloon.style.borderRadius = '50% 50% 0 0';
-    balloon.style.position = 'relative';
-    balloon.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.3)';
-    balloon.style.marginBottom = '-8px';
+        // Create the custom content (label + red balloon)
+        const content = document.createElement('div');
+        content.style.display = 'flex';
+        content.style.flexDirection = 'column';
+        content.style.alignItems = 'center';
 
-    // Balloon pointer
-    const pointer = document.createElement('div');
-    pointer.style.width = '0';
-    pointer.style.height = '0';
-    pointer.style.borderLeft = '8px solid transparent';
-    pointer.style.borderRight = '8px solid transparent';
-    pointer.style.borderTop = '8px solid red';
-    pointer.style.position = 'absolute';
-    pointer.style.bottom = '-8px';
-    pointer.style.left = '50%';
-    pointer.style.transform = 'translateX(-50%)';
+        // Label
+        const label = document.createElement('div');
+        label.textContent = location.name;
+        label.style.backgroundColor = 'white';
+        label.style.padding = '2px 6px';
+        label.style.borderRadius = '4px';
+        label.style.border = '1px solid #ccc';
+        label.style.whiteSpace = 'nowrap';
+        label.style.fontSize = '12px';
+        label.style.boxShadow = '0px 2px 4px rgba(0, 0, 0, 0.3)';
+        label.style.marginBottom = '4px';
+        content.appendChild(label);
 
-    balloon.appendChild(pointer);
-    content.appendChild(balloon);
+        // Red balloon marker
+        const balloon = document.createElement('div');
+        balloon.style.width = '16px';
+        balloon.style.height = '24px';
+        balloon.style.backgroundColor = 'red';
+        balloon.style.borderRadius = '50% 50% 0 0';
+        balloon.style.position = 'relative';
+        balloon.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.3)';
+        balloon.style.marginBottom = '-8px';
 
-    // Set custom content
-    marker.content = content;
-    console.log(`Custom content successfully set for location: ${location.name}`);
-  };
+        // Balloon pointer
+        const pointer = document.createElement('div');
+        pointer.style.width = '0';
+        pointer.style.height = '0';
+        pointer.style.borderLeft = '8px solid transparent';
+        pointer.style.borderRight = '8px solid transparent';
+        pointer.style.borderTop = '8px solid red';
+        pointer.style.position = 'absolute';
+        pointer.style.bottom = '-8px';
+        pointer.style.left = '50%';
+        pointer.style.transform = 'translateX(-50%)';
+
+        balloon.appendChild(pointer);
+        content.appendChild(balloon);
+
+        // Set custom content
+        marker.content = content;
+        console.log(`Custom content successfully set for location: ${location.name}`);
+        clearInterval(interval); // Stop the interval once content is set
+      }
+    }, 100);
+
+    return () => clearInterval(interval); // Cleanup
+  }, [location]);
 
   return (
     <AdvancedMarker
+      ref={markerRef}
       position={getLatLngFromPlace(location)}
       onClick={onClick}
-      onLoad={handleLoad}
     />
   );
 };
