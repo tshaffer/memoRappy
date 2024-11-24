@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ExtendedGooglePlace } from '../types';
 import { AdvancedMarker, APIProvider, InfoWindow, Map, MapCameraChangedEvent } from '@vis.gl/react-google-maps';
 import { getLatLngFromPlace } from '../utilities';
@@ -16,15 +16,13 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
   const [selectedLocation, setSelectedLocation] = useState<ExtendedGooglePlace | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
+  const markerRefs = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && (event.key === '+' || event.key === '=' || event.key === '-')) {
         event.preventDefault();
-        if (event.key === '+' || event.key === '=') {
-          setZoom((prevZoom) => prevZoom + 1);
-        } else if (event.key === '-') {
-          setZoom((prevZoom) => prevZoom - 1);
-        }
+        setZoom((prevZoom) => prevZoom + (event.key === '-' ? -1 : 1));
       }
     };
 
@@ -50,6 +48,28 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
     }
   }, []);
 
+  useEffect(() => {
+    // Assign custom content (labels) to each marker
+    locations.forEach((location, index) => {
+      const marker = markerRefs.current[index];
+
+      if (marker) {
+        const labelContent = document.createElement('div');
+        labelContent.style.backgroundColor = 'white';
+        labelContent.style.border = '1px solid #ccc';
+        labelContent.style.borderRadius = '4px';
+        labelContent.style.padding = '2px 6px';
+        labelContent.style.boxShadow = '0px 2px 4px rgba(0, 0, 0, 0.3)';
+        labelContent.style.whiteSpace = 'nowrap';
+        labelContent.style.fontSize = '12px';
+        labelContent.style.marginBottom = '4px';
+        labelContent.innerText = location.name;
+
+        marker.content = labelContent;
+      }
+    });
+  }, [locations]);
+
   const handleMarkerClick = (location: ExtendedGooglePlace) => {
     setSelectedLocation(location);
   };
@@ -64,33 +84,12 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
 
   const renderMarkers = (): JSX.Element[] => {
     return locations.map((location, index) => {
-      const markerRef = React.createRef<google.maps.marker.AdvancedMarkerElement>();
-
-      useEffect(() => {
-        const marker = markerRef.current;
-
-        if (marker) {
-          // Create custom content for the label
-          const labelContent = document.createElement('div');
-          labelContent.style.backgroundColor = 'white';
-          labelContent.style.border = '1px solid #ccc';
-          labelContent.style.borderRadius = '4px';
-          labelContent.style.padding = '2px 6px';
-          labelContent.style.boxShadow = '0px 2px 4px rgba(0, 0, 0, 0.3)';
-          labelContent.style.whiteSpace = 'nowrap';
-          labelContent.style.fontSize = '12px';
-          labelContent.style.marginBottom = '4px'; // Spacing between label and marker
-          labelContent.innerText = location.name;
-
-          // Set the custom content on the marker
-          marker.content = labelContent;
-        }
-      }, [location]);
-
       return (
         <AdvancedMarker
           key={index}
-          ref={markerRef}
+          ref={(el) => {
+            if (el) markerRefs.current[index] = el;
+          }}
           position={getLatLngFromPlace(location)}
           onClick={() => handleMarkerClick(location)}
         />
@@ -98,25 +97,7 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
     });
   };
 
-  const renderInfoWindow = (): JSX.Element | null => {
-    if (!selectedLocation) return null;
-
-    return (
-      <InfoWindow
-        position={getLatLngFromPlace(selectedLocation)}
-        onCloseClick={handleCloseInfoWindow}
-      >
-        <div style={{ padding: '4px' }}>
-          <h4>{selectedLocation.name}</h4>
-          <p>{selectedLocation.website}</p>
-        </div>
-      </InfoWindow>
-    );
-  };
-
   const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY!;
-
-  const locationMarkers: JSX.Element[] = renderMarkers();
 
   return (
     <APIProvider apiKey={googleMapsApiKey} version="beta">
@@ -126,13 +107,13 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
         mapId="1ca0b6526e7d4819"
         defaultCenter={initialCenter}
         zoom={zoom}
-        onZoomChanged={(event) => handleZoomChanged(event)}
+        onZoomChanged={handleZoomChanged}
         fullscreenControl={false}
         zoomControl={true}
         gestureHandling="greedy"
         scrollwheel={true}
       >
-        {locationMarkers}
+        {renderMarkers()}
         {currentLocation && (
           <AdvancedMarker position={currentLocation}>
             <div
@@ -146,7 +127,14 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
             />
           </AdvancedMarker>
         )}
-        {selectedLocation && renderInfoWindow()}
+        {selectedLocation && (
+          <InfoWindow
+            position={getLatLngFromPlace(selectedLocation)}
+            onCloseClick={handleCloseInfoWindow}
+          >
+            <div>{selectedLocation.name}</div>
+          </InfoWindow>
+        )}
       </Map>
     </APIProvider>
   );
