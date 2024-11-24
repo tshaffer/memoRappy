@@ -49,23 +49,56 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
   }, []);
 
   useEffect(() => {
-    // Assign custom content (labels) to each marker
+    // Assign custom content (label + red balloon) to each marker
     locations.forEach((location, index) => {
       const marker = markerRefs.current[index];
 
       if (marker) {
-        const labelContent = document.createElement('div');
-        labelContent.style.backgroundColor = 'white';
-        labelContent.style.border = '1px solid #ccc';
-        labelContent.style.borderRadius = '4px';
-        labelContent.style.padding = '2px 6px';
-        labelContent.style.boxShadow = '0px 2px 4px rgba(0, 0, 0, 0.3)';
-        labelContent.style.whiteSpace = 'nowrap';
-        labelContent.style.fontSize = '12px';
-        labelContent.style.marginBottom = '4px';
-        labelContent.innerText = location.name;
+        // Create container for the label and red balloon
+        const container = document.createElement('div');
+        container.style.display = 'flex';
+        container.style.flexDirection = 'column';
+        container.style.alignItems = 'center';
 
-        marker.content = labelContent;
+        // Label
+        const label = document.createElement('div');
+        label.style.backgroundColor = 'white';
+        label.style.border = '1px solid #ccc';
+        label.style.borderRadius = '4px';
+        label.style.padding = '2px 6px';
+        label.style.boxShadow = '0px 2px 4px rgba(0, 0, 0, 0.3)';
+        label.style.whiteSpace = 'nowrap';
+        label.style.fontSize = '12px';
+        label.style.marginBottom = '4px';
+        label.innerText = location.name;
+
+        // Red balloon (default marker appearance)
+        const redBalloon = document.createElement('div');
+        redBalloon.style.width = '16px';
+        redBalloon.style.height = '24px';
+        redBalloon.style.backgroundColor = 'red';
+        redBalloon.style.borderRadius = '8px 8px 0 0'; // Balloon shape
+        redBalloon.style.position = 'relative';
+        redBalloon.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.3)';
+
+        // Balloon pointer
+        const pointer = document.createElement('div');
+        pointer.style.width = '0';
+        pointer.style.height = '0';
+        pointer.style.borderLeft = '8px solid transparent';
+        pointer.style.borderRight = '8px solid transparent';
+        pointer.style.borderTop = '8px solid red';
+        pointer.style.position = 'absolute';
+        pointer.style.top = '24px';
+        pointer.style.left = '0px';
+        pointer.style.transform = 'translateX(-50%)';
+        redBalloon.appendChild(pointer);
+
+        container.appendChild(label);
+        container.appendChild(redBalloon);
+
+        // Assign custom content to marker
+        marker.content = container;
       }
     });
   }, [locations]);
