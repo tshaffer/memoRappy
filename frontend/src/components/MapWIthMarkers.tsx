@@ -15,7 +15,6 @@ const DEFAULT_ZOOM = 14;
 
 const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, locations }) => {
   const [currentLocation, setCurrentLocation] = useState<google.maps.LatLngLiteral | null>(null);
-  const [hoveredLocation, setHoveredLocation] = useState<ExtendedGooglePlace | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<ExtendedGooglePlace | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
@@ -70,12 +69,12 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
 
   const handleMarkerHover = (location: ExtendedGooglePlace) => {
     console.log('handleMarkerHover', location);
-    setHoveredLocation(location);
+    // setHoveredLocation(location);
   };
 
   const handleMarkerHoverEnd = () => {
     console.log('handleMarkerHoverEnd');
-    setHoveredLocation(null);
+    // setHoveredLocation(null);
   };
 
   const handleCloseInfoWindow = () => {
