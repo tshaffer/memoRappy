@@ -13,9 +13,21 @@ interface CustomMarkerProps {
 
 const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick, onHover, onHoverEnd }) => {
   
+  let showDiags = false;
+  if (location.name.startsWith('La ')) {
+    showDiags = true;
+  }
+
+  if (showDiags) console.log('CustomMarker entry, location:', location.name);
+
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
 
+  if (showDiags) console.log('markerRef:', markerRef);
+
   useEffect(() => {
+
+    if (showDiags) console.log('useEffect, markerRef.current:', markerRef.current);
+
     const marker = markerRef.current;
 
     if (marker) {
@@ -63,6 +75,8 @@ const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick, onHover,
       };
     }
   }, [location, onHover, onHoverEnd]);
+
+  if (showDiags) console.log('return AdvancedMarker, ref:', markerRef);
 
   return <AdvancedMarker ref={markerRef} position={getLatLngFromPlace(location)} onClick={onClick} />;
 };
