@@ -63,31 +63,39 @@ const MapWithMarkers: React.FC<MapWithMarkersProps> = ({ initialCenter, location
   };
 
   const renderMarkers = (): JSX.Element[] => {
-    return locations.map((location, index) => (
-      <AdvancedMarker
-        key={index}
-        position={getLatLngFromPlace(location)}
-        onClick={() => handleMarkerClick(location)}
-        content={
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div
-              style={{
-                backgroundColor: 'white',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                padding: '2px 6px',
-                boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.3)',
-                whiteSpace: 'nowrap',
-                fontSize: '12px',
-                marginBottom: '4px', // Space between label and marker
-              }}
-            >
-              {location.name}
-            </div>
-          </div>
+    return locations.map((location, index) => {
+      const markerRef = React.createRef<google.maps.marker.AdvancedMarkerElement>();
+
+      useEffect(() => {
+        const marker = markerRef.current;
+
+        if (marker) {
+          // Create custom content for the label
+          const labelContent = document.createElement('div');
+          labelContent.style.backgroundColor = 'white';
+          labelContent.style.border = '1px solid #ccc';
+          labelContent.style.borderRadius = '4px';
+          labelContent.style.padding = '2px 6px';
+          labelContent.style.boxShadow = '0px 2px 4px rgba(0, 0, 0, 0.3)';
+          labelContent.style.whiteSpace = 'nowrap';
+          labelContent.style.fontSize = '12px';
+          labelContent.style.marginBottom = '4px'; // Spacing between label and marker
+          labelContent.innerText = location.name;
+
+          // Set the custom content on the marker
+          marker.content = labelContent;
         }
-      />
-    ));
+      }, [location]);
+
+      return (
+        <AdvancedMarker
+          key={index}
+          ref={markerRef}
+          position={getLatLngFromPlace(location)}
+          onClick={() => handleMarkerClick(location)}
+        />
+      );
+    });
   };
 
   const renderInfoWindow = (): JSX.Element | null => {
