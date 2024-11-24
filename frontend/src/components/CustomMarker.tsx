@@ -34,6 +34,7 @@ const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick, onHover,
       // Create a custom content element for the marker
       const content = document.createElement('div');
       content.style.display = 'flex';
+      content.style.flexDirection = 'column';
       content.style.alignItems = 'center';
 
       // Add the label
@@ -48,6 +49,31 @@ const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick, onHover,
       label.style.boxShadow = '0px 2px 4px rgba(0,0,0,0.2)';
       label.style.transform = 'translate(-50%, -150%)'; // Position label above the marker
       content.appendChild(label);
+
+      // Red Balloon Marker
+      const balloon = document.createElement('div');
+      balloon.style.width = '16px';
+      balloon.style.height = '24px';
+      balloon.style.backgroundColor = 'red';
+      balloon.style.borderRadius = '8px 8px 0 0'; // Rounded top corners for the balloon
+      balloon.style.position = 'relative';
+      balloon.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.3)';
+      balloon.style.marginBottom = '-4px';
+
+      // Balloon Pointer
+      const pointer = document.createElement('div');
+      pointer.style.width = '0';
+      pointer.style.height = '0';
+      pointer.style.borderLeft = '8px solid transparent';
+      pointer.style.borderRight = '8px solid transparent';
+      pointer.style.borderTop = '8px solid red';
+      pointer.style.position = 'absolute';
+      pointer.style.top = '24px';
+      pointer.style.left = '0px';
+      pointer.style.transform = 'translateX(-50%)';
+      balloon.appendChild(pointer);
+
+      content.appendChild(balloon);
 
       // Add the marker element (blue dot)
       const markerElement = document.createElement('div');
