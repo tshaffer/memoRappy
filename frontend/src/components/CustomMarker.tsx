@@ -12,6 +12,7 @@ interface CustomMarkerProps {
 }
 
 const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick, onHover, onHoverEnd }) => {
+
   let showDiags = false;
   if (location.name.startsWith('La ')) {
     showDiags = true;
@@ -24,7 +25,15 @@ const CustomMarker: React.FC<CustomMarkerProps> = ({ location, onClick, onHover,
   if (showDiags) console.log('markerRef:', markerRef);
 
   useEffect(() => {
-    if (showDiags) console.log('useEffect, markerRef.current:', markerRef.current);
+    
+    let showUseEffectDiags = false;
+    if (location.name.startsWith('La ')) {
+      showUseEffectDiags = true;
+    }
+      if (showUseEffectDiags) {
+      console.log('useEffect invoked for location:', location.name);
+      console.log('markerRef.current:', markerRef.current);
+    }
 
     const marker = markerRef.current;
 
